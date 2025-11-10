@@ -92,6 +92,7 @@ const kidImageContainer = document.getElementById('kid-image-container');
 
 const collectBtn = document.getElementById('collect-btn');
 const investigateBtn = document.getElementById('investigate-btn');
+const callAttentionBtn = document.getElementById('call-attention-btn');
 const endTurnBtn = document.getElementById('end-turn-btn');
 const upgradeBtn = document.getElementById('upgrade-btn');
 
@@ -451,17 +452,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Adiciona listeners aos botões
     collectBtn.addEventListener('click', collectResource);
     investigateBtn.addEventListener('click', investigate);
+    callAttentionBtn.addEventListener('click', callAttention);
     endTurnBtn.addEventListener('click', endTurn); 
     upgradeBtn.addEventListener('click', performUpgrade);
 
-    // NOVO LISTENER:
-    const callAttentionBtn = document.createElement('button');
-    callAttentionBtn.id = 'call-attention-btn';
-    callAttentionBtn.className = 'action-btn';
-    callAttentionBtn.textContent = 'CALL ATTENTION (2 AP)';
-    document.querySelector('.action-buttons').appendChild(callAttentionBtn);
-    callAttentionBtn.addEventListener('click', callAttention);
-    
+      
     // Listener de conexão da Wallet (FUTURO)
     document.getElementById('connect-wallet-btn').addEventListener('click', () => {
         logMessage("Wallet Connection is a future feature (Phase 4)!", 'yellow');
