@@ -9,6 +9,33 @@
 </head>
 <body>
 
+    <div id="nft-selection-modal" class="modal">
+        <div class="modal-content">
+                <h2>SELECT YOUR EXPEDITION KIDZ</h2>
+                <p>Select ONE NFT for the Active Expedition and up to NINE others for the Idle Expedition (Passive Resource Gain).</p>
+                
+                <div id="nft-list-container">
+                    <div id="active-nft-slot" class="nft-slot active-slot">
+                        <h4>ACTIVE KID (Main Game)</h4>
+                        <p>Click on an NFT below to select your active character.</p>
+                    </div>
+                    
+                    <div id="idle-nft-slots-container">
+                        <h4>IDLE KIDZ (Max 9)</h4>
+                        </div>
+                    
+                    <hr>
+                    
+                    <div id="simulated-wallet-nfts">
+                        <h4>WALLET NFTS FOUND (Click to Assign)</h4>
+                        </div>
+                </div>
+                
+                <button id="start-expedition-btn" class="action-btn" disabled>START EXPEDITION</button>
+                <p id="selection-status" style="margin-top: 10px; color: yellow;"></p>
+            </div>
+        </div>
+
     <header>
         <h1>CYBERKIDZ CLUB: EXPEDITION</h1>
         <div id="wallet-status">
