@@ -9,88 +9,156 @@
 </head>
 <body>
 
-    <div id="nft-selection-modal" class="modal">
-        <div class="modal-content">
-            <h2>SELECT YOUR EXPEDITION KIDZ</h2>
-            <p>Select ONE NFT for the Active Expedition and up to NINE others for the Idle Expedition (Passive Resource Gain).</p>
-            
-            <div id="nft-list-container">
-                
-                <div id="active-nft-slot" class="nft-slot active-slot">
-                    <h4>ACTIVE KID (Main Game)</h4>
-                    <p>Click on an NFT below to select your active character.</p>
-                </div>
-                
-                <div id="idle-nft-slots-container">
-                    <h4>IDLE KIDZ (Max 9)</h4>
-                    </div>
-                
-                <hr>
-                
-                <div id="simulated-wallet-nfts">
-                    <h4>WALLET NFTS FOUND (Click to Assign)</h4>
-                    </div>
-            </div>
-            
-            <button id="start-expedition-btn" class="action-btn" disabled>START EXPEDITION</button>
-            <p id="selection-status" style="margin-top: 10px; color: yellow;"></p>
-        </div>
-    </div>
     <header>
         <h1>CYBERKIDZ CLUB: EXPEDITION</h1>
         <div id="wallet-status">
             <span id="connection-status">Disconnected</span>
-            <button id="connect-wallet-btn">Connect Wallet</button>
         </div>
     </header>
 
-    <main class="game-container">
+    <section id="logged-out-screen" class="screen">
+        <div class="landing-container panel">
+            <h2>WELCOME TO THE WASTELAND</h2>
+            <p>Connect your wallet to load your Kidz or play the Demo.</p>
+            <button id="connect-wallet-btn" class="action-btn">Connect Wallet</button>
+            <button id="demo-game-btn" class="action-btn demo-btn">Play Demo</button>
+        </div>
+    </section>
+
+    <section id="dashboard-screen" class="screen" style="display: none;">
         
-        <section id="status-panel" class="panel">
-            <h3>🤖 YOUR CYBERKID</h3>
-            <div id="kid-info">
-                
-                <div id="kid-image-container">
+        <div class="dashboard-header">
+            <h2>WASTELAND HUB</h2>
+            <p>Select your Kid, manage equipment, and craft new items.</p>
+        </div>
+
+        <div class="dashboard-container">
+
+            <div id="nft-selection-panel" class="panel">
+                <h3>Select Your Kid</h3>
+                <div id="nft-list-container">
                     </div>
-                
-                <p><strong>Tribe:</strong> <span id="kid-tribe">?</span></p>
-                <p><strong>Strength:</strong> <span id="kid-strength">0</span></p>
-                <p><strong>HP:</strong> <span id="kid-hp">100/100</span></p>
-
-                <p><strong>Action Pts (AP):</strong> <span id="kid-ap">0</span></p>
-                <p><strong>Movement Pts (MP):</strong> <span id="kid-mp">0</span></p>
-
-                <p><strong>Resources:</strong></p>
-                <ul id="resource-list">
-                    <li>Scrap: <span id="res-scrap">0</span></li>
-                    <li>Clean Water: <span id="res-water">0</span></li>
-                    <li>Food: <span id="res-food">0</span></li>
-                </ul>
-                <button id="upgrade-btn" class="action-btn" disabled>UPGRADE (10 ALL)</button>
+                <button id="start-expedition-btn" class="action-btn" disabled>Start Expedition</button>
             </div>
-        </section>
 
-        <section id="map-panel" class="panel">
-            <h3>🗺️ WASTELAND: DAY <span id="turn-counter">0</span>/10</h3> 
-            <div id="game-map" class="grid-container">
+            <div id="equipment-panel" class="panel">
+                <h3>Active Kid: <span id="dash-kid-name">None</span></h3>
+                <div class="equipment-grid">
+                    <div class="equip-slot" id="equip-slot-helmet"><span>Helmet</span></div>
+                    <div class="equip-slot" id="equip-slot-weapon"><span>Weapon</span></div>
+                    <div class="equip-slot" id="equip-slot-accessory"><span>Accessory</span></div>
+                    <div class="equip-slot" id="equip-slot-armor"><span>Armor</span></div>
+                    <div class="equip-slot" id="equip-slot-gloves"><span>Gloves</span></div>
+                    <div class="equip-slot" id="equip-slot-implant"><span>Implant</span></div>
+                    <div class="equip-slot" id="equip-slot-boots"><span>Boots</span></div>
                 </div>
-        </section>
+                <div class="stats-display">
+                    <h4>Total Attributes</h4>
+                    <p>Damage: <span id="dash-stat-dmg">0</span></p>
+                    <p>Defense: <span id="dash-stat-def">0</span></p>
+                    <p>Crit Chance: <span id="dash-stat-crit">0%</span></p>
+                    <p>Drop Chance: <span id="dash-stat-drop">0%</span></p>
+                    </div>
+            </div>
 
-        <section id="action-panel" class="panel">
-            <h3>⚙️ ACTIONS & LOG</h3>
-            <div class="action-buttons">
-                <button id="collect-btn" class="action-btn" disabled>COLLECT RESOURCE (1 AP)</button>
-                <button id="investigate-btn" class="action-btn" disabled>INVESTIGATE (1 AP)</button>
-                <button id="call-attention-btn" class="action-btn" disabled>CALL ATTENTION (2 AP)</button>
+            <div id="crafting-panel" class="panel">
+                <h3>Inventory & Crafting</h3>
                 
-                <button id="end-turn-btn" class="action-btn" disabled>END DAY / RECHARGE</button>
-            </div>
-            <div id="game-log">
-                <p class="log-entry">[Console]: Ready to start the Expedition!</p>
-            </div>
-        </section>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="inventory">Materials</button>
+                    <button class="tab-btn" data-tab="refine">Refine</button>
+                    <button class="tab-btn" data-tab="craft">Craft</button>
+                </div>
 
-    </main>
+                <div id="tab-inventory" class="tab-content active">
+                    <h4>Wasteland Materials</h4>
+                    <ul id="inventory-list-materials">
+                        <li>Scrap: <span id="inv-scrap">0</span></li>
+                        <li>Clean Water: <span id="inv-water">0</span></li>
+                        <li>Food: <span id="inv-food">0</span></li>
+                        <hr>
+                        <li>Metal (Volcanic): <span id="inv-metal">0</span></li>
+                        <li>Nanochips (Nocturnal): <span id="inv-nanochips">0</span></li>
+                        </ul>
+                </div>
+
+                <div id="tab-refine" class="tab-content">
+                    <h4>Refine Components</h4>
+                    <div class="crafting-recipe">
+                        <span>10 Metal + 5 Magma = <strong>1 Volcanic Core</strong></span>
+                        <button class="action-btn small-btn">Refine</button>
+                    </div>
+                    <div class="crafting-recipe">
+                        <span>20 Scrap + 20 Water... = <strong>1 Lucky Clover</strong></span>
+                        <button class="action-btn small-btn">Refine</button>
+                    </div>
+                </div>
+
+                <div id="tab-craft" class="tab-content">
+                    <h4>Craft & Embed</h4>
+                    <div class="crafting-recipe">
+                        <span>10 Scrap = <strong>1 Rustic Chestplate (Empty)</strong></span>
+                        <button class="action-btn small-btn">Craft</button>
+                    </div>
+                    <div class="crafting-recipe">
+                        <span>Rustic Chestplate + 1 Defense Plate = <strong>Crystal Chest (Lvl 1)</strong></span>
+                        <button class="action-btn small-btn">Embed</button>
+                    </div>
+                    <div class="crafting-recipe">
+                        <span>Rustic Chestplate + 1 Lucky Clover = <strong>Lucky Chest (Lvl 1)</strong></span>
+                        <button class="action-btn small-btn">Embed</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="game-screen" class="screen" style="display: none;">
+        <main class="game-container">
+            
+            <section id="status-panel" class="panel">
+                <h3>🤖 ACTIVE KID</h3>
+                <div id="kid-info">
+                    <div id="kid-image-container"></div>
+                    <p><strong>Tribe:</strong> <span id="kid-tribe">?</span></p>
+                    <p><strong>Strength:</strong> <span id="kid-strength">0</span></p>
+                    <p><strong>HP:</strong> <span id="kid-hp">100/100</span></p>
+                    <p><strong>Defense:</strong> <span id="kid-defense">0</span></p>
+                    <p><strong>Drop Chance:</strong> <span id="kid-drop-chance">0%</span></p>
+                    <hr>
+                    <p><strong>Action Pts (AP):</strong> <span id="kid-ap">0</span></p>
+                    <p><strong>Movement Pts (MP):</strong> <span id="kid-mp">0</span></p>
+                    <p><strong>Resources Found (This Trip):</strong></p>
+                    <ul id="resource-list">
+                        <li>Scrap: <span id="res-scrap">0</span></li>
+                        <li>Clean Water: <span id="res-water">0</span></li>
+                        <li>Food: <span id="res-food">0</span></li>
+                    </ul>
+                    <button id="exit-expedition-btn" class="action-btn">End Expedition</button>
+                </div>
+            </section>
+
+            <section id="map-panel" class="panel">
+                <h3>🗺️ WASTELAND: DAY <span id="turn-counter">0</span>/10</h3> 
+                <div id="game-map" class="grid-container">
+                    </div>
+            </section>
+
+            <section id="action-panel" class="panel">
+                <h3>⚙️ ACTIONS & LOG</h3>
+                <div class="action-buttons">
+                    <button id="collect-btn" class="action-btn" disabled>COLLECT RESOURCE (1 AP)</button>
+                    <button id="investigate-btn" class="action-btn" disabled>INVESTIGATE (1 AP)</button>
+                    <button id="call-attention-btn" class="action-btn" disabled>CALL ATTENTION (2 AP)</button>
+                    <button id="end-turn-btn" class="action-btn" disabled>END DAY / RECHARGE</button>
+                </div>
+                <div id="game-log">
+                    <p class="log-entry">[Console]: Ready to start the Expedition!</p>
+                </div>
+            </section>
+
+        </main>
+    </section>
 
     <script src="script.js"></script>
 </body>
