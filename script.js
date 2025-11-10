@@ -76,6 +76,33 @@ let gameState = {
     gameMap: []
 };
 
+let selectionState = {
+    allNfts: [], // Simulação de todos os NFTs encontrados na wallet
+    activeNft: null,
+    idleNfts: []
+};
+
+// Dados de simulação para 20 NFTs (substituirá a chamada real à API Tezos)
+const MOCK_NFTS = [
+    { id: 'CKC-001', name: 'Nocturnals Stealth', tribe: TRIBES.NOCTURNALS, img: 'https://via.placeholder.com/100/4B0082/FFFFFF?text=NFT-001' },
+    { id: 'CKC-002', name: 'Reptilians Hunter', tribe: TRIBES.REPTILIANS, img: 'https://via.placeholder.com/100/3CB371/FFFFFF?text=NFT-002' },
+    { id: 'CKC-003', name: 'Volcanics Forger', tribe: TRIBES.VOLCANICS, img: 'https://via.placeholder.com/100/FF0000/FFFFFF?text=NFT-003' },
+    { id: 'CKC-004', name: 'Radioactives Scavenger', tribe: TRIBES.RADIOACTIVES, img: 'https://via.placeholder.com/100/B2FF66/000000?text=NFT-004' },
+    { id: 'CKC-005', name: 'Undergrounder Miner', tribe: TRIBES.UNDERGROUNDERS, img: 'https://via.placeholder.com/100/A0522D/FFFFFF?text=NFT-005' },
+    // Adicione mais 15 NFTs mockados aqui para preencher a lista
+    // Para simplificar, vamos duplicar 
+];
+for(let i = 6; i <= 20; i++) {
+    const base = MOCK_NFTS[i % 5];
+    selectionState.allNfts.push({ 
+        id: `CKC-${String(i).padStart(3, '0')}`, 
+        name: `${base.tribe.name} #${i}`, 
+        tribe: base.tribe,
+        img: `https://via.placeholder.com/100/${base.tribe.color.substring(1).toUpperCase()}/FFFFFF?text=NFT-${i}`
+    });
+}
+selectionState.allNfts = [...MOCK_NFTS.slice(0, 5), ...selectionState.allNfts];
+
 // --- ELEMENTOS DOM (Referências do HTML) ---
 const mapElement = document.getElementById('game-map');
 const logElement = document.getElementById('game-log');
@@ -95,6 +122,16 @@ const investigateBtn = document.getElementById('investigate-btn');
 const callAttentionBtn = document.getElementById('call-attention-btn');
 const endTurnBtn = document.getElementById('end-turn-btn');
 const upgradeBtn = document.getElementById('upgrade-btn');
+// ... (outras referências DOM)
+
+// NOVAS REFERÊNCIAS PARA O MODAL
+const nftSelectionModal = document.getElementById('nft-selection-modal');
+const connectWalletBtn = document.getElementById('connect-wallet-btn');
+const startExpeditionBtn = document.getElementById('start-expedition-btn');
+const simulatedWalletNftsContainer = document.getElementById('simulated-wallet-nfts');
+const activeNftSlot = document.getElementById('active-nft-slot');
+const idleNftSlotsContainer = document.getElementById('idle-nft-slots-container');
+const selectionStatus = document.getElementById('selection-status');
 
 
 // ====================================================================
@@ -207,6 +244,132 @@ function updateStatusPanel() {
     
     // Habilita/Desabilita o botão de upgrade (Custo fixo: 10 de cada recurso)
     upgradeBtn.disabled = (gameState.player.resources.scrap < 10 || gameState.player.resources.water < 10 || gameState.player.resources.food < 10);
+}
+
+function renderNftList() {
+    simulatedWalletNftsContainer.innerHTML = '<h4>WALLET NFTS FOUND (Click to Assign)</h4>';
+    selectionState.allNfts.forEach(nft => {
+        const item = document.createElement('div');
+        item.classList.add('simulated-nft-item');
+        item.dataset.nftId = nft.id;
+        item.dataset.tribe = nft.tribe.name;
+        item.innerHTML = `<img src="${nft.img}" style="width: 50px; height: 50px;"><br>#${nft.id.slice(-3)} (${nft.tribe.name.charAt(0)})`;
+        item.addEventListener('click', () => handleNftSelection(nft));
+        simulatedWalletNftsContainer.appendChild(item);
+    });
+    
+    // Gera 9 slots Idle
+    idleNftSlotsContainer.innerHTML = '<h4>IDLE KIDZ (Max 9)</h4>';
+    for (let i = 0; i < 9; i++) {
+        const slot = document.createElement('div');
+        slot.classList.add('nft-slot', 'idle-slot');
+        slot.innerHTML = `Slot ${i + 1} (Empty)`;
+        idleNftSlotsContainer.appendChild(slot);
+    }
+}
+
+function handleNftSelection(nft) {
+    if (selectionState.activeNft && selectionState.activeNft.id === nft.id) {
+        // Deselecionar Ativo
+        selectionState.activeNft = null;
+    } else if (selectionState.idleNfts.some(n => n.id === nft.id)) {
+        // Deselecionar Idle
+        selectionState.idleNfts = selectionState.idleNfts.filter(n => n.id !== nft.id);
+    } else if (!selectionState.activeNft) {
+        // Selecionar como Ativo
+        selectionState.activeNft = nft;
+        // Remove dos Idles se estiver lá
+        selectionState.idleNfts = selectionState.idleNfts.filter(n => n.id !== nft.id);
+    } else if (selectionState.idleNfts.length < 9) {
+        // Selecionar como Idle
+        selectionState.idleNfts.push(nft);
+    } else {
+        selectionStatus.textContent = "Error: Max 1 Active and 9 Idle NFTs selected.";
+        return;
+    }
+
+    // Atualiza a visualização do modal
+    updateNftSelectionUI();
+}
+
+function updateNftSelectionUI() {
+    // 1. Limpa classes de seleção e status
+    document.querySelectorAll('.simulated-nft-item').forEach(item => {
+        item.classList.remove('selected-active', 'selected-idle');
+        item.style.backgroundColor = 'transparent';
+    });
+    
+    // 2. Atualiza slot Ativo
+    activeNftSlot.innerHTML = selectionState.activeNft 
+        ? `<img src="${selectionState.activeNft.img}" style="width: 100%; height: auto;"><br>Active: ${selectionState.activeNft.tribe.name}`
+        : '<h4>ACTIVE KID (Main Game)</h4><p>Click to select.</p>';
+    
+    // 3. Atualiza slots Idle
+    const idleSlots = idleNftSlotsContainer.querySelectorAll('.idle-slot');
+    idleSlots.forEach((slot, index) => {
+        const idleNft = selectionState.idleNfts[index];
+        slot.innerHTML = idleNft 
+            ? `<img src="${idleNft.img}" style="width: 100%; height: auto;"><br>Idle: #${idleNft.id.slice(-3)}`
+            : `Slot ${index + 1} (Empty)`;
+    });
+
+    // 4. Marca NFTs na lista da Wallet
+    document.querySelectorAll('.simulated-nft-item').forEach(item => {
+        const id = item.dataset.nftId;
+        if (selectionState.activeNft && selectionState.activeNft.id === id) {
+            item.classList.add('selected-active');
+            item.style.backgroundColor = 'var(--color-bg-dark)';
+        } else if (selectionState.idleNfts.some(n => n.id === id)) {
+            item.classList.add('selected-idle');
+            item.style.backgroundColor = 'var(--color-bg-dark)';
+        }
+    });
+
+    // 5. Habilita/Desabilita botão START
+    const ready = selectionState.activeNft !== null;
+    startExpeditionBtn.disabled = !ready;
+    selectionStatus.textContent = ready 
+        ? `Ready to go! ${selectionState.idleNfts.length} Kidz idle.`
+        : "Please select ONE Active Kid to start the expedition.";
+}
+
+function openNftSelection() {
+    nftSelectionModal.style.display = 'block';
+    renderNftList();
+}
+
+function closeNftSelectionAndStart() {
+    if (!selectionState.activeNft) {
+        selectionStatus.textContent = "Error: You must select ONE Active Kid.";
+        return;
+    }
+
+    nftSelectionModal.style.display = 'none';
+    
+    // Configura o jogo com o NFT ativo escolhido
+    const activeTribe = selectionState.activeNft.tribe;
+    const placeholderURL = selectionState.activeNft.img;
+    
+    // NOVO: Sobrescreve a inicialização para usar o NFT selecionado
+    gameState.player.tribe = activeTribe;
+    gameState.player.stats.strength = activeTribe.stats.strength;
+    gameState.player.stats.hp = activeTribe.stats.hp;
+    gameState.player.stats.maxHp = activeTribe.stats.hp;
+    gameState.player.stats.luck = activeTribe.stats.luck;
+    gameState.player.stats.AP = activeTribe.stats.AP;
+    gameState.player.stats.maxAP = activeTribe.stats.AP;
+    gameState.player.stats.MP = activeTribe.stats.MP;
+    gameState.player.stats.maxMP = activeTribe.stats.MP;
+    gameState.player.imageURL = placeholderURL; // Define a imagem
+
+    initializeGame(false); // Chama a inicialização sem resetar tudo
+    
+    logMessage(`Active Kid: ${selectionState.activeNft.name} (${selectionState.activeNft.tribe.name}) is ready!`, 'lime');
+    logMessage(`${selectionState.idleNfts.length} Kidz assigned to Idle Expedition (Passive gain starting).`, 'yellow');
+
+    // Mudar status da Wallet
+    document.getElementById('connection-status').textContent = 'Connected (NFT Loaded)';
+    document.getElementById('connection-status').style.color = 'lime';
 }
 
 // ====================================================================
@@ -463,4 +626,26 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('connection-status').textContent = 'Simulated Connection';
         document.getElementById('connection-status').style.color = 'lime';
     });
+
+    document.addEventListener('DOMContentLoaded', () => {
+    // initializeGame(); // REMOVIDO: A inicialização agora acontece após a seleção do NFT
+
+    // Adiciona listeners aos botões
+    collectBtn.addEventListener('click', collectResource);
+    investigateBtn.addEventListener('click', investigate);
+    callAttentionBtn.addEventListener('click', callAttention); 
+    endTurnBtn.addEventListener('click', endTurn); 
+    upgradeBtn.addEventListener('click', performUpgrade);
+
+    // LISTENERS DO MODAL
+    connectWalletBtn.addEventListener('click', openNftSelection); // Abre o modal ao conectar
+    startExpeditionBtn.addEventListener('click', closeNftSelectionAndStart); // Inicia o jogo
+    
+    // Opcional: Inicia o jogo no modo desconectado se necessário
+    // Se o modal estiver escondido, o initializeGame precisa de um fallback
+    if (nftSelectionModal.style.display !== 'block') {
+         // Fallback: Se não conectar, inicia com Kid padrão.
+         // Para este projeto, vamos forçar a seleção.
+    }
+});
 });
