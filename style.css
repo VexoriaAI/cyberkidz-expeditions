@@ -1,0 +1,176 @@
+:root {
+    --color-bg-dark: #1a1a2e; /* Fundo Principal Escuro */
+    --color-panel-dark: #2c2c47; /* Cor dos Painéis */
+    --color-accent-blue: #00e0ff; /* Azul Ciber */
+    --color-accent-red: #ff3a5c; /* Vermelho/Mutação */
+    --color-text-light: #e0e0e0;
+    --grid-size: 6; /* Define o tamanho do grid (6x6) */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto Mono', monospace; /* Fonte de terminal/ciber */
+}
+
+body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-light);
+    padding: 20px;
+}
+
+/* --- HEADER / WALLET --- */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--color-accent-blue);
+    padding-bottom: 10px;
+}
+
+h1 {
+    color: var(--color-accent-blue);
+    font-size: 1.5em;
+    text-shadow: 0 0 5px rgba(0, 224, 255, 0.5);
+}
+
+#wallet-status {
+    display: flex;
+    align-items: center;
+}
+
+#connection-status {
+    margin-right: 15px;
+    color: var(--color-accent-red); /* Inicialmente vermelho (desconectado) */
+}
+
+/* --- LAYOUT PRINCIPAL --- */
+.game-container {
+    display: flex;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.panel {
+    background-color: var(--color-panel-dark);
+    border: 1px solid var(--color-accent-blue);
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 224, 255, 0.2);
+    flex: 1; /* Distribui o espaço igualmente */
+    min-width: 280px;
+}
+
+#map-panel {
+    flex: 2; /* O mapa ocupa mais espaço */
+    min-width: 400px;
+}
+
+h3 {
+    color: var(--color-accent-red);
+    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--color-text-light);
+    padding-bottom: 5px;
+}
+
+/* --- BOTÕES DE AÇÃO --- */
+.action-btn {
+    background-color: var(--color-accent-red);
+    color: var(--color-text-light);
+    border: none;
+    padding: 10px 15px;
+    margin-top: 5px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+}
+
+.action-btn:hover:not(:disabled) {
+    background-color: #ff607d;
+    box-shadow: 0 0 10px var(--color-accent-red);
+}
+
+.action-btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+/* --- MAPA GRID --- */
+#game-map {
+    display: grid;
+    /* Calcula o grid com base no --grid-size */
+    grid-template-columns: repeat(var(--grid-size), 1fr); 
+    grid-template-rows: repeat(var(--grid-size), 1fr);
+    aspect-ratio: 1 / 1; /* Mantém o mapa quadrado */
+    gap: 2px;
+    background-color: #000;
+    margin-top: 10px;
+}
+
+.map-cell {
+    background-color: #333;
+    border: 1px solid #444;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8em;
+    transition: background-color 0.1s;
+}
+
+.map-cell:hover {
+    background-color: #444;
+    border-color: var(--color-accent-blue);
+}
+
+/* Classe para o Kid (será adicionada via JS) */
+.map-cell.kid {
+    background-color: var(--color-accent-blue);
+    border-color: white;
+    box-shadow: 0 0 8px var(--color-accent-blue);
+}
+
+/* --- STATUS E LOG --- */
+#resource-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+#resource-list li {
+    margin-bottom: 5px;
+    color: var(--color-text-light);
+}
+
+#game-log {
+    height: 150px;
+    overflow-y: scroll;
+    background-color: #111;
+    border: 1px solid #444;
+    padding: 10px;
+    margin-top: 15px;
+}
+
+.log-entry {
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: #00e0ff; /* Cor Ciber para as mensagens */
+}
+
+/* Responsividade Básica para Mobile */
+@media (max-width: 900px) {
+    .game-container {
+        flex-direction: column;
+    }
+    .panel {
+        min-width: 100%;
+        margin-bottom: 20px;
+    }
+    #map-panel {
+        flex: auto;
+    }
+}
