@@ -4,23 +4,30 @@
     --color-accent-blue: #00e0ff; /* Azul Ciber */
     --color-accent-red: #ff3a5c; /* Vermelho/Mutação */
     --color-text-light: #e0e0e0;
-    --grid-size: 6; /* Define o tamanho do grid (6x6) */
+    
+    /* Variáveis do Mapa Hexagonal (Ajuste o tamanho aqui) */
+    --hex-size: 60px; /* Tamanho (largura) de um hexágono */
+    --hex-height: calc(var(--hex-size) * 1.1547); /* Altura (largura * sqrt(3)/2 * 2) */
+    --hex-margin: calc(var(--hex-size) * -0.25); /* Sobreposição horizontal */
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Roboto Mono', monospace; /* Fonte de terminal/ciber */
+    font-family: 'Roboto Mono', monospace;
 }
 
 body {
     background-color: var(--color-bg-dark);
     color: var(--color-text-light);
     padding: 20px;
+    overflow-x: hidden;
 }
 
-/* --- HEADER / WALLET --- */
+/* ==================================================================== */
+/* HEADER UNIVERSAL */
+/* ==================================================================== */
 header {
     display: flex;
     justify-content: space-between;
@@ -46,37 +53,17 @@ h1 {
     color: var(--color-accent-red);
 }
 
-/* --- LAYOUT PRINCIPAL --- */
-.game-container {
-    display: flex;
-    gap: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
+/* ==================================================================== */
+/* COMPONENTES GLOBAIS (Botões, Painéis) */
+/* ==================================================================== */
 .panel {
     background-color: var(--color-panel-dark);
     border: 1px solid var(--color-accent-blue);
     padding: 15px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 224, 255, 0.2);
-    flex: 1; 
-    min-width: 280px;
 }
 
-#map-panel {
-    flex: 2; 
-    min-width: 400px;
-}
-
-h3 {
-    color: var(--color-accent-red);
-    margin-bottom: 10px;
-    border-bottom: 1px dashed var(--color-text-light);
-    padding-bottom: 5px;
-}
-
-/* --- BOTÕES DE AÇÃO --- */
 .action-btn {
     background-color: var(--color-accent-red);
     color: var(--color-text-light);
@@ -100,67 +87,155 @@ h3 {
     cursor: not-allowed;
 }
 
-/* --- MAPA GRID --- */
-#game-map {
-    display: grid;
-    grid-template-columns: repeat(var(--grid-size), 1fr); 
-    grid-template-rows: repeat(var(--grid-size), 1fr);
-    aspect-ratio: 1 / 1; 
-    gap: 2px;
-    background-color: #000;
-    margin-top: 10px;
+.action-btn.demo-btn {
+    background-color: var(--color-accent-blue);
+    color: var(--color-bg-dark);
 }
 
-.map-cell {
-    background-color: #333;
-    border: 1px solid #444;
-    cursor: pointer;
+/* ==================================================================== */
+/* ESTRUTURA DE TELAS */
+/* ==================================================================== */
+.screen {
+    width: 100%;
+    padding: 0;
+}
+
+/* --- TELA 1: LOGGED OUT --- */
+#logged-out-screen .landing-container {
+    text-align: center;
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 40px;
+}
+
+#logged-out-screen h2 {
+    color: var(--color-accent-red);
+    margin-bottom: 20px;
+}
+
+#logged-out-screen .action-btn {
+    max-width: 300px;
+    margin: 10px auto 0 auto;
+}
+
+/* --- TELA 2: DASHBOARD --- */
+#dashboard-screen .dashboard-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.dashboard-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+#nft-selection-panel {
+    flex: 1;
+    min-width: 280px;
+}
+
+#equipment-panel {
+    flex: 2;
+    min-width: 400px;
+}
+
+#crafting-panel {
+    flex: 1.5;
+    min-width: 320px;
+}
+
+/* Layout dos Slots de Equipamento */
+.equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.equip-slot {
+    height: 100px;
+    border: 2px dashed var(--color-text-light);
+    border-radius: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 0.8em;
-    transition: background-color 0.1s;
-}
-
-.map-cell:hover {
-    background-color: #444;
-    border-color: var(--color-accent-blue);
-}
-
-/* Classe para o Kid (será adicionada via JS) */
-.map-cell.kid {
-    background-color: var(--color-accent-blue);
-    border-color: white;
-    box-shadow: 0 0 8px var(--color-accent-blue);
-}
-
-/* --- STATUS E LOG --- */
-#resource-list {
-    list-style: none;
-    padding-left: 0;
-}
-
-#resource-list li {
-    margin-bottom: 5px;
-    color: var(--color-text-light);
-}
-
-#game-log {
-    height: 150px;
-    overflow-y: scroll;
-    background-color: #111;
-    border: 1px solid #444;
-    padding: 10px;
-    margin-top: 15px;
-}
-
-.log-entry {
-    margin-bottom: 5px;
+    background-color: rgba(0,0,0,0.2);
     font-size: 0.9em;
-    color: #00e0ff;
+    color: #888;
 }
 
-/* --- IMAGEM E SLOTS --- */
+/* Abas de Crafting */
+.tabs {
+    display: flex;
+    border-bottom: 1px solid var(--color-accent-blue);
+    margin-bottom: 10px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #888;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.tab-btn.active {
+    color: var(--color-accent-blue);
+    border-bottom: 2px solid var(--color-accent-blue);
+}
+
+.tab-content {
+    display: none; /* Escondido por padrão */
+}
+
+.tab-content.active {
+    display: block; /* Visível */
+}
+
+.crafting-recipe {
+    padding: 10px;
+    border: 1px solid #444;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.action-btn.small-btn {
+    width: auto;
+    padding: 5px 10px;
+}
+
+#inventory-list-materials {
+    list-style: none;
+    padding: 0;
+}
+
+/* --- TELA 3: JOGO --- */
+#game-screen .game-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+#game-screen #status-panel {
+    flex: 1;
+    min-width: 280px;
+}
+#game-screen #map-panel {
+    flex: 2;
+    min-width: 500px; /* Precisa de mais espaço para o hex map */
+}
+#game-screen #action-panel {
+    flex: 1;
+    min-width: 280px;
+}
+
+/* Imagem do Kid no Jogo */
 #kid-image-container {
     height: 150px; 
     width: 150px; 
@@ -177,110 +252,90 @@ h3 {
     display: block;
 }
 
-/* --- MODAL E SELEÇÃO DE NFT --- */
-.modal {
-    display: none; /* Escondido por padrão */
-    position: fixed;
-    z-index: 10;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.9);
+#resource-list {
+    list-style: none;
+    padding-left: 0;
 }
 
-.modal-content {
-    background-color: var(--color-panel-dark);
-    margin: 5% auto; 
-    padding: 20px;
-    border: 3px solid var(--color-accent-blue);
-    width: 90%;
-    max-width: 1000px;
-    box-shadow: 0 0 20px var(--color-accent-blue);
-}
-
-#nft-list-container {
-    padding: 10px;
-    border: 1px dashed #444;
-    margin-bottom: 20px;
-}
-
-.nft-slot, .simulated-nft-item {
-    border: 1px solid #666;
-    padding: 5px;
-    margin: 5px;
-    display: inline-block;
-    width: 100px;
-    height: 120px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.7em;
-    vertical-align: top;
-}
-
-.nft-slot.active-slot {
-    border-color: var(--color-accent-red);
-    width: 150px;
-    height: 170px;
-    margin: 10px;
-}
-
-.simulated-nft-item:hover {
-    border-color: var(--color-accent-blue);
-    box-shadow: 0 0 5px var(--color-accent-blue);
-}
-
-.selected-active {
-    border-color: lime !important;
-    box-shadow: 0 0 8px lime !important;
-}
-
-.selected-idle {
-    border-color: yellow !important;
-    box-shadow: 0 0 5px yellow !important;
-}
-
-#idle-nft-slots-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    border: 1px dashed #333;
-    padding: 10px;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    justify-content: center;
-}
-
-.idle-slot {
-    width: 80px;
-    height: 100px;
-    border: 1px dashed #444;
-}
-
-#simulated-wallet-nfts {
-    margin-top: 20px;
-    max-height: 250px;
-    overflow-y: auto;
+#game-log {
+    height: 200px;
+    overflow-y: scroll;
+    background-color: #111;
     border: 1px solid #444;
     padding: 10px;
-    text-align: center;
+    margin-top: 15px;
 }
 
-/* Responsividade Básica para Mobile */
+.log-entry {
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: #00e0ff;
+}
+
+/* ==================================================================== */
+/* MAPA HEXAGONAL (Substitui o antigo .map-cell) */
+/* ==================================================================== */
+#game-map {
+    position: relative; /* Contêiner para posicionamento absoluto */
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Mantém proporção, mas pode precisar de ajuste */
+    overflow: hidden; /* Garante que os hexágonos não saiam */
+    margin-top: 10px;
+    background-color: #000;
+}
+
+.hex-cell {
+    /* Define a forma de "pointy-top" hex */
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    
+    width: var(--hex-size);
+    height: var(--hex-height);
+    background-color: #333;
+    
+    position: absolute; /* Posição será definida pelo JavaScript */
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    /* Para centralizar o texto (ex: '🤖' ou '⚠️') */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em; /* Aumenta o tamanho do ícone */
+}
+
+.hex-cell:hover {
+    transform: scale(1.1);
+    z-index: 5;
+}
+
+.hex-kid {
+    background-color: var(--color-accent-blue) !important;
+    border: 2px solid white;
+    box-shadow: 0 0 10px var(--color-accent-blue);
+    z-index: 2; /* Garante que o Kid fique por cima */
+}
+
+/* ==================================================================== */
+/* RESPONSIVIDADE */
+/* ==================================================================== */
 @media (max-width: 900px) {
+    /* Stacka o Dashboard */
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
+    /* Stacka o Jogo */
     .game-container {
         flex-direction: column;
     }
+
     .panel {
         min-width: 100%;
         margin-bottom: 20px;
     }
+
     #map-panel {
         flex: auto;
-    }
-    .modal-content {
-        margin: 10% auto;
+        min-height: 400px; /* Garante altura mínima em mobile */
     }
 }
