@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberKidz: Wasteland Expedition</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <h1>CYBERKIDZ CLUB: EXPEDITION</h1>
+        <div id="wallet-status">
+            <span id="connection-status">Disconnected</span>
+            <button id="connect-wallet-btn">Connect Wallet</button>
+        </div>
+    </header>
+
+    <main class="game-container">
+        
+        <section id="status-panel" class="panel">
+            <h3>🤖 YOUR CYBERKID</h3>
+            <div id="kid-info">
+                <p><strong>Tribe:</strong> <span id="kid-tribe">?</span></p>
+                <p><strong>Strength:</strong> <span id="kid-strength">0</span></p>
+                <p><strong>HP:</strong> <span id="kid-hp">100/100</span></p>
+                <p><strong>Resources:</strong></p>
+                <ul id="resource-list">
+                    <li>Scrap: <span id="res-scrap">0</span></li>
+                    <li>Clean Water: <span id="res-water">0</span></li>
+                    <li>Food: <span id="res-food">0</span></li>
+                </ul>
+                <button id="upgrade-btn" class="action-btn" disabled>UPGRADE</button>
+            </div>
+        </section>
+
+        <section id="map-panel" class="panel">
+            <h3>🗺️ WASTELAND: TURN <span id="turn-counter">0</span>/10</h3>
+            <div id="game-map" class="grid-container">
+                </div>
+        </section>
+
+        <section id="action-panel" class="panel">
+            <h3>⚙️ ACTIONS & LOG</h3>
+            <div class="action-buttons">
+                <button id="collect-btn" class="action-btn" disabled>COLLECT RESOURCE</button>
+                <button id="investigate-btn" class="action-btn" disabled>INVESTIGATE</button>
+                <button id="end-turn-btn" class="action-btn" disabled>END TURN</button>
+            </div>
+            <div id="game-log">
+                <p class="log-entry">[Console]: Ready to start the Expedition!</p>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
