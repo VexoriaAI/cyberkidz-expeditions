@@ -5,35 +5,43 @@
 // --- CONFIGURAÇÕES E DADOS DO JOGO (FASE 2.1) ---
 const GRID_SIZE = 6;
 const MAX_TURNS = 10;
+// --- CONFIGURAÇÕES E DADOS DO JOGO ---
+// ... (GRID_SIZE e MAX_TURNS permanecem)
+
 const TRIBES = {
     VOLCANICS: {
         name: "Volcanics",
         bonus: "Burning Ridge",
-        stats: { strength: 12, hp: 100, luck: 0.2 },
+        // Mais Fortes, mais lentos: Mais STR, menos MP
+        stats: { strength: 14, hp: 110, luck: 0.2, AP: 3, MP: 12 }, 
         color: 'red'
     },
     UNDERGROUNDERS: {
         name: "Undergrounders",
         bonus: "Abandoned Mines",
-        stats: { strength: 8, hp: 120, luck: 0.1 },
+        // Equilibrados
+        stats: { strength: 9, hp: 120, luck: 0.1, AP: 4, MP: 15 }, 
         color: 'brown'
     },
     REPTILIANS: {
         name: "Reptilians",
         bonus: "Covenant Swamp",
-        stats: { strength: 15, hp: 90, luck: 0.3 },
+        // Fortes e ligeiramente lentos
+        stats: { strength: 16, hp: 90, luck: 0.3, AP: 3, MP: 13 }, 
         color: 'green'
     },
     RADIOACTIVES: {
         name: "Radioactives",
         bonus: "Lake Rancid",
-        stats: { strength: 10, hp: 80, luck: 0.4 },
+        // Mais Velozes, mais fracos: Mais MP, menos STR
+        stats: { strength: 8, hp: 80, luck: 0.4, AP: 5, MP: 20 }, 
         color: 'lime'
     },
     NOCTURNALS: {
         name: "Nocturnals",
         bonus: "Ancient Ruins",
-        stats: { strength: 9, hp: 100, luck: 0.25 },
+        // Equilibrados, focados em stealth/ação
+        stats: { strength: 10, hp: 100, luck: 0.25, AP: 4, MP: 15 }, 
         color: 'purple'
     }
 };
@@ -54,14 +62,16 @@ const ENEMY = {
 
 // --- ESTADO INICIAL DO JOGO ---
 let gameState = {
-    currentTurn: 0,
-    isCombat: false,
+    // ... (restante do gameState)
     player: {
-        tribe: null,
-        x: 0,
-        y: 0,
-        stats: { strength: 0, hp: 0, maxHp: 0, luck: 0, upgrades: 0 },
-        resources: { scrap: 0, water: 0, food: 0 }
+        // ... (restante do player)
+        stats: { 
+            strength: 0, hp: 0, maxHp: 0, luck: 0, upgrades: 0, 
+            AP: 0, maxAP: 0, 
+            MP: 0, maxMP: 0 
+        }, 
+        resources: { scrap: 0, water: 0, food: 0 },
+        imageURL: "https://via.placeholder.com/150/00e0ff/1a1a2e?text=NFT+Kid" // Placeholder
     },
     gameMap: []
 };
@@ -76,6 +86,9 @@ const kidHpElement = document.getElementById('kid-hp');
 const resScrapElement = document.getElementById('res-scrap');
 const resWaterElement = document.getElementById('res-water');
 const resFoodElement = document.getElementById('res-food');
+const kidApElement = document.getElementById('kid-ap');
+const kidMpElement = document.getElementById('kid-mp');
+const kidImageContainer = document.getElementById('kid-image-container');
 
 const collectBtn = document.getElementById('collect-btn');
 const investigateBtn = document.getElementById('investigate-btn');
@@ -166,21 +179,33 @@ function renderMap() {
 }
 
 function updateStatusPanel() {
-    // Atualiza os dados no painel esquerdo
     kidTribeElement.textContent = gameState.player.tribe.name;
     kidStrengthElement.textContent = gameState.player.stats.strength;
     kidHpElement.textContent = `${gameState.player.stats.hp}/${gameState.player.stats.maxHp}`;
     
+    // NOVO: Atualiza AP e MP
+    kidApElement.textContent = gameState.player.stats.AP;
+    kidMpElement.textContent = gameState.player.stats.MP;
+    
+    // NOVO: Exibe a imagem do NFT
+    kidImageContainer.innerHTML = `<img src="${gameState.player.imageURL}" alt="Your CyberKid" style="width:100%; height:auto; border-radius:5px; margin-bottom: 10px;">`;
+
     resScrapElement.textContent = gameState.player.resources.scrap;
     resWaterElement.textContent = gameState.player.resources.water;
     resFoodElement.textContent = gameState.player.resources.food;
     
     turnCounterElement.textContent = `${gameState.currentTurn}`;
 
+    // NOVO: Habilita/Desabilita botões com base no AP
+    collectBtn.disabled = (gameState.player.stats.AP < 1);
+    investigateBtn.disabled = (gameState.player.stats.AP < 1);
+    document.getElementById('call-attention-btn').disabled = (gameState.player.stats.AP < 2); // Novo botão
+
+    // Habilita/Desabilita o botão de END TURN (Agora só reseta AP/MP)
+    endTurnBtn.disabled = (gameState.player.stats.AP === gameState.player.stats.maxAP && gameState.player.stats.MP === gameState.player.stats.maxMP);
+    
     // Habilita/Desabilita o botão de upgrade (Custo fixo: 10 de cada recurso)
-    upgradeBtn.disabled = (gameState.player.resources.scrap < 10 || 
-                          gameState.player.resources.water < 10 || 
-                          gameState.player.resources.food < 10);
+    upgradeBtn.disabled = (gameState.player.resources.scrap < 10 || gameState.player.resources.water < 10 || gameState.player.resources.food < 10);
 }
 
 // ====================================================================
@@ -189,24 +214,24 @@ function updateStatusPanel() {
 
 /** Lida com a tentativa de mover o Kid para uma nova célula. */
 function handleMoveAttempt(event) {
-    if (gameState.currentTurn > MAX_TURNS || gameState.player.stats.hp <= 0 || gameState.isCombat) return;
+    if (gameState.currentTurn > MAX_TURNS || gameState.player.stats.hp <= 0 || gameState.isCombat || gameState.player.stats.MP <= 0) return;
 
-    const targetX = parseInt(event.target.dataset.x);
-    const targetY = parseInt(event.target.dataset.y);
-    const currentX = gameState.player.x;
-    const currentY = gameState.player.y;
-
-    // Calcula a distância de Manhattan (apenas 1 passo na horizontal ou vertical)
-    const distance = Math.abs(targetX - currentX) + Math.abs(targetY - currentY);
+    // ... (cálculo de distância e verificação)
 
     if (distance === 1) {
         // Movimento válido
         gameState.player.x = targetX;
         gameState.player.y = targetY;
-        logMessage(`Moved to [${targetX}, ${targetY}] - Biome: ${getCell(targetX, targetY).biome.name}`);
         
-        // Finaliza o turno após o movimento
-        endTurn();
+        // NOVO: Consome 1 MP
+        gameState.player.stats.MP--; 
+        
+        logMessage(`Moved to [${targetX}, ${targetY}]. MP remaining: ${gameState.player.stats.MP}`);
+        
+        // APENAS RENDERIZA E ATUALIZA O STATUS, NÃO ENCERRA O TURNO
+        renderMap();
+        updateStatusPanel();
+        
     } else {
         logMessage("Invalid move! You can only move one square horizontally or vertically.", 'yellow');
     }
@@ -214,47 +239,60 @@ function handleMoveAttempt(event) {
 
 /** Ação de Coletar Recurso */
 function collectResource() {
-    if (gameState.isCombat || gameState.currentTurn > MAX_TURNS) return;
+    if (gameState.isCombat || gameState.player.stats.AP < 1) return;
 
     const currentCell = getCell(gameState.player.x, gameState.player.y);
-    const resourceName = currentCell.biome.resource.toLowerCase();
+    const resourceName = currentCell.biome.resource.toLowerCase().replace(' ', ''); // Trata 'Clean Water'
     
-    // Calcula a quantidade coletada (Base 1 + Sorte)
     let collectedAmount = 1 + Math.floor(Math.random() * 3); 
     
-    // Bônus da Tribo: Se o Kid estiver no seu bioma de bônus, ganha +2
     if (currentCell.biome.name === gameState.player.tribe.bonus) {
         collectedAmount += 2;
         logMessage(`Tribe Bonus: Extra ${collectedAmount} ${resourceName} collected!`, 'lime');
     }
 
     gameState.player.resources[resourceName] += collectedAmount;
-    logMessage(`Successfully collected ${collectedAmount} ${resourceName} from the ${currentCell.biome.name}.`);
     
-    // Finaliza o turno após a ação
-    endTurn();
+    // NOVO: Consome 1 AP
+    gameState.player.stats.AP--; 
+
+    logMessage(`Successfully collected ${collectedAmount} ${resourceName}. AP remaining: ${gameState.player.stats.AP}.`);
+    
+    updateStatusPanel(); 
 }
 
 /** Ação de Investigar (Chance de Inimigo ou Item) */
 function investigate() {
-    if (gameState.isCombat || gameState.currentTurn > MAX_TURNS) return;
+    if (gameState.isCombat || gameState.player.stats.AP < 1) return;
 
     const currentCell = getCell(gameState.player.x, gameState.player.y);
 
+    gameState.player.stats.AP--; // Consome 1 AP
+    
     if (currentCell.hasEnemy) {
         logMessage("An enemy lurks here! Combat initiated!", 'red');
-        startCombat();
-    } else if (Math.random() < 0.5) { // 50% de chance de encontrar algo
-        // Encontra um item raro (água ou scrap)
+        startCombat(ENEMY.MUTANT); // Passa um inimigo padrão
+    } else if (Math.random() < 0.5) {
         const rareResource = (Math.random() < 0.5) ? 'water' : 'scrap';
         const amount = Math.floor(Math.random() * 5) + 1;
         gameState.player.resources[rareResource] += amount;
-        logMessage(`Found a cache of ${amount} ${rareResource} hidden in the ${currentCell.biome.name} ruins!`, 'lime');
-        endTurn();
+        logMessage(`Found a cache of ${amount} ${rareResource} hidden! AP remaining: ${gameState.player.stats.AP}.`, 'lime');
+        updateStatusPanel();
     } else {
-        logMessage("Investigation complete. Found nothing of value.", 'yellow');
-        endTurn();
+        logMessage("Investigation complete. Found nothing of value. AP remaining: ${gameState.player.stats.AP}.", 'yellow');
+        updateStatusPanel();
     }
+}
+
+/** Ação de Chamar Atencao (Combate Imediato) */
+
+function callAttention() {
+    if (gameState.isCombat || gameState.player.stats.AP < 2) return;
+
+    gameState.player.stats.AP -= 2; // Consome 2 AP
+    
+    logMessage("You called attention from the Wasteland! A fierce Drone is approaching!", 'red');
+    startCombat(ENEMY.DRONE); // Garante um Drone (mais fraco, recompensa padrão)
 }
 
 /** Lógica de Combate Simples */
@@ -334,19 +372,26 @@ function performUpgrade() {
 // ====================================================================
 
 /** Lógica executada no final de cada turno. */
-function endTurn(advanceTurn = true) {
-    if (advanceTurn) {
-        gameState.currentTurn++;
+function endTurn() {
+    // Apenas finaliza a expedição se o limite de turnos (dias) for atingido
+    if (gameState.currentTurn >= MAX_TURNS) {
+        gameOver(true);
+        return;
     }
+    
+    // 1. Avança o contador da Expedição (Dias)
+    gameState.currentTurn++;
 
-    if (gameState.currentTurn <= MAX_TURNS) {
-        renderMap();
-        updateStatusPanel();
-        toggleActionButtons(true);
-        logMessage("Turn ended. Waiting for your next move.");
-    } else {
-        gameOver(true); // Fim da expedição (sucesso se chegou ao fim)
-    }
+    // 2. Reseta AP e MP para o próximo dia
+    gameState.player.stats.AP = gameState.player.stats.maxAP;
+    gameState.player.stats.MP = gameState.player.stats.maxMP;
+    
+    // 3. Spawna novos inimigos e eventos (para o próximo dia)
+    generateMap(); // Regenera o mapa com novos inimigos
+    
+    renderMap();
+    updateStatusPanel();
+    logMessage(`--- DAY ${gameState.currentTurn} START --- AP and MP fully restored.`, 'yellow');
 }
 
 /** Lida com o fim do jogo. */
@@ -365,29 +410,38 @@ function gameOver(success) {
 
 /** Inicializa o estado do jogo ao carregar a página. */
 function initializeGame() {
-    // Escolhe uma tribo aleatória para iniciar o jogo
     const tribeKeys = Object.keys(TRIBES);
     const selectedTribeKey = tribeKeys[Math.floor(Math.random() * tribeKeys.length)];
     const selectedTribe = TRIBES[selectedTribeKey];
 
-    // Configura o estado do jogador
+    // Configurar o estado do jogador
     gameState.player.tribe = selectedTribe;
     gameState.player.stats.strength = selectedTribe.stats.strength;
     gameState.player.stats.hp = selectedTribe.stats.hp;
     gameState.player.stats.maxHp = selectedTribe.stats.hp;
     gameState.player.stats.luck = selectedTribe.stats.luck;
-    gameState.player.x = 0; 
-    gameState.player.y = GRID_SIZE - 1; // Posição inicial no canto inferior esquerdo
-
-    // Inicia o mapa e o contador
+    
+    // NOVO: Configurar Action/Movement Points
+    gameState.player.stats.AP = selectedTribe.stats.AP;
+    gameState.player.stats.maxAP = selectedTribe.stats.AP;
+    gameState.player.stats.MP = selectedTribe.stats.MP;
+    gameState.player.stats.maxMP = selectedTribe.stats.MP;
+    
+    // Iniciar o mapa e o contador de EXPEDIÇÃO (o contador de turno agora é por AP)
     gameState.currentTurn = 1;
     generateMap();
+    
+    // Posição inicial do Kid
+    gameState.player.x = 0;
+    gameState.player.y = GRID_SIZE - 1; 
+
+    // Renderiza o UI
     renderMap();
     updateStatusPanel();
-    toggleActionButtons(true);
-    
-    logMessage(`Expedition started! You are a ${selectedTribe.name} Kid.`, 'lime');
-    logMessage("Click on an adjacent square to move, then use an action.");
+    toggleActionButtons(true); // Habilita botões no início
+
+    logMessage(`Expedition started! You are a ${selectedTribe.name} Kid. AP: ${selectedTribe.stats.AP}, MP: ${selectedTribe.stats.MP}.`, 'lime');
+    logMessage("Use Movement Points (MP) to move, then Action Points (AP) to interact.");
 }
 
 // --- LISTENERS DE EVENTOS ---
@@ -397,8 +451,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Adiciona listeners aos botões
     collectBtn.addEventListener('click', collectResource);
     investigateBtn.addEventListener('click', investigate);
-    endTurnBtn.addEventListener('click', endTurn); // Este é apenas um 'Skip Turn'
+    endTurnBtn.addEventListener('click', endTurn); 
     upgradeBtn.addEventListener('click', performUpgrade);
+
+    // NOVO LISTENER:
+    const callAttentionBtn = document.createElement('button');
+    callAttentionBtn.id = 'call-attention-btn';
+    callAttentionBtn.className = 'action-btn';
+    callAttentionBtn.textContent = 'CALL ATTENTION (2 AP)';
+    document.querySelector('.action-buttons').appendChild(callAttentionBtn);
+    callAttentionBtn.addEventListener('click', callAttention);
     
     // Listener de conexão da Wallet (FUTURO)
     document.getElementById('connect-wallet-btn').addEventListener('click', () => {
