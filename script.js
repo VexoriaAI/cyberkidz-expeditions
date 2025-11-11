@@ -274,15 +274,15 @@ function renderEquippedItems() {
 
 // ATUALIZADO: Renderiza o grid de 3 colunas
 function renderInventory() {
-    const inventoryList = document.getElementById('inventory-grid-materials');
-    inventoryList.innerHTML = ''; // Limpa o grid
+    const inventoryGrid = document.getElementById('inventory-grid-materials');
+    inventoryGrid.innerHTML = ''; // Limpa o grid
     for (const materialId in gameState.player.inventory.materials) {
         const material = MATERIALS[materialId];
         const amount = gameState.player.inventory.materials[materialId];
         if (material) {
             // Adiciona as 3 colunas
-            inventoryList.innerHTML += `
-                <img src="images/${material.icon}" alt="${material.name}" class="inventory-item-icon" title="${material.name}">
+            inventoryGrid.innerHTML += `
+                <img src="images/${material.icon}" alt="${material.name}" class="inventory-item-icon" title="${material.name}" onerror="this.style.display='none'">
                 <span class="inventory-item-name">${material.name}:</span>
                 <span class="inventory-item-qty" id="inv-${materialId}">${amount}</span>
             `;
@@ -297,11 +297,12 @@ function renderCraftingRecipes() {
     tabRefine.innerHTML = '<h4>Refine Components</h4>';
     tabCraft.innerHTML = '<h4>Craft Empty Gear</h4>';
 
+    // Gera receitas de Refino
     for (const compId in RECIPES_REFINE) {
         const recipe = RECIPES_REFINE[compId];
         // Cria o HTML para os ícones
         let costHtml = Object.entries(recipe.cost).map(([matId, amt]) => `
-            <img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}"> x${amt}
+            <img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}" onerror="this.style.display='none'"> x${amt}
         `).join(' + ');
 
         tabRefine.innerHTML += `
@@ -311,10 +312,11 @@ function renderCraftingRecipes() {
             </div>`;
     }
 
+    // Gera receitas de Craft (Vazio)
     for (const itemId in RECIPES_CRAFT_EMPTY) {
         const recipe = RECIPES_CRAFT_EMPTY[itemId];
         let costHtml = Object.entries(recipe.cost).map(([matId, amt]) => `
-            <img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}"> x${amt}
+            <img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}" onerror="this.style.display='none'"> x${amt}
         `).join(' + ');
 
         tabCraft.innerHTML += `
@@ -505,7 +507,6 @@ function initializeGame() {
     logMessage(`Day ${gameState.currentDay} started! You have ${gameState.expedition.currentAP} AP and ${gameState.expedition.currentMP} MP.`, 'lime');
 }
 
-// ATUALIZADO: Preenche todos os novos campos da UI
 function updateGameStatusPanel() {
     const kid = gameState.player.activeKid;
     const stats = gameState.expedition.stats;
@@ -535,7 +536,7 @@ function updateGameStatusPanel() {
     let found = 0;
     for (const res in gameState.expedition.resourcesFound) {
         const amount = gameState.expedition.resourcesFound[res];
-        if (amount > 0 && MATERIALS[res]) { // Verifica se o material existe
+        if (amount > 0 && MATERIALS[res]) { 
             resourceList.innerHTML += `<li>${MATERIALS[res].name}: <span>${amount}</span></li>`;
             found++;
         }
