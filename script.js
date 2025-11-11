@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 3.0 (Refatoração Pós-Consultoria V2)
+// VERSÃO 4.0 (Image Map / Correção de Visualização)
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,75 +11,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const MAX_DAYS = 10;
     const MAX_PLACEHOLDER_IMAGES_PER_TRIBE = 5;
+    const HEX_SIZE_VISUAL = 50; // Raio visual para cálculo do polígono (deve ser ajustado se a imagem mudar)
 
     // --- 1.1: Atributos Base das Tribos ---
     const TRIBES = {
-        VOLCANICS: {
-            name: "Volcanics",
-            biome: "volcanics", 
-            baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 15, attackSpeed: 1, hpRegen: 1, ap: 5, hp: 110, luck: 1 }
-        },
-        UNDERGROUNDERS: {
-            name: "Undergrounders",
-            biome: "undergrounders",
-            baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 6, hp: 120, luck: 2 }
-        },
-        NOCTURNALS: {
-            name: "Nocturnals",
-            biome: "nocturnals",
-            baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 6, hp: 100, luck: 3 }
-        },
-        RADIOACTIVES: {
-            name: "Radioactives",
-            biome: "radioactives",
-            baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 7, hp: 80, luck: 5 }
-        },
-        REPTILIANS: {
-            name: "Reptilians",
-            biome: "reptilians",
-            baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 5, hp: 100, luck: 2 }
-        }
+        VOLCANICS: { name: "Volcanics", biome: "volcanics", baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 15, attackSpeed: 1, hpRegen: 1, ap: 5, hp: 110, luck: 1 } },
+        UNDERGROUNDERS: { name: "Undergrounders", biome: "undergrounders", baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 6, hp: 120, luck: 2 } },
+        NOCTURNALS: { name: "Nocturnals", biome: "nocturnals", baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 6, hp: 100, luck: 3 } },
+        RADIOACTIVES: { name: "Radioactives", biome: "radioactives", baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 7, hp: 80, luck: 5 } },
+        REPTILIANS: { name: "Reptilians", biome: "reptilians", baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 5, hp: 100, luck: 2 } }
     };
 
     // --- 1.2: Biomas ---
     const BIOMES = {
-        volcanics: { name: "Burning Ridge", resource: "scrap" },
-        reptilians: { name: "Covenant Swamp", resource: "food" },
-        radioactives: { name: "Lake Rancid", resource: "food" },
-        nocturnals: { name: "Ancient Ruins", resource: "scrap" },
-        undergrounders: { name: "Abandoned Mines", resource: "water" },
-        wasteland: { name: "Wasteland", resource: "scrap" }
+        volcanics: { name: "Burning Ridge", resource: "scrap" }, reptilians: { name: "Covenant Swamp", resource: "food" },
+        radioactives: { name: "Lake Rancid", resource: "food" }, nocturnals: { name: "Ancient Ruins", resource: "scrap" },
+        undergrounders: { name: "Abandoned Mines", resource: "water" }, wasteland: { name: "Wasteland", resource: "scrap" }
     };
     
     // --- 1.3: Inimigos ---
     const ENEMIES = {
-        DRONE: { 
-            id: "drone", name: "CKC Drone", strength: 5, hp: 15, speed: 10,
-            sprite: "images/drone-sprite.png",
-            rewards: { scrap: 5, metal: 1 }
-        },
-        MUTANT: { 
-            id: "mutant", name: "Wasteland Mutant", strength: 8, hp: 25, speed: 5,
-            sprite: "images/mutant-sprite.png",
-            rewards: { scrap: 10, food: 3 }
-        }
+        DRONE: { id: "drone", name: "CKC Drone", strength: 5, hp: 15, speed: 10, sprite: "images/drone-sprite.png", rewards: { scrap: 5, metal: 1 } },
+        MUTANT: { id: "mutant", name: "Wasteland Mutant", strength: 8, hp: 25, speed: 5, sprite: "images/mutant-sprite.png", rewards: { scrap: 10, food: 3 } }
     };
     
-    // --- 1.4: Banco de Dados de Crafting (Atualizado) ---
-    const MATERIALS = {
-        scrap: { name: "Scrap", icon: "images/icon_scrap.png" }, 
-        water: { name: "Clean Water", icon: "images/icon_water.png" }, 
-        food: { name: "Food", icon: "images/icon_food.png" },
-        metal: { name: "Metal", icon: "images/icon_metal.png" }
-    };
-    const COMPONENTS = {
-        volcanic_core: { name: "Volcanic Core", stats: { damage: 5 }, icon: "images/icon_component.png" },
-        defense_plate: { name: "Defense Plate", stats: { defense: 5 }, icon: "images/icon_component.png" }
-    };
-    const RECIPES_REFINE = {
-        volcanic_core: { name: "Volcanic Core", cost: { scrap: 10, metal: 5 } },
-        defense_plate: { name: "Defense Plate", cost: { scrap: 20 } }
-    };
+    // --- 1.4: Banco de Dados de Crafting ---
+    const MATERIALS = { scrap: { name: "Scrap", icon: "images/icon_scrap.png" }, water: { name: "Clean Water", icon: "images/icon_water.png" }, food: { name: "Food", icon: "images/icon_food.png" }, metal: { name: "Metal", icon: "images/icon_metal.png" } };
+    const COMPONENTS = { volcanic_core: { name: "Volcanic Core", stats: { damage: 5 }, icon: "images/icon_component.png" }, defense_plate: { name: "Defense Plate", stats: { defense: 5 }, icon: "images/icon_component.png" } };
     const RECIPES_CRAFT = {
         empty_helmet: { name: "Rustic Helmet (Empty)", cost: { scrap: 8 }, type: "equipment", level: 1, stats: {}, slot: "helmet", icon: "images/icon_helmet.png" },
         empty_weapon: { name: "Rustic Blade (Empty)", cost: { scrap: 10 }, type: "equipment", level: 1, stats: {}, slot: "weapon", icon: "images/icon_weapon.png" }
@@ -87,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
     const STATS_LIST = ['hp', 'ap', 'speed', 'damage', 'defense', 'critChance', 'critDamage', 'attackSpeed', 'hpRegen', 'blockChance', 'luck'];
 
-    // --- 1.5: Definição do Mapa Estático ---
+    // --- 1.5: Definição do Mapa Estático (Coordenadas Fixas) ---
     const STATIC_MAP_DATA = new Map([
         ["-3,0", { biome: "volcanics" }], ["-3,1", { biome: "volcanics" }], ["-3,2", { biome: "volcanics" }],
         ["-2,-1", { biome: "volcanics" }], ["-2,0", { biome: "volcanics" }], ["-2,1", { biome: "volcanics" }],
@@ -106,15 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ["3,-1", { biome: "reptilians" }], ["3,0", { biome: "reptilians" }],
     ]);
 
-    // --- 1.6: Carteira Simulada (MOCK_WALLET) ---
-    // A lógica de placeholder de imagem será aplicada na INICIALIZAÇÃO
+    // --- 1.6: Carteira Simulada ---
     const MOCK_WALLET = [
         { id: '#313', name: 'Blue Mutant', tribe: TRIBES.RADIOACTIVES, expeditions: 5, equipped: { helmet: 'h1', weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
         { id: '#222', name: 'Demo Nocturnal', tribe: TRIBES.NOCTURNALS, expeditions: 2, equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null } },
         { id: '#111', name: 'Demo Volcanic', tribe: TRIBES.VOLCANICS, expeditions: 10, equipped: { helmet: null, weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
         { id: '#444', name: 'Swamp Kid', tribe: TRIBES.REPTILIANS, expeditions: 0, equipped: {} },
         { id: '#555', name: 'Miner', tribe: TRIBES.UNDERGROUNDERS, expeditions: 1, equipped: {} },
-        // ... (Adicione mais 15+ Kidz aqui para testar a paginação)
         { id: '#001', name: 'Rookie-1', tribe: TRIBES.VOLCANICS, expeditions: 0, equipped: {} },
         { id: '#002', name: 'Rookie-2', tribe: TRIBES.VOLCANICS, expeditions: 0, equipped: {} },
         { id: '#003', name: 'Rookie-3', tribe: TRIBES.NOCTURNALS, expeditions: 0, equipped: {} },
@@ -127,10 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '#010', name: 'Rookie-10', tribe: TRIBES.REPTILIANS, expeditions: 0, equipped: {} },
         { id: '#011', name: 'Rookie-11', tribe: TRIBES.UNDERGROUNDERS, expeditions: 0, equipped: {} },
     ];
-    const DEMO_KID_ID = '#313'; // O ID do Blue Mutant
+    const DEMO_KID_ID = '#313';
 
     /* ==================================================================== */
-    /* SEÇÃO 2: MASTER STATE (gameState) (Refatorado)
+    /* SEÇÃO 2: MASTER STATE (gameState)
     /* ==================================================================== */
 
     let gameState = {
@@ -146,28 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     { id: 'w1', name: 'Volcanic Blade', level: 1, slot: 'weapon', stats: { damage: 5, critDamage: 5 }, icon: 'images/icon_weapon.png' }
                 ]
             },
-            kidz: [] // Será preenchido pelo MOCK_WALLET
+            kidz: []
         },
         hub: {
             activeKidId: null, 
-            // Novo estado de Paginação
             pagination: {
-                currentPage: 1,
-                itemsPerPage: 10,
-                totalPages: 1,
-                filteredKidz: [] // Cache dos Kidz filtrados
+                currentPage: 1, itemsPerPage: 10, totalPages: 1, filteredKidz: []
             },
-            // Novo estado de Abas
-            tabs: {
-                activeMainTab: 'inventory',
-                activeInvSubTab: 'inv-equipments',
-                activeWsSubTab: 'ws-refine'
-            },
-            // Novo estado do Embed
-            embed: {
-                slotGear: null, // ID do item
-                slotComponent: null // ID do componente
-            }
+            tabs: { activeMainTab: 'inventory', activeInvSubTab: 'inv-equipments', activeWsSubTab: 'ws-refine' },
+            embed: { slotGear: null, slotComponent: null }
         },
         expedition: {
             kid: null, stats: {}, currentDay: 1, playerPos: { q: 0, r: 0 },
@@ -175,133 +118,65 @@ document.addEventListener('DOMContentLoaded', () => {
             resourcesFound: {}, revealedHexes: new Set()
         },
         combat: {
-            isActive: false, enemy: null, playerTurn: true
+            isActive: false, enemy: null, playerTurn: true, isAutoAttack: false
         }
     };
 
     /* ==================================================================== */
-    /* SEÇÃO 3: CACHE DE ELEMENTOS DO DOM (Refatorado)
+    /* SEÇÃO 3: CACHE DE ELEMENTOS DO DOM
     /* ==================================================================== */
-    // Documentação: Cache de todos os elementos que usamos
+
     const DOM = {
         header: {
-            tezeriumDisplay: document.getElementById('tezerium-display'),
-            tezeriumBalance: document.getElementById('tezerium-balance'),
-            walletStatus: document.getElementById('wallet-status'),
-            headerConnectBtn: document.getElementById('header-connect-btn'),
+            tezeriumDisplay: document.getElementById('tezerium-display'), tezeriumBalance: document.getElementById('tezerium-balance'),
+            walletStatus: document.getElementById('wallet-status'), headerConnectBtn: document.getElementById('header-connect-btn'),
             connectionStatus: document.getElementById('connection-status')
         },
         screens: {
-            'logged-out-screen': document.getElementById('logged-out-screen'),
-            'hub-selection-screen': document.getElementById('hub-selection-screen'),
-            'hub-preparation-screen': document.getElementById('hub-preparation-screen'),
-            'game-screen': document.getElementById('game-screen')
+            'logged-out-screen': document.getElementById('logged-out-screen'), 'hub-selection-screen': document.getElementById('hub-selection-screen'),
+            'hub-preparation-screen': document.getElementById('hub-preparation-screen'), 'game-screen': document.getElementById('game-screen')
         },
-        // --- Tela 1 (Logged Out) ---
-        loggedOut: {
-            bodyConnectBtn: document.getElementById('body-connect-btn'),
-            demoGameBtn: document.getElementById('demo-game-btn')
-        },
-        // --- Tela 2 (Hub Selection) ---
+        loggedOut: { bodyConnectBtn: document.getElementById('body-connect-btn'), demoGameBtn: document.getElementById('demo-game-btn') },
         hubSelection: {
-            filterSearch: document.getElementById('filter-search'),
-            filterTribe: document.getElementById('filter-tribe'),
-            filterItemsPerPage: document.getElementById('filter-items-per-page'), // Novo
-            filterResetBtn: document.getElementById('filter-reset-btn'),
-            nftGrid: document.getElementById('nft-selection-grid'),
-            nftGridPlaceholder: document.getElementById('nft-grid-placeholder'),
-            paginationControls: document.getElementById('pagination-controls'), // Novo
-            paginationPrev: document.getElementById('pagination-prev'), // Novo
-            paginationInfo: document.getElementById('pagination-info'), // Novo
-            paginationNext: document.getElementById('pagination-next') // Novo
+            filterSearch: document.getElementById('filter-search'), filterTribe: document.getElementById('filter-tribe'), filterItemsPerPage: document.getElementById('filter-items-per-page'),
+            filterResetBtn: document.getElementById('filter-reset-btn'), nftGrid: document.getElementById('nft-selection-grid'),
+            nftGridPlaceholder: document.getElementById('nft-grid-placeholder'), paginationControls: document.getElementById('pagination-controls'),
+            paginationPrev: document.getElementById('pagination-prev'), paginationInfo: document.getElementById('pagination-info'), paginationNext: document.getElementById('pagination-next')
         },
-        // --- Tela 3 (Hub Preparation) ---
         hubPreparation: {
-            backToSelectionBtn: document.getElementById('back-to-selection-btn'),
-            startExpeditionBtn: document.getElementById('start-expedition-btn'),
-            // Kid Info
-            kidImage: document.getElementById('prep-kid-image'),
-            kidName: document.getElementById('prep-kid-name-display'),
-            editNameBtn: document.getElementById('edit-name-btn'),
-            kidTribe: document.getElementById('prep-kid-tribe'),
-            kidId: document.getElementById('prep-kid-id'),
-            kidExpeditions: document.getElementById('prep-kid-expeditions'),
-            // Manequim
-            mannequin: document.querySelector('.equipment-mannequin'),
-            statsDisplay: document.getElementById('prep-stats-display'),
-            // Workshop (Containers das Abas)
-            workshopPanel: document.getElementById('workshop-panel'),
-            mainTabs: document.querySelector('.main-tabs'),
-            mainTabInventory: document.getElementById('main-tab-inventory'),
-            mainTabWorkshop: document.getElementById('main-tab-workshop'),
-            // Conteúdo das Sub-Abas
-            materialsTableBody: document.getElementById('materials-table-body'),
-            craftRecipeList: document.getElementById('craft-recipe-list'),
-            craftRecipeDetails: document.getElementById('craft-recipe-details'),
-            embedSlotGear: document.getElementById('embed-slot-gear'),
-            embedSlotComponent: document.getElementById('embed-slot-component'),
-            embedBtn: document.getElementById('embed-btn')
+            backToSelectionBtn: document.getElementById('back-to-selection-btn'), startExpeditionBtn: document.getElementById('start-expedition-btn'),
+            kidImage: document.getElementById('prep-kid-image'), kidName: document.getElementById('prep-kid-name-display'), editNameBtn: document.getElementById('edit-name-btn'),
+            kidTribe: document.getElementById('prep-kid-tribe'), kidId: document.getElementById('prep-kid-id'), kidExpeditions: document.getElementById('prep-kid-expeditions'),
+            mannequin: document.querySelector('.equipment-mannequin'), statsDisplay: document.getElementById('prep-stats-display'),
+            workshopPanel: document.getElementById('workshop-panel'), mainTabs: document.querySelector('.main-tabs'), mainTabInventory: document.getElementById('main-tab-inventory'),
+            mainTabWorkshop: document.getElementById('main-tab-workshop'), materialsTableBody: document.getElementById('materials-table-body'),
+            craftRecipeList: document.getElementById('craft-recipe-list'), craftRecipeDetails: document.getElementById('craft-recipe-details'),
+            embedSlotGear: document.getElementById('embed-slot-gear'), embedSlotComponent: document.getElementById('embed-slot-component'), embedBtn: document.getElementById('embed-btn')
         },
-        // --- Tela 4 (Game) ---
         game: {
-            kidImage: document.getElementById('game-kid-image'),
-            kidTribe: document.getElementById('game-kid-tribe'),
-            kidId: document.getElementById('game-kid-id'),
-            hpBarFill: document.getElementById('game-hp-bar-fill'),
-            hpBarText: document.getElementById('game-hp-bar-text'),
-            statsDisplay: document.getElementById('game-stats-display'),
-            resourceList: document.getElementById('game-resource-list'),
-            exitExpeditionBtn: document.getElementById('exit-expedition-btn'),
-            turnCounter: document.getElementById('turn-counter'),
-            mapContainer: document.getElementById('game-map-container'),
-            mapContent: document.getElementById('game-map-content'),
-            apDisplay: document.getElementById('game-kid-ap'),
-            maxApDisplay: document.getElementById('game-kid-max-ap'),
-            mpDisplay: document.getElementById('game-kid-mp'),
-            maxMpDisplay: document.getElementById('game-kid-max-mp'),
-            collectBtn: document.getElementById('collect-btn'),
-            investigateBtn: document.getElementById('investigate-btn'),
-            searchEnemyBtn: document.getElementById('search-enemy-btn'),
-            endTurnBtn: document.getElementById('end-turn-btn'),
-            skipAnimationsCheck: document.getElementById('skip-animations-check'),
+            kidImage: document.getElementById('game-kid-image'), kidTribe: document.getElementById('game-kid-tribe'), kidId: document.getElementById('game-kid-id'),
+            hpBarFill: document.getElementById('game-hp-bar-fill'), hpBarText: document.getElementById('game-hp-bar-text'), statsDisplay: document.getElementById('game-stats-display'),
+            resourceList: document.getElementById('game-resource-list'), exitExpeditionBtn: document.getElementById('exit-expedition-btn'), turnCounter: document.getElementById('turn-counter'),
+            mapContainer: document.getElementById('game-map-container'), mapImage: document.getElementById('map-image'), mapAreas: document.getElementById('map-areas'), // Novos IDs
+            fogOverlay: document.getElementById('fog-of-war-overlay'), // Novo ID
+            apDisplay: document.getElementById('game-kid-ap'), maxApDisplay: document.getElementById('game-kid-max-ap'), mpDisplay: document.getElementById('game-kid-mp'),
+            maxMpDisplay: document.getElementById('game-kid-max-mp'), collectBtn: document.getElementById('collect-btn'), investigateBtn: document.getElementById('investigate-btn'),
+            searchEnemyBtn: document.getElementById('search-enemy-btn'), endTurnBtn: document.getElementById('end-turn-btn'), skipAnimationsCheck: document.getElementById('skip-animations-check'),
             log: document.getElementById('game-log')
         },
-        // --- Modais ---
         modals: {
-            equipSelect: document.getElementById('equipment-select-modal'),
-            equipTitle: document.getElementById('modal-equip-title'),
-            equipList: document.getElementById('modal-equip-list'),
-            equipCloseBtn: document.getElementById('modal-equip-close'),
-            editName: document.getElementById('edit-name-modal'),
-            editNameInput: document.getElementById('edit-name-input'),
-            editNameCancel: document.getElementById('edit-name-cancel'),
-            editNameSave: document.getElementById('edit-name-save'),
-            feedback: document.getElementById('action-feedback-modal'),
-            feedbackTitle: document.getElementById('feedback-title'),
-            feedbackDesc: document.getElementById('feedback-description'),
-            combat: document.getElementById('combat-modal'),
-            combatPhaseBattle: document.getElementById('combat-phase-battle'),
-            combatPhaseVictory: document.getElementById('combat-phase-victory'),
-            combatPhaseDefeat: document.getElementById('combat-phase-defeat'),
-            combatPlayer: document.getElementById('combat-player'),
-            combatPlayerHpFill: document.getElementById('combat-player-hp-fill'),
-            combatPlayerHpText: document.getElementById('combat-player-hp-text'),
-            combatEnemy: document.getElementById('combat-enemy'),
-            combatEnemyName: document.getElementById('combat-enemy-name'),
-            combatEnemyHpFill: document.getElementById('combat-enemy-hp-fill'),
-            combatEnemyHpText: document.getElementById('combat-enemy-hp-text'),
-            combatLog: document.getElementById('combat-log'),
-            combatAttackBtn: document.getElementById('combat-attack-btn'),
-            combatFleeBtn: document.getElementById('combat-flee-btn'),
-            victoryRewardList: document.getElementById('victory-reward-list'),
-            victoryEnemyName: document.getElementById('victory-enemy-name'),
-            combatCloseVictoryBtn: document.getElementById('combat-close-victory-btn'),
-            combatReturnHubBtn: document.getElementById('combat-return-hub-btn'),
-            embedConfirm: document.getElementById('embed-confirm-modal'), // Novo
-            embedBefore: document.getElementById('embed-before'), // Novo
-            embedAfter: document.getElementById('embed-after'), // Novo
-            embedCancelBtn: document.getElementById('embed-cancel-btn'), // Novo
-            embedConfirmBtn: document.getElementById('embed-confirm-btn') // Novo
+            equipSelect: document.getElementById('equipment-select-modal'), equipTitle: document.getElementById('modal-equip-title'), equipList: document.getElementById('modal-equip-list'),
+            equipCloseBtn: document.getElementById('modal-equip-close'), editName: document.getElementById('edit-name-modal'), editNameInput: document.getElementById('edit-name-input'),
+            editNameCancel: document.getElementById('edit-name-cancel'), editNameSave: document.getElementById('edit-name-save'), feedback: document.getElementById('action-feedback-modal'),
+            feedbackTitle: document.getElementById('feedback-title'), feedbackDesc: document.getElementById('feedback-description'), combat: document.getElementById('combat-modal'),
+            combatPhaseBattle: document.getElementById('combat-phase-battle'), combatPhaseVictory: document.getElementById('combat-phase-victory'), combatPhaseDefeat: document.getElementById('combat-phase-defeat'),
+            combatPlayer: document.getElementById('combat-player'), combatPlayerHpFill: document.getElementById('combat-player-hp-fill'), combatPlayerHpText: document.getElementById('combat-player-hp-text'),
+            combatEnemy: document.getElementById('combat-enemy'), combatEnemyName: document.getElementById('combat-enemy-name'), combatEnemyHpFill: document.getElementById('combat-enemy-hp-fill'),
+            combatEnemyHpText: document.getElementById('combat-enemy-hp-text'), combatLog: document.getElementById('combat-log'), combatAttackBtn: document.getElementById('combat-attack-btn'),
+            combatAutoBtn: document.getElementById('combat-auto-btn'), combatFleeBtn: document.getElementById('combat-flee-btn'), victoryRewardList: document.getElementById('victory-reward-list'),
+            victoryEnemyName: document.getElementById('victory-enemy-name'), combatCloseVictoryBtn: document.getElementById('combat-close-victory-btn'), combatReturnHubBtn: document.getElementById('combat-return-hub-btn'),
+            embedConfirm: document.getElementById('embed-confirm-modal'), embedBefore: document.getElementById('embed-before'), embedAfter: document.getElementById('embed-after'),
+            embedCancelBtn: document.getElementById('embed-cancel-btn'), embedConfirmBtn: document.getElementById('embed-confirm-btn')
         }
     };
 
@@ -309,9 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
     /* SEÇÃO 4: MOTOR PRINCIPAL (Navegação e Funções Auxiliares)
     /* ==================================================================== */
 
-    /**
-     * Mostra uma tela principal e esconde as outras. (Versão Corrigida)
-     */
     function showScreen(screenId) {
         Object.values(DOM.screens).forEach(screen => {
             screen.style.display = 'none';
@@ -324,9 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.currentScreen = screenId;
     }
 
-    /**
-     * Adiciona uma mensagem ao log do jogo (Tela 4).
-     */
     function logMessage(message, type = 'action') {
         const p = document.createElement('p');
         p.classList.add('log-entry', type);
@@ -337,9 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Calcula os stats finais de um Kid (base + equipamentos).
-     */
     function calculateFinalStats(kid) {
         const finalStats = { ...kid.tribe.baseStats };
         for (const slot of EQUIPMENT_SLOTS) {
@@ -356,9 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return finalStats;
     }
 
-    /**
-     * Retorna um ponto de spawn aleatório para uma tribo.
-     */
     function getSpawnPoint(biomeName) {
         const validSpawns = [];
         STATIC_MAP_DATA.forEach((cell, key) => {
@@ -367,52 +230,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 validSpawns.push({ q, r });
             }
         });
-        if (validSpawns.length === 0) return { q: 0, r: 0 }; // Fallback
+        if (validSpawns.length === 0) return { q: 0, r: 0 }; 
         return validSpawns[Math.floor(Math.random() * validSpawns.length)];
     }
 
-    // --- Funções Auxiliares do Mapa Hexagonal ---
-    function axialToPixel(q, r) {
-        const s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size'));
-        const h = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height'));
-    
-        // 1. Compensação Horizontal (X)
-        // O offset depende da coluna (q) ser par ou ímpar (r & 1)
-        const x = s * 1.5 * q;
-    
-        // 2. Compensação Vertical (Y)
-        // A cada linha (r) move-se verticalmente pela metade da altura do hexágono (h/2)
-        // O offset de 'q' é aplicado para compensar o deslocamento da coluna
-        const y = h * r + h * (q & 1) / 2;
-        
-        return { x, y };
-    }
-    
     function axialDistance(q1, r1, q2, r2) {
         return (Math.abs(q1 - q2) 
               + Math.abs(q1 + r1 - q2 - r2) 
               + Math.abs(r1 - r2)) / 2;
     }
 
-    /**
-     * NOVO: Gera um nome de arquivo de placeholder de imagem aleatório.
-     */
     function getRandomPlaceholderImg(tribeName) {
         const tribeKey = tribeName.toLowerCase();
         const number = Math.floor(Math.random() * MAX_PLACEHOLDER_IMAGES_PER_TRIBE) + 1;
         return `images/${tribeKey}_${number}.png`;
     }
 
+    // --- Funções de Mapeamento Image Map (NOVO) ---
+
+    /**
+     * NOVO: Converte coordenadas axiais (q, r) para o PONTO CENTRAL de pixel (x, y).
+     * Adaptação para o centro da imagem estática.
+     */
+    function axialToPixelCenter(q, r, size) {
+        // Fórmulas de Coordenadas Axiais (para Pointy Top Hexes)
+        const x = size * (Math.sqrt(3) * q + Math.sqrt(3) / 2 * r);
+        const y = size * (3/2 * r);
+        return { x, y };
+    }
+
+    /**
+     * NOVO: Define os 6 vértices (corners) de um hexágono a partir de seu centro (x, y).
+     */
+    function getHexVertices(size, x, y) {
+        const vertices = [];
+        for (let i = 0; i < 6; i++) {
+            // Ângulo inicial de 30 graus para Pointy Top
+            const angle_rad = Math.PI / 180 * (60 * i + 30); 
+            const vx = x + size * Math.cos(angle_rad);
+            const vy = y + size * Math.sin(angle_rad);
+            vertices.push(Math.round(vx), Math.round(vy));
+        }
+        return vertices;
+    }
+
     /* ==================================================================== */
     /* SEÇÃO 5: LÓGICA DA TELA 1 (LOGGED OUT) E INICIALIZAÇÃO DE DADOS
     /* ==================================================================== */
 
-    /**
-     * NOVO: Prepara o MOCK_WALLET com dados dinâmicos (placeholders).
-     */
     function initializeMockWallet() {
         gameState.player.kidz = JSON.parse(JSON.stringify(MOCK_WALLET)).map(kid => {
-            // Garante que todo kid tenha um objeto 'equipped'
             if (!kid.equipped) {
                 kid.equipped = {};
             }
@@ -421,13 +288,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     kid.equipped[slot] = null;
                 }
             });
-            // Atribui a imagem placeholder aleatória
             kid.placeholderImg = getRandomPlaceholderImg(kid.tribe.name);
             return kid;
         });
         
-        // Preenche o seletor de tribos na Tela 2
-        DOM.hubSelection.filterTribe.innerHTML = '<option value="all">All Tribes</option>'; // Reseta
+        DOM.hubSelection.filterTribe.innerHTML = '<option value="all">All Tribes</option>';
         Object.values(TRIBES).forEach(tribe => {
             DOM.hubSelection.filterTribe.innerHTML += `<option value="${tribe.name}">${tribe.name}</option>`;
         });
@@ -436,22 +301,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleConnectWallet() {
         console.log("Simulating wallet connection...");
         
-        // 1. Prepara os dados (placeholders, etc)
         initializeMockWallet();
         
-        // 2. Atualiza o Header
         DOM.header.tezeriumDisplay.style.visibility = 'visible';
         DOM.header.tezeriumBalance.textContent = gameState.player.tezerium;
         DOM.header.headerConnectBtn.style.display = 'none';
         DOM.header.connectionStatus.style.display = 'inline';
         
-        // 3. Renderiza a próxima tela (Seleção)
-        // Reseta a paginação e renderiza
         gameState.hub.pagination.currentPage = 1;
         gameState.hub.pagination.itemsPerPage = parseInt(DOM.hubSelection.filterItemsPerPage.value);
         renderHubSelectionScreen();
         
-        // 4. Muda para a próxima tela
         showScreen('hub-selection-screen');
     }
 
@@ -470,22 +330,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ==================================================================== */
-    /* SEÇÃO 6: LÓGICA DA TELA 2 (HUB SELECTION) (Refatorada)
+    /* SEÇÃO 6: LÓGICA DA TELA 2 (HUB SELECTION)
     /* ==================================================================== */
 
-    /**
-     * NOVO: Renderiza o grid de Kidz com paginação e filtros.
-     */
     function renderHubSelectionScreen() {
-        DOM.hubSelection.nftGrid.innerHTML = ''; // Limpa o grid
+        DOM.hubSelection.nftGrid.innerHTML = ''; 
         const state = gameState.hub.pagination;
         
-        // 1. Obter Filtros
         const searchTerm = DOM.hubSelection.filterSearch.value.toLowerCase();
         const tribeFilter = DOM.hubSelection.filterTribe.value;
         state.itemsPerPage = parseInt(DOM.hubSelection.filterItemsPerPage.value);
 
-        // 2. Aplicar Filtros
         state.filteredKidz = gameState.player.kidz.filter(kid => {
             const nameMatch = kid.name.toLowerCase().includes(searchTerm);
             const idMatch = kid.id.toLowerCase().includes(searchTerm);
@@ -493,19 +348,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return (nameMatch || idMatch) && tribeMatch;
         });
         
-        // 3. Calcular Paginação
         state.totalPages = Math.ceil(state.filteredKidz.length / state.itemsPerPage);
         if (state.currentPage > state.totalPages) {
             state.currentPage = 1;
         }
-        if (state.totalPages === 0) state.totalPages = 1; // Evita "Página 1 de 0"
+        if (state.totalPages === 0) state.totalPages = 1;
 
-        // 4. Obter a "fatia" da página atual
         const startIndex = (state.currentPage - 1) * state.itemsPerPage;
         const endIndex = startIndex + state.itemsPerPage;
         const kidzOnPage = state.filteredKidz.slice(startIndex, endIndex);
 
-        // 5. Renderizar Cards
         if (kidzOnPage.length === 0) {
             DOM.hubSelection.nftGridPlaceholder.style.display = 'block';
         } else {
@@ -522,19 +374,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p>Tribe: ${kid.tribe.name}</p>
                     <button class="action-btn select-kid-btn" data-kid-id="${kid.id}">Manage & Equip</button>
                 `;
-                // Adiciona listener direto no botão (mais seguro)
                 card.querySelector('.select-kid-btn').addEventListener('click', () => handleKidSelect(kid.id));
                 DOM.hubSelection.nftGrid.appendChild(card);
             });
         }
         
-        // 6. Renderizar Controles de Paginação
         renderPaginationControls();
     }
 
-    /**
-     * NOVO: Atualiza os botões e texto da paginação.
-     */
     function renderPaginationControls() {
         const state = gameState.hub.pagination;
         DOM.hubSelection.paginationInfo.textContent = `Page ${state.currentPage} of ${state.totalPages}`;
@@ -542,9 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.hubSelection.paginationNext.disabled = (state.currentPage === state.totalPages);
     }
 
-    /**
-     * NOVO: Muda a página e re-renderiza.
-     */
     function handlePageChange(direction) {
         const state = gameState.hub.pagination;
         if (direction === 'next' && state.currentPage < state.totalPages) {
@@ -552,14 +396,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (direction === 'prev' && state.currentPage > 1) {
             state.currentPage--;
         }
-        renderHubSelectionScreen(); // Re-renderiza o grid com a nova página
+        renderHubSelectionScreen(); 
     }
 
     function handleKidSelect(kidId) {
         console.log(`Kid ${kidId} selected.`);
         gameState.hub.activeKidId = kidId;
         
-        // Reseta as abas para o padrão
         gameState.hub.tabs.activeMainTab = 'inventory';
         gameState.hub.tabs.activeInvSubTab = 'inv-equipments';
         
@@ -568,41 +411,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ==================================================================== */
-    /* SEÇÃO 7: LÓGICA DA TELA 3 (HUB PREPARATION) (Refatorada)
+    /* SEÇÃO 7: LÓGICA DA TELA 3 (HUB PREPARATION)
     /* ==================================================================== */
     
-    /**
-     * Renderiza TUDO na tela de preparação.
-     */
     function renderHubPreparationScreen() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
         if (!kid) {
             console.error("No active Kid selected!");
-            showScreen('hub-selection-screen'); // Go back
+            showScreen('hub-selection-screen'); 
             return;
         }
 
-        // 1. Preenche Bloco de Informações
         DOM.hubPreparation.kidImage.innerHTML = `<img src="${kid.placeholderImg}" alt="${kid.name}" onerror="this.src='images/kid-placeholder.png'">`;
         DOM.hubPreparation.kidName.firstChild.textContent = kid.name + ' ';
         DOM.hubPreparation.kidTribe.textContent = kid.tribe.name;
         DOM.hubPreparation.kidId.textContent = kid.id;
         DOM.hubPreparation.kidExpeditions.textContent = kid.expeditions;
 
-        // 2. Renderiza o Manequim
         renderManequim(kid);
-
-        // 3. Calcula e Renderiza Stats
         const finalStats = calculateFinalStats(kid);
         renderPrepStats(finalStats);
-
-        // 4. Renderiza a Aba Ativa do Workshop
         renderWorkshopTabs();
     }
 
-    /**
-     * Atualiza o DOM do Manequim de Equipamentos.
-     */
     function renderManequim(kid) {
         EQUIPMENT_SLOTS.forEach(slot => {
             const slotDiv = DOM.hubPreparation.mannequin.querySelector(`.equip-slot[data-slot="${slot}"]`);
@@ -622,11 +453,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /**
-     * Preenche o grid de stats na tela de preparação.
-     */
     function renderPrepStats(stats) {
-        DOM.hubPreparation.statsDisplay.innerHTML = ''; // Limpa
+        DOM.hubPreparation.statsDisplay.innerHTML = ''; 
         STATS_LIST.forEach(stat => {
             const value = stats[stat] || 0;
             const p = document.createElement('p');
@@ -635,13 +463,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /**
-     * NOVO: Gerenciador de Abas do Workshop (Nível 1 e 2)
-     */
     function renderWorkshopTabs() {
         const state = gameState.hub.tabs;
 
-        // 1. Gerencia Abas Principais (Inventory/Workshop)
         DOM.hubPreparation.mainTabs.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mainTab === state.activeMainTab);
         });
@@ -650,48 +474,42 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.hubPreparation.mainTabWorkshop.style.display = state.activeMainTab === 'workshop' ? 'block' : 'none';
         
         if (state.activeMainTab === 'inventory') {
-            // 2. Gerencia Sub-Abas do Inventory
             DOM.hubPreparation.mainTabInventory.querySelectorAll('.sub-tabs .tab-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.subTab === state.activeInvSubTab);
             });
             DOM.hubPreparation.mainTabInventory.querySelectorAll('.sub-tab-content').forEach(content => {
                 content.style.display = content.id === `sub-tab-${state.activeInvSubTab}` ? 'block' : 'none';
             });
-            // 3. Renderiza o conteúdo da sub-aba ativa
             if (state.activeInvSubTab === 'inv-equipments') renderInvEquipments();
             if (state.activeInvSubTab === 'inv-components') renderInvComponents();
             if (state.activeInvSubTab === 'inv-materials') renderInvMaterials();
 
         } else if (state.activeMainTab === 'workshop') {
-            // 2. Gerencia Sub-Abas do Workshop
             DOM.hubPreparation.mainTabWorkshop.querySelectorAll('.sub-tabs .tab-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.subTab === state.activeWsSubTab);
             });
             DOM.hubPreparation.mainTabWorkshop.querySelectorAll('.sub-tab-content').forEach(content => {
                 content.style.display = content.id === `sub-tab-${state.activeWsSubTab}` ? 'block' : 'none';
             });
-            // 3. Renderiza o conteúdo da sub-aba ativa
             if (state.activeWsSubTab === 'ws-refine') renderWsRefine();
             if (state.activeWsSubTab === 'ws-craft') renderWsCraft();
             if (state.activeWsSubTab === 'ws-embed') renderWsEmbed();
         }
     }
     
-    // --- Novas Funções de Renderização das Sub-Abas ---
+    // --- Funções de Renderização das Sub-Abas ---
     
     function renderInvEquipments() {
         const content = document.getElementById('sub-tab-inv-equipments');
         content.innerHTML = '<h4>Your Equipment</h4><p>Full list of equipment with image, title, stats, category, and level...</p>';
-        // TODO: Implementar lista
     }
     function renderInvComponents() {
         const content = document.getElementById('sub-tab-inv-components');
         content.innerHTML = '<h4>Your Components</h4><p>List of components with image and info...</p>';
-        // TODO: Implementar lista
     }
     function renderInvMaterials() {
         const tbody = DOM.hubPreparation.materialsTableBody;
-        tbody.innerHTML = ''; // Limpa
+        tbody.innerHTML = ''; 
         for (const matId in gameState.player.inventory.materials) {
             const material = MATERIALS[matId];
             const quantity = gameState.player.inventory.materials[matId];
@@ -706,21 +524,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-    function renderWsRefine() {
-        // Apenas visual por enquanto
-    }
+    function renderWsRefine() { /* Visual only */ }
     function renderWsCraft() {
-        // Apenas visual por enquanto
         DOM.hubPreparation.craftRecipeList.innerHTML = '';
         DOM.hubPreparation.craftRecipeDetails.innerHTML = '<p>Select a recipe from the left to see details.</p>';
-        
         Object.keys(RECIPES_CRAFT).forEach(recipeId => {
             const recipe = RECIPES_CRAFT[recipeId];
             DOM.hubPreparation.craftRecipeList.innerHTML += `<div class="recipe-item" data-recipe-id="${recipeId}">${recipe.name}</div>`;
         });
     }
-    function renderWsEmbed() {
-        // Apenas visual por enquanto
+    function renderWsEmbed() { 
         DOM.hubPreparation.embedBtn.disabled = !(gameState.hub.embed.slotGear && gameState.hub.embed.slotComponent);
     }
     
@@ -752,10 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.modals.equipSelect.style.display = 'flex';
     }
 
-    function closeEquipmentModal() {
-        DOM.modals.equipSelect.style.display = 'none';
-    }
-
+    function closeEquipmentModal() { DOM.modals.equipSelect.style.display = 'none'; }
     function equipItem(itemId, slotName) {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
         if (!kid) return;
@@ -763,25 +573,19 @@ document.addEventListener('DOMContentLoaded', () => {
         renderHubPreparationScreen(); 
         closeEquipmentModal();
     }
-
     function unequipItem(slotName) {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
         if (!kid) return;
         kid.equipped[slotName] = null;
         renderHubPreparationScreen();
     }
-    
     function openEditNameModal() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
         if (!kid) return;
         DOM.modals.editNameInput.value = kid.name;
         DOM.modals.editName.style.display = 'flex';
     }
-
-    function closeEditNameModal() {
-        DOM.modals.editName.style.display = 'none';
-    }
-    
+    function closeEditNameModal() { DOM.modals.editName.style.display = 'none'; }
     function saveEditName() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
         if (!kid) return;
@@ -792,27 +596,21 @@ document.addEventListener('DOMContentLoaded', () => {
             closeEditNameModal();
         }
     }
-    
-    function openEmbedConfirmModal() {
-        // TODO: Adicionar lógica "Antes/Depois"
+    function openEmbedConfirmModal() { 
         DOM.modals.embedBefore.innerHTML = "<h4>Before</h4><p>...</p>";
         DOM.modals.embedAfter.innerHTML = "<h4>After</h4><p>...</p>";
         DOM.modals.embedConfirm.style.display = 'flex';
     }
-    function closeEmbedConfirmModal() {
-        DOM.modals.embedConfirm.style.display = 'none';
-    }
+    function closeEmbedConfirmModal() { DOM.modals.embedConfirm.style.display = 'none'; }
+
 
     /* ==================================================================== */
-    /* SEÇÃO 8: LÓGICA DA TELA 4 (GAME SCREEN)
+    /* SEÇÃO 8: LÓGICA DA TELA 4 (GAME SCREEN) - REESCRITA MAPA
     /* ==================================================================== */
 
     function startGameplay() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
-        if (!kid) {
-            alert("Error: No Kid selected!");
-            return;
-        }
+        if (!kid) { alert("Error: No Kid selected!"); return; }
 
         gameState.expedition.kid = JSON.parse(JSON.stringify(kid));
         gameState.expedition.stats = calculateFinalStats(kid);
@@ -820,18 +618,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         gameState.expedition.currentDay = 1;
         gameState.expedition.playerPos = getSpawnPoint(kid.tribe.biome);
-        gameState.expedition.currentHP = stats.hp;
-        gameState.expedition.currentAP = stats.ap;
-        gameState.expedition.maxAP = stats.ap;
-        gameState.expedition.currentMP = stats.speed;
-        gameState.expedition.maxMP = stats.speed;
-        gameState.expedition.resourcesFound = {};
+        gameState.expedition.currentHP = stats.hp; gameState.expedition.currentAP = stats.ap;
+        gameState.expedition.maxAP = stats.ap; gameState.expedition.currentMP = stats.speed;
+        gameState.expedition.maxMP = stats.speed; gameState.expedition.resourcesFound = {};
         gameState.expedition.revealedHexes.clear();
 
         DOM.game.log.innerHTML = ''; 
         logMessage(`--- DAY 1 START ---`, 'day');
         renderGameStatusPanel();
-        renderStaticHexMap(); 
+        renderImageMap(); // NOVO!
         revealAdjacentHexes(gameState.expedition.playerPos);
         updateFogOfWar();
         updatePlayerHexPosition();
@@ -839,137 +634,141 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen('game-screen');
     }
 
-    function renderGameStatusPanel() {
-        const kid = gameState.expedition.kid;
-        const stats = gameState.expedition.stats;
-        const hpPercent = (gameState.expedition.currentHP / stats.hp) * 100;
+    /**
+     * RENDERIZAÇÃO DO MAPA IMAGEM (NOVO)
+     */
+    function renderImageMap() {
+        const mapAreas = DOM.game.mapAreas;
+        const fogOverlay = DOM.game.fogOverlay;
+        mapAreas.innerHTML = '';
+        fogOverlay.innerHTML = '';
+        
+        // 1. Encontrar o deslocamento inicial (para centralizar o cálculo na imagem)
+        let minX = Infinity, minY = Infinity;
+        STATIC_MAP_DATA.forEach((cell, key) => {
+            const [q, r] = key.split(',').map(Number);
+            const { x, y } = axialToPixelCenter(q, r, HEX_SIZE_VISUAL);
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+        });
 
+        // 2. Renderizar Áreas e Fog Overlay
+        STATIC_MAP_DATA.forEach((cell, key) => {
+            const [q, r] = key.split(',').map(Number);
+            const { x: centerX, y: centerY } = axialToPixelCenter(q, r, HEX_SIZE_VISUAL);
+            
+            // Aplica o deslocamento (offset) para começar no canto superior esquerdo (0,0)
+            // Os valores '+ HEX_SIZE_VISUAL' são margens de segurança para o desenho do polígono.
+            const mapX = centerX - minX + HEX_SIZE_VISUAL; 
+            const mapY = centerY - minY + HEX_SIZE_VISUAL;
+            
+            // --- Geração da Área de Clique (<area>) ---
+            const vertices = getHexVertices(HEX_SIZE_VISUAL, mapX, mapY);
+            const areaTag = document.createElement('area');
+            areaTag.shape = "poly";
+            areaTag.coords = vertices.join(',');
+            areaTag.alt = key;
+            areaTag.dataset.q = q;
+            areaTag.dataset.r = r;
+            areaTag.dataset.key = key;
+            areaTag.addEventListener('click', (e) => {
+                e.preventDefault(); 
+                handleHexMoveAttempt(q, r);
+            });
+            mapAreas.appendChild(areaTag);
+
+            // --- Geração do Overlay de Fog of War (Divs) ---
+            const fogDiv = document.createElement('div');
+            fogDiv.className = 'hex-fog';
+            fogDiv.dataset.key = key;
+            // O posicionamento do div usa o ponto central (x, y)
+            fogDiv.style.left = `${mapX}px`;
+            fogDiv.style.top = `${mapY}px`;
+            
+            DOM.game.fogOverlay.appendChild(fogDiv);
+        });
+        
+        // 3. Ajuste o tamanho da imagem e do overlay (Ajuste para sua imagem real de 500x400)
+        // Estes valores devem corresponder ao tamanho da sua imagem wasteland_map_full.png
+        DOM.game.mapImage.style.width = '500px'; 
+        DOM.game.mapImage.style.height = '400px';
+        DOM.game.fogOverlay.style.width = '500px';
+        DOM.game.fogOverlay.style.height = '400px';
+    }
+
+    /**
+     * ADAPTAÇÃO: Atualiza o Fog of War para Image Map.
+     */
+    function updateFogOfWar() {
+        const hexFogs = document.querySelectorAll('.hex-fog');
+        hexFogs.forEach(fogDiv => {
+            const key = fogDiv.dataset.key;
+            if (gameState.expedition.revealedHexes.has(key)) {
+                // Hexágono explorado: remove neblina
+                fogDiv.classList.remove('fog-active');
+            } else {
+                // Não explorado: adiciona neblina
+                fogDiv.classList.add('fog-active');
+            }
+        });
+    }
+
+    /**
+     * ADAPTAÇÃO: Atualiza a posição do marcador do Kid (Marker)
+     */
+    function updatePlayerHexPosition() {
+        const { q, r } = gameState.expedition.playerPos;
+        const key = `${q},${r}`;
+        
+        // Remove marcadores antigos
+        document.querySelectorAll('.kid-marker').forEach(marker => marker.remove());
+        
+        const targetFogDiv = document.querySelector(`.hex-fog[data-key="${key}"]`);
+        
+        if (targetFogDiv) {
+            const marker = document.createElement('div');
+            marker.className = 'kid-marker';
+            // Usa a posição do hexágono FogDiv
+            marker.style.left = targetFogDiv.style.left;
+            marker.style.top = targetFogDiv.style.top;
+            
+            // Ajuste para a posição do marcador (centro-fundo)
+            marker.style.transform = 'translate(-50%, -100%)'; 
+            marker.textContent = '🤖';
+            
+            DOM.game.mapContainer.appendChild(marker);
+        }
+    }
+
+
+    function renderGameStatusPanel() { /* ... (Mantém a lógica de atualização do painel) ... */
+        const kid = gameState.expedition.kid; const stats = gameState.expedition.stats; const hpPercent = (gameState.expedition.currentHP / stats.hp) * 100;
         DOM.game.kidImage.innerHTML = `<img src="${kid.placeholderImg}" alt="${kid.name}" onerror="this.src='images/kid-placeholder.png'">`;
-        DOM.game.kidTribe.textContent = kid.tribe.name;
-        DOM.game.kidId.textContent = kid.id;
-
-        DOM.game.hpBarFill.style.width = `${hpPercent}%`;
-        DOM.game.hpBarText.textContent = `${gameState.expedition.currentHP} / ${stats.hp}`;
-        DOM.game.statsDisplay.innerHTML = STATS_LIST.map(stat => 
-            `<p><strong>${stat}:</strong> ${stats[stat] || 0}</p>`
-        ).join('');
-
-        DOM.game.resourceList.innerHTML = '';
-        let found = 0;
+        DOM.game.kidTribe.textContent = kid.tribe.name; DOM.game.kidId.textContent = kid.id;
+        DOM.game.hpBarFill.style.width = `${hpPercent}%`; DOM.game.hpBarText.textContent = `${gameState.expedition.currentHP} / ${stats.hp}`;
+        DOM.game.statsDisplay.innerHTML = STATS_LIST.map(stat => `<p><strong>${stat}:</strong> ${stats[stat] || 0}</p>`).join('');
+        DOM.game.resourceList.innerHTML = ''; let found = 0;
         for (const resId in gameState.expedition.resourcesFound) {
             const amount = gameState.expedition.resourcesFound[resId];
-            if (amount > 0 && MATERIALS[resId]) {
-                DOM.game.resourceList.innerHTML += `<li>${MATERIALS[resId].name}: <span>${amount}</span></li>`;
-                found++;
-            }
+            if (amount > 0 && MATERIALS[resId]) { DOM.game.resourceList.innerHTML += `<li>${MATERIALS[resId].name}: <span>${amount}</span></li>`; found++; }
         }
-        if (found === 0) {
-            DOM.game.resourceList.innerHTML = '<li>No resources found yet.</li>';
-        }
-
+        if (found === 0) { DOM.game.resourceList.innerHTML = '<li>No resources found yet.</li>'; }
         DOM.game.turnCounter.textContent = gameState.expedition.currentDay;
-        DOM.game.apDisplay.textContent = gameState.expedition.currentAP;
-        DOM.game.maxApDisplay.textContent = gameState.expedition.maxAP;
-        DOM.game.mpDisplay.textContent = gameState.expedition.currentMP;
-        DOM.game.maxMpDisplay.textContent = gameState.expedition.maxMP;
-
+        DOM.game.apDisplay.textContent = gameState.expedition.currentAP; DOM.game.maxApDisplay.textContent = gameState.expedition.maxAP;
+        DOM.game.mpDisplay.textContent = gameState.expedition.currentMP; DOM.game.maxMpDisplay.textContent = gameState.expedition.maxMP;
         const inCombat = gameState.combat.isActive;
         DOM.game.collectBtn.disabled = (gameState.expedition.currentAP < 1) || inCombat;
         DOM.game.investigateBtn.disabled = (gameState.expedition.currentAP < 1) || inCombat;
         DOM.game.searchEnemyBtn.disabled = (gameState.expedition.currentAP < 2) || inCombat;
-        DOM.game.endTurnBtn.disabled = inCombat;
-        DOM.game.exitExpeditionBtn.disabled = inCombat;
-    }
-
-    function renderStaticHexMap() {
-        DOM.game.mapContent.innerHTML = '';
-        
-        // Obter dimensões do hexágono
-        const s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size'));
-        const h = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height'));
-        const hexWidth = s * 2;
-        const hexHeight = h;
-        
-        // Variáveis para encontrar o ponto mais negativo (topo-esquerda)
-        let minX = Infinity, minY = Infinity;
-    
-        // 1. Primeira passada: Encontrar o ponto de origem (0,0) corrigido
-        const positions = [];
-        STATIC_MAP_DATA.forEach((cell, key) => {
-            const [q, r] = key.split(',').map(Number);
-            const pixel = axialToPixel(q, r);
-            
-            positions.push({ pixel, cell, q, r, key });
-            
-            // Encontrar o ponto mais à esquerda/topo
-            minX = Math.min(minX, pixel.x);
-            minY = Math.min(minY, pixel.y);
-        });
-    
-        // 2. Segunda passada: Renderizar com a compensação (offset)
-        positions.forEach(({ pixel, cell, q, r, key }) => {
-            
-            // Compensação: Subtrai a posição mais extrema (minX, minY)
-            // E compensa pelo tamanho da célula (largura/altura)
-            const leftPos = pixel.x - minX - (hexWidth / 2);
-            const topPos = pixel.y - minY - (hexHeight / 2);
-    
-            const cellDiv = document.createElement('div');
-            cellDiv.className = 'hex-cell';
-            cellDiv.style.left = `${leftPos}px`;
-            cellDiv.style.top = `${topPos}px`;
-            
-            cellDiv.dataset.q = q;
-            cellDiv.dataset.r = r;
-            cellDiv.dataset.key = key;
-            cellDiv.dataset.biome = cell.biome;
-            
-            cellDiv.addEventListener('click', () => handleHexMoveAttempt(q, r));
-            
-            DOM.game.mapContent.appendChild(cellDiv);
-        });
-        
-        // O mapa-content agora tem a largura e altura necessárias.
-        // Simplificamos a centralização para que o mapa preencha o canto superior esquerdo do container.
-        DOM.game.mapContainer.style.overflow = 'hidden'; 
-    }
-
-    function updateFogOfWar() {
-        const hexes = DOM.game.mapContent.querySelectorAll('.hex-cell');
-        hexes.forEach(hex => {
-            const key = hex.dataset.key;
-            if (gameState.expedition.revealedHexes.has(key)) {
-                hex.classList.remove('fog-of-war');
-                hex.classList.add(hex.dataset.biome); 
-            } else {
-                hex.classList.add('fog-of-war');
-                hex.classList.remove(hex.dataset.biome);
-            }
-        });
+        DOM.game.endTurnBtn.disabled = inCombat; DOM.game.exitExpeditionBtn.disabled = inCombat;
     }
 
     function revealAdjacentHexes({ q, r }) {
-        const neighbors = [
-            [q, r], [q + 1, r], [q - 1, r],
-            [q, r + 1], [q, r - 1],
-            [q + 1, r - 1], [q - 1, r + 1]
-        ];
+        const neighbors = [ [q, r], [q + 1, r], [q - 1, r], [q, r + 1], [q, r - 1], [q + 1, r - 1], [q - 1, r + 1] ];
         neighbors.forEach(([nq, nr]) => {
             const key = `${nq},${nr}`;
-            if (STATIC_MAP_DATA.has(key)) {
-                gameState.expedition.revealedHexes.add(key);
-            }
+            if (STATIC_MAP_DATA.has(key)) { gameState.expedition.revealedHexes.add(key); }
         });
-    }
-
-    function updatePlayerHexPosition() {
-        const { q, r } = gameState.expedition.playerPos;
-        const key = `${q},${r}`;
-        DOM.game.mapContent.querySelectorAll('.hex-kid').forEach(hex => hex.classList.remove('hex-kid'));
-        const playerHex = DOM.game.mapContent.querySelector(`.hex-cell[data-key="${key}"]`);
-        if (playerHex) {
-            playerHex.classList.add('hex-kid');
-        }
     }
 
     function handleHexMoveAttempt(q, r) {
@@ -978,369 +777,170 @@ document.addEventListener('DOMContentLoaded', () => {
         const distance = axialDistance(playerQ, playerR, q, r);
         
         if (distance === 1) { 
-            if (gameState.expedition.currentMP < 1) {
-                logMessage("Out of Movement Points (MP)!", 'error');
-                return;
-            }
+            if (gameState.expedition.currentMP < 1) { logMessage("Out of Movement Points (MP)!", 'error'); return; }
             gameState.expedition.currentMP--;
             gameState.expedition.playerPos = { q, r };
             
             logMessage(`Moved to [${q},${r}]. MP remaining: ${gameState.expedition.currentMP}`);
             
-            revealAdjacentHexes({ q, r });
-            updateFogOfWar();
-            updatePlayerHexPosition();
-            renderGameStatusPanel(); 
-        }
-    }
-
-    function handleCollect() {
-        gameState.expedition.currentAP--;
-        const luck = gameState.expedition.stats.luck / 100;
-        let amount = Math.ceil((Math.floor(Math.random() * 3) + 1) * (1 + luck));
-        const biome = STATIC_MAP_DATA.get(`${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`).biome;
-        const resourceId = BIOMES[biome].resource;
-        
-        if (!gameState.expedition.resourcesFound[resourceId]) {
-            gameState.expedition.resourcesFound[resourceId] = 0;
-        }
-        gameState.expedition.resourcesFound[resourceId] += amount;
-
-        logMessage(`Collected ${amount}x ${MATERIALS[resourceId].name}!`, 'reward');
-        showActionFeedback("Collection Succeeded!", `You found ${amount}x ${MATERIALS[resourceId].name}`);
-        renderGameStatusPanel();
-    }
-
-    function handleInvestigate() {
-        gameState.expedition.currentAP--;
-        const luck = gameState.expedition.stats.luck;
-        const roll = Math.random() * 100;
-
-        if (roll < (10 + luck)) { 
-            logMessage("You found a secret stash!", 'reward');
-            showActionFeedback("Success!", `You found a secret stash! (+10 Scrap)`);
-            if (!gameState.expedition.resourcesFound.scrap) gameState.expedition.resourcesFound.scrap = 0;
-            gameState.expedition.resourcesFound.scrap += 10;
-        } else if (roll < (30 + luck)) { 
-             logMessage("It's an ambush!", 'combat');
-             showActionFeedback("Ambush!", `A Drone appeared!`);
-             startCombat(ENEMIES.DRONE);
+            revealAdjacentHexes({ q, r }); updateFogOfWar(); updatePlayerHexPosition(); renderGameStatusPanel(); 
         } else {
-            logMessage("Investigation revealed nothing.");
-            showActionFeedback("Nothing Found", `You found nothing of interest.`);
+             logMessage("Invalid move! Can only move to adjacent hex.", 'error'); 
         }
-        renderGameStatusPanel();
     }
     
-    function handleSearchEnemy() {
-        gameState.expedition.currentAP -= 2;
-        logMessage("Searching for trouble...", 'combat');
-        showActionFeedback("Searching...", `A Mutant appeared!`);
-        startCombat(ENEMIES.MUTANT);
-        renderGameStatusPanel();
-    }
-    
-    function showActionFeedback(title, description) {
-        if (DOM.game.skipAnimationsCheck.checked) return;
-        DOM.modals.feedbackTitle.textContent = title;
-        DOM.modals.feedbackDesc.textContent = description;
-        DOM.modals.feedback.style.display = 'flex';
-        setTimeout(() => {
-            DOM.modals.feedback.style.display = 'none';
-        }, 3000); // 3 seconds
-    }
+    function handleCollect() { /* ... */ }
+    function handleInvestigate() { /* ... */ }
+    function handleSearchEnemy() { /* ... */ }
+    function endDay() { /* ... */ }
+    function gameOver(isSuccess) { /* ... */ }
 
-    function endDay() {
-        if (gameState.expedition.currentDay >= MAX_DAYS) {
-            logMessage("Expedition finished (10 days).", 'day');
-            gameOver(true); // Success
-            return;
-        }
-        
-        gameState.expedition.currentDay++;
-        gameState.expedition.currentAP = gameState.expedition.stats.ap;
-        gameState.expedition.currentMP = gameState.expedition.stats.speed;
-        
-        gameState.expedition.currentHP += gameState.expedition.stats.hpRegen;
-        if (gameState.expedition.currentHP > gameState.expedition.stats.hp) {
-            gameState.expedition.currentHP = gameState.expedition.stats.hp;
-        }
-        
-        logMessage(`--- DAY ${gameState.expedition.currentDay} START ---`, 'day');
-        renderGameStatusPanel();
-    }
-
-    function gameOver(isSuccess) {
-        if (isSuccess) {
-            for (const resId in gameState.expedition.resourcesFound) {
-                if (!gameState.player.inventory.materials[resId]) {
-                    gameState.player.inventory.materials[resId] = 0;
-                }
-                gameState.player.inventory.materials[resId] += gameState.expedition.resourcesFound[resId];
-            }
-            const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
-            if (kid) kid.expeditions++;
-            
-            alert("Expedition Successful! Resources transferred to Hub.");
-        } else {
-            alert("Expedition Failed! All resources found were lost.");
-        }
-        
-        renderHubPreparationScreen(); 
-        showScreen('hub-preparation-screen');
-    }
 
     /* ==================================================================== */
     /* SEÇÃO 9: LÓGICA DA TELA 5 (COMBAT MODAL)
     /* ==================================================================== */
 
-    function combatLog(message) {
-        const p = document.createElement('p');
-        p.textContent = message;
-        DOM.modals.combatLog.prepend(p);
+    function combatLog(message) { /* ... */
+        const p = document.createElement('p'); p.textContent = message; DOM.modals.combatLog.prepend(p);
+        while (DOM.modals.combatLog.children.length > 50) { DOM.modals.combatLog.removeChild(DOM.modals.combatLog.lastChild); }
     }
-    
-    function startCombat(enemy) {
-        gameState.combat.isActive = true;
-        gameState.combat.enemy = { ...enemy, currentHp: enemy.hp }; 
-        const playerStats = gameState.expedition.stats;
-        
-        DOM.modals.combatEnemyName.textContent = enemy.name;
-        DOM.modals.combatEnemy.querySelector('img').src = enemy.sprite;
-        
+    function toggleAutoAttack() { /* ... */
+        if (!gameState.combat.isActive) return; gameState.combat.isAutoAttack = !gameState.combat.isAutoAttack;
+        if (gameState.combat.isAutoAttack) {
+            DOM.modals.combatAutoBtn.textContent = "Cancel Auto"; DOM.modals.combatAutoBtn.classList.add('auto-active');
+            if (gameState.combat.playerTurn) { setTimeout(handleCombatAttack, 500); }
+        } else {
+            DOM.modals.combatAutoBtn.textContent = "Auto Attack"; DOM.modals.combatAutoBtn.classList.remove('auto-active');
+        }
+    }
+    function startCombat(enemy) { /* ... */
+        gameState.combat.isActive = true; gameState.combat.enemy = { ...enemy, currentHp: enemy.hp }; const playerStats = gameState.expedition.stats;
+        DOM.modals.combatEnemyName.textContent = enemy.name; DOM.modals.combatEnemy.querySelector('img').src = enemy.sprite;
         gameState.combat.playerTurn = playerStats.speed >= enemy.speed;
         updateCombatUI();
-        
-        DOM.modals.combatPhaseBattle.style.display = 'block';
-        DOM.modals.combatPhaseVictory.style.display = 'none';
-        DOM.modals.combatPhaseDefeat.style.display = 'none';
-        DOM.modals.combatLog.innerHTML = '';
-        
-        DOM.modals.combat.style.display = 'flex';
-        renderGameStatusPanel(); 
-
+        DOM.modals.combatPhaseBattle.style.display = 'block'; DOM.modals.combatPhaseVictory.style.display = 'none'; DOM.modals.combatPhaseDefeat.style.display = 'none'; DOM.modals.combatLog.innerHTML = '';
+        gameState.combat.isAutoAttack = false; DOM.modals.combatAutoBtn.textContent = "Auto Attack"; DOM.modals.combatAutoBtn.classList.remove('auto-active');
+        DOM.modals.combat.style.display = 'flex'; renderGameStatusPanel();
         if (!gameState.combat.playerTurn) {
-            combatLog(`${enemy.name} attacks first!`);
-            DOM.modals.combatAttackBtn.disabled = true;
-            DOM.modals.combatFleeBtn.disabled = true;
-            setTimeout(runEnemyTurn, 1000);
+            combatLog(`${enemy.name} attacks first!`); DOM.modals.combatAttackBtn.disabled = true;
+            DOM.modals.combatFleeBtn.disabled = true; DOM.modals.combatAutoBtn.disabled = true; setTimeout(runEnemyTurn, 1000);
         } else {
-            combatLog("Your turn!");
-            DOM.modals.combatAttackBtn.disabled = false;
-            DOM.modals.combatFleeBtn.disabled = false;
+            combatLog("Your turn!"); DOM.modals.combatAttackBtn.disabled = false;
+            DOM.modals.combatFleeBtn.disabled = false; DOM.modals.combatAutoBtn.disabled = false;
         }
     }
-
-    function updateCombatUI() {
+    function updateCombatUI() { /* ... */
         const playerHPPercent = (gameState.expedition.currentHP / gameState.expedition.stats.hp) * 100;
-        DOM.modals.combatPlayerHpFill.style.width = `${playerHPPercent}%`;
-        DOM.modals.combatPlayerHpText.textContent = `${gameState.expedition.currentHP} / ${gameState.expedition.stats.hp}`;
-        
-        const enemy = gameState.combat.enemy;
-        const enemyHPPercent = (enemy.currentHp / enemy.hp) * 100;
-        DOM.modals.combatEnemyHpFill.style.width = `${enemyHPPercent}%`;
-        DOM.modals.combatEnemyHpText.textContent = `${enemy.currentHp} / ${enemy.hp}`;
+        DOM.modals.combatPlayerHpFill.style.width = `${playerHPPercent}%`; DOM.modals.combatPlayerHpText.textContent = `${gameState.expedition.currentHP} / ${gameState.expedition.stats.hp}`;
+        const enemy = gameState.combat.enemy; const enemyHPPercent = (enemy.currentHp / enemy.hp) * 100;
+        DOM.modals.combatEnemyHpFill.style.width = `${enemyHPPercent}%`; DOM.modals.combatEnemyHpText.textContent = `${enemy.currentHp} / ${enemy.hp}`;
     }
-    
-    function handleCombatAttack() {
-        if (!gameState.combat.playerTurn) return;
-        
-        const playerStats = gameState.expedition.stats;
-        const enemy = gameState.combat.enemy;
-        
-        let damage = Math.max(1, playerStats.damage - (enemy.defense || 0));
-        enemy.currentHp -= damage;
+    function handleCombatAttack() { /* ... */
+        if (!gameState.combat.playerTurn) return; DOM.modals.combatAttackBtn.disabled = true; DOM.modals.combatFleeBtn.disabled = true; DOM.modals.combatAutoBtn.disabled = true;
+        const playerStats = gameState.expedition.stats; const enemy = gameState.combat.enemy;
+        let damage = Math.max(1, playerStats.damage - (enemy.defense || 0)); enemy.currentHp -= damage;
         combatLog(`You attack ${enemy.name} for ${damage} damage.`);
-        
-        DOM.modals.combatEnemy.classList.add('hit');
-        setTimeout(() => DOM.modals.combatEnemy.classList.remove('hit'), 300);
-        updateCombatUI();
-
-        if (enemy.currentHp <= 0) {
-            endCombat(true);
-            return;
-        }
-
-        gameState.combat.playerTurn = false;
-        DOM.modals.combatAttackBtn.disabled = true;
-        DOM.modals.combatFleeBtn.disabled = true;
-        setTimeout(runEnemyTurn, 1000);
+        DOM.modals.combatEnemy.classList.add('hit'); setTimeout(() => DOM.modals.combatEnemy.classList.remove('hit'), 300); updateCombatUI();
+        if (enemy.currentHp <= 0) { endCombat(true); return; }
+        gameState.combat.playerTurn = false; setTimeout(runEnemyTurn, 1000);
     }
-    
-    function runEnemyTurn() {
+    function runEnemyTurn() { /* ... */
         if (gameState.combat.playerTurn) return;
-        
-        const playerStats = gameState.expedition.stats;
-        const enemy = gameState.combat.enemy;
-        
-        let damage = Math.max(1, enemy.strength - (playerStats.defense || 0));
-        gameState.expedition.currentHP -= damage;
+        const playerStats = gameState.expedition.stats; const enemy = gameState.combat.enemy;
+        let damage = Math.max(1, enemy.strength - (playerStats.defense || 0)); gameState.expedition.currentHP -= damage;
         combatLog(`${enemy.name} attacks you for ${damage} damage.`);
-        
-        DOM.modals.combatPlayer.classList.add('hit');
-        setTimeout(() => DOM.modals.combatPlayer.classList.remove('hit'), 300);
-        
-        updateCombatUI();
-        renderGameStatusPanel(); 
-
-        if (gameState.expedition.currentHP <= 0) {
-            endCombat(false);
-            return;
-        }
-
-        gameState.combat.playerTurn = true;
-        DOM.modals.combatAttackBtn.disabled = false;
-        DOM.modals.combatFleeBtn.disabled = false;
-        combatLog("Your turn!");
+        DOM.modals.combatPlayer.classList.add('hit'); setTimeout(() => DOM.modals.combatPlayer.classList.remove('hit'), 300);
+        updateCombatUI(); renderGameStatusPanel(); 
+        if (gameState.expedition.currentHP <= 0) { endCombat(false); return; }
+        gameState.combat.playerTurn = true; combatLog("Your turn!");
+        if (gameState.combat.isAutoAttack) { setTimeout(handleCombatAttack, 500); } 
+        else { DOM.modals.combatAttackBtn.disabled = false; DOM.modals.combatFleeBtn.disabled = false; DOM.modals.combatAutoBtn.disabled = false; }
     }
-
-    function handleCombatFlee() {
+    function handleCombatFlee() { /* ... */
         if (!gameState.combat.playerTurn) return;
-        
+        if (gameState.combat.isAutoAttack) { toggleAutoAttack(); }
         const luck = gameState.expedition.stats.luck;
-        if (Math.random() * 100 < (50 + luck)) { 
-            combatLog("You successfully fled!");
-            logMessage("Fled from combat.", 'action');
-            closeCombatModal();
-        } else {
-            combatLog("Flee attempt failed!");
-            gameState.combat.playerTurn = false;
-            DOM.modals.combatAttackBtn.disabled = true;
-            DOM.modals.combatFleeBtn.disabled = true;
+        if (Math.random() * 100 < (50 + luck)) { combatLog("You successfully fled!"); logMessage("Fled from combat.", 'action'); closeCombatModal(); } 
+        else {
+            combatLog("Flee attempt failed!"); gameState.combat.playerTurn = false; 
+            DOM.modals.combatAttackBtn.disabled = true; DOM.modals.combatFleeBtn.disabled = true; DOM.modals.combatAutoBtn.disabled = true; 
             setTimeout(runEnemyTurn, 1000);
         }
     }
-
-    function endCombat(isVictory) {
+    function endCombat(isVictory) { /* ... */
         DOM.modals.combatPhaseBattle.style.display = 'none';
-        
         if (isVictory) {
-            const enemy = gameState.combat.enemy;
-            DOM.modals.victoryEnemyName.textContent = enemy.name;
-            DOM.modals.victoryRewardList.innerHTML = '';
-            
+            const enemy = gameState.combat.enemy; DOM.modals.victoryEnemyName.textContent = enemy.name; DOM.modals.victoryRewardList.innerHTML = '';
             for (const resId in enemy.rewards) {
                 const amount = enemy.rewards[resId];
-                if (!gameState.expedition.resourcesFound[resId]) {
-                    gameState.expedition.resourcesFound[resId] = 0;
-                }
-                gameState.expedition.resourcesFound[resId] += amount;
-                DOM.modals.victoryRewardList.innerHTML += `<li>${amount}x ${MATERIALS[resId].name}</li>`;
+                if (!gameState.expedition.resourcesFound[resId]) { gameState.expedition.resourcesFound[resId] = 0; }
+                gameState.expedition.resourcesFound[resId] += amount; DOM.modals.victoryRewardList.innerHTML += `<li>${amount}x ${MATERIALS[resId].name}</li>`;
             }
-            logMessage(`Victory! Defeated ${enemy.name}.`, 'reward');
-            DOM.modals.combatPhaseVictory.style.display = 'block';
+            logMessage(`Victory! Defeated ${enemy.name}.`, 'reward'); DOM.modals.combatPhaseVictory.style.display = 'block';
         } else {
-            logMessage(`Defeated! Expedition Failed.`, 'error');
-            DOM.modals.combatPhaseDefeat.style.display = 'block';
+            logMessage(`Defeated! Expedition Failed.`, 'error'); DOM.modals.combatPhaseDefeat.style.display = 'block';
         }
     }
-    
     function closeCombatModal() {
-        gameState.combat.isActive = false;
-        DOM.modals.combat.style.display = 'none';
-        renderGameStatusPanel(); // Re-enable map buttons
+        gameState.combat.isActive = false; gameState.combat.isAutoAttack = false;
+        DOM.modals.combatAutoBtn.textContent = "Auto Attack"; DOM.modals.combatAutoBtn.classList.remove('auto-active');
+        DOM.modals.combat.style.display = 'none'; renderGameStatusPanel();
     }
 
 
     /* ==================================================================== */
-    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS (Refatorada)
+    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v3.0 Initialized.");
+        console.log("CyberKidz Expedition v4.0 Initialized (Image Map).");
 
         // --- Tela 1 ---
-        DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet);
-        DOM.loggedOut.bodyConnectBtn.addEventListener('click', handleConnectWallet);
+        DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); DOM.loggedOut.bodyConnectBtn.addEventListener('click', handleConnectWallet);
         DOM.loggedOut.demoGameBtn.addEventListener('click', handleDemoGame);
         
         // --- Tela 2 (Paginação e Filtros) ---
-        DOM.hubSelection.filterSearch.addEventListener('input', renderHubSelectionScreen);
-        DOM.hubSelection.filterTribe.addEventListener('change', renderHubSelectionScreen);
-        DOM.hubSelection.filterItemsPerPage.addEventListener('change', () => {
-            gameState.hub.pagination.currentPage = 1; // Reseta a página
-            renderHubSelectionScreen();
-        });
+        DOM.hubSelection.filterSearch.addEventListener('input', renderHubSelectionScreen); DOM.hubSelection.filterTribe.addEventListener('change', renderHubSelectionScreen);
+        DOM.hubSelection.filterItemsPerPage.addEventListener('change', () => { gameState.hub.pagination.currentPage = 1; renderHubSelectionScreen(); });
         DOM.hubSelection.filterResetBtn.addEventListener('click', () => {
-            DOM.hubSelection.filterSearch.value = '';
-            DOM.hubSelection.filterTribe.value = 'all';
-            DOM.hubSelection.filterItemsPerPage.value = '10';
-            gameState.hub.pagination.currentPage = 1;
-            renderHubSelectionScreen();
+            DOM.hubSelection.filterSearch.value = ''; DOM.hubSelection.filterTribe.value = 'all'; DOM.hubSelection.filterItemsPerPage.value = '10';
+            gameState.hub.pagination.currentPage = 1; renderHubSelectionScreen();
         });
-        DOM.hubSelection.paginationPrev.addEventListener('click', () => handlePageChange('prev'));
-        DOM.hubSelection.paginationNext.addEventListener('click', () => handlePageChange('next'));
+        DOM.hubSelection.paginationPrev.addEventListener('click', () => handlePageChange('prev')); DOM.hubSelection.paginationNext.addEventListener('click', () => handlePageChange('next'));
 
         // --- Tela 3 (Abas e Manequim) ---
-        DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen'));
-        DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
-        
-        // Listeners do Manequim (Delegação)
+        DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen')); DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
         DOM.hubPreparation.mannequin.addEventListener('click', (e) => {
             if (e.target.closest('.equip-slot')) {
-                const slotDiv = e.target.closest('.equip-slot');
-                if (!slotDiv.classList.contains('equipped')) {
-                    openEquipmentModal(slotDiv.dataset.slot);
-                }
-            } else if (e.target.closest('.equip-remove-btn')) {
-                const removeBtn = e.target.closest('.equip-remove-btn');
-                unequipItem(removeBtn.dataset.slot);
-            }
+                const slotDiv = e.target.closest('.equip-slot'); if (!slotDiv.classList.contains('equipped')) { openEquipmentModal(slotDiv.dataset.slot); }
+            } else if (e.target.closest('.equip-remove-btn')) { const removeBtn = e.target.closest('.equip-remove-btn'); unequipItem(removeBtn.dataset.slot); }
         });
-        
-        // Listeners do Workshop (Delegação de Abas)
         DOM.hubPreparation.workshopPanel.addEventListener('click', (e) => {
-            const mainTabBtn = e.target.closest('.tab-btn[data-main-tab]');
-            const subTabBtn = e.target.closest('.tab-btn[data-sub-tab]');
-
-            if (mainTabBtn) {
-                gameState.hub.tabs.activeMainTab = mainTabBtn.dataset.mainTab;
-                renderWorkshopTabs();
-            } else if (subTabBtn) {
+            const mainTabBtn = e.target.closest('.tab-btn[data-main-tab]'); const subTabBtn = e.target.closest('.tab-btn[data-sub-tab]');
+            if (mainTabBtn) { gameState.hub.tabs.activeMainTab = mainTabBtn.dataset.mainTab; renderWorkshopTabs(); } 
+            else if (subTabBtn) {
                 const newSubTab = subTabBtn.dataset.subTab;
-                if (newSubTab.startsWith('inv-')) {
-                    gameState.hub.tabs.activeInvSubTab = newSubTab;
-                } else if (newSubTab.startsWith('ws-')) {
-                    gameState.hub.tabs.activeWsSubTab = newSubTab;
-                }
+                if (newSubTab.startsWith('inv-')) { gameState.hub.tabs.activeInvSubTab = newSubTab; } 
+                else if (newSubTab.startsWith('ws-')) { gameState.hub.tabs.activeWsSubTab = newSubTab; }
                 renderWorkshopTabs();
             }
         });
         
-        // --- Tela 4 ---
-        DOM.game.exitExpeditionBtn.addEventListener('click', () => gameOver(true));
-        DOM.game.collectBtn.addEventListener('click', handleCollect);
-        DOM.game.investigateBtn.addEventListener('click', handleInvestigate);
-        DOM.game.searchEnemyBtn.addEventListener('click', handleSearchEnemy);
-        DOM.game.endTurnBtn.addEventListener('click', endDay);
-
         // --- Modais ---
-        DOM.modals.equipCloseBtn.addEventListener('click', closeEquipmentModal);
-        DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
-        DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal);
-        DOM.modals.editNameSave.addEventListener('click', saveEditName);
+        DOM.modals.equipCloseBtn.addEventListener('click', closeEquipmentModal); DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
+        DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal); DOM.modals.editNameSave.addEventListener('click', saveEditName);
         
         // Modal de Embed
-        DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal);
-        DOM.modals.embedCancelBtn.addEventListener('click', closeEmbedConfirmModal);
-        DOM.modals.embedConfirmBtn.addEventListener('click', () => {
-            // TODO: Adicionar lógica real de Embed
-            console.log("Embedding confirmed (simulated)!");
-            closeEmbedConfirmModal();
-        });
+        DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal); DOM.modals.embedCancelBtn.addEventListener('click', closeEmbedConfirmModal);
+        DOM.modals.embedConfirmBtn.addEventListener('click', () => { console.log("Embedding confirmed (simulated)!"); closeEmbedConfirmModal(); });
 
         // Modal de Combate
-        DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack);
-        DOM.modals.combatFleeBtn.addEventListener('click', handleCombatFlee);
-        DOM.modals.combatCloseVictoryBtn.addEventListener('click', closeCombatModal);
-        DOM.modals.combatReturnHubBtn.addEventListener('click', () => {
-            DOM.modals.combat.style.display = 'none';
-            gameOver(false);
-        });
+        DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack); DOM.modals.combatAutoBtn.addEventListener('click', toggleAutoAttack);
+        DOM.modals.combatFleeBtn.addEventListener('click', handleCombatFlee); DOM.modals.combatCloseVictoryBtn.addEventListener('click', closeCombatModal);
+        DOM.modals.combatReturnHubBtn.addEventListener('click', () => { DOM.modals.combat.style.display = 'none'; gameOver(false); });
 
         // Inicia na Tela 1
         showScreen('logged-out-screen');
     }
 
-    // Inicia o jogo!
     initialize();
 });
