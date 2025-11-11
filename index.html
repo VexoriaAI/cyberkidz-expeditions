@@ -31,36 +31,62 @@
             <h2>WASTELAND HUB</h2>
             <p>Select your Kid, manage equipment, and craft new items.</p>
         </div>
-
+    
         <div class="dashboard-container">
-
+    
             <div id="nft-selection-panel" class="panel">
                 <h3>Select Your Kid</h3>
                 <div id="nft-list-container">
                     </div>
-                <button id="start-expedition-btn" class="action-btn" disabled>Start Expedition</button>
             </div>
-
+    
             <div id="equipment-panel" class="panel">
-                <h3>Active Kid: <span id="dash-kid-name">None</span></h3>
-                <div class="equipment-grid">
-                    <div class="equip-slot" id="equip-slot-helmet"><span>Helmet</span></div>
-                    <div class="equip-slot" id="equip-slot-weapon"><span>Weapon</span></div>
-                    <div class="equip-slot" id="equip-slot-accessory"><span>Accessory</span></div>
-                    <div class="equip-slot" id="equip-slot-armor"><span>Armor</span></div>
-                    <div class="equip-slot" id="equip-slot-gloves"><span>Gloves</span></div>
-                    <div class="equip-slot" id="equip-slot-implant"><span>Implant</span></div>
-                    <div class="equip-slot" id="equip-slot-boots"><span>Boots</span></div>
+                
+                <div id="kid-details-placeholder">
+                    <p>← Select a Kid from the list to view details and equip items.</p>
                 </div>
-                <div class="stats-display">
-                    <h4>Total Attributes</h4>
-                    <p>Damage: <span id="dash-stat-dmg">0</span></p>
-                    <p>Defense: <span id="dash-stat-def">0</span></p>
-                    <p>Crit Chance: <span id="dash-stat-crit">0%</span></p>
-                    <p>Drop Chance: <span id="dash-stat-drop">0%</span></p>
+                
+                <div id="kid-details-content" style="display: none;">
+                    
+                    <h3>
+                        <span id="dash-kid-name">Kid Name</span>
+                        <span id="edit-name-icon" title="Edit Name"> ✏️</span>
+                    </h3>
+                    
+                    <div class="kid-details-header">
+                        <div id="dash-kid-image">
+                            </div>
+                        <div class="kid-details-info">
+                            <p><strong>ID:</strong> <span id="dash-kid-id">#000</span></p>
+                            <p><strong>Tribe:</strong> <span id="dash-kid-tribe">?</span></p>
+                        </div>
                     </div>
+                    
+                    <hr>
+                    
+                    <h4>Equipment</h4>
+                    <div class="equipment-grid">
+                        <div class="equip-slot" id="equip-slot-helmet"><span>Helmet</span></div>
+                        <div class="equip-slot" id="equip-slot-weapon"><span>Weapon</span></div>
+                        <div class="equip-slot" id="equip-slot-accessory"><span>Accessory</span></div>
+                        <div class="equip-slot" id="equip-slot-armor"><span>Armor</span></div>
+                        <div class="equip-slot" id="equip-slot-gloves"><span>Gloves</span></div>
+                        <div class="equip-slot" id="equip-slot-implant"><span>Implant</span></div>
+                        <div class="equip-slot" id="equip-slot-boots"><span>Boots</span></div>
+                    </div>
+                    
+                    <div class="stats-display">
+                        <h4>Total Attributes</h4>
+                        <p>Damage: <span id="dash-stat-dmg">0</span></p>
+                        <p>Defense: <span id="dash-stat-def">0</span></p>
+                        <p>Crit Chance: <span id="dash-stat-crit">0%</span></p>
+                        <p>Drop Chance: <span id="dash-stat-drop">0%</span></p>
+                        </div>
+                    
+                    <button id="start-expedition-btn" class="action-btn" style="margin-top: 20px;">Start Expedition</button>
+                </div>
             </div>
-
+    
             <div id="crafting-panel" class="panel">
                 <h3>Inventory & Crafting</h3>
                 
@@ -69,7 +95,7 @@
                     <button class="tab-btn" data-tab="refine">Refine</button>
                     <button class="tab-btn" data-tab="craft">Craft</button>
                 </div>
-
+    
                 <div id="tab-inventory" class="tab-content active">
                     <h4>Wasteland Materials</h4>
                     <ul id="inventory-list-materials">
@@ -81,34 +107,14 @@
                         <li>Nanochips (Nocturnal): <span id="inv-nanochips">0</span></li>
                         </ul>
                 </div>
-
+    
                 <div id="tab-refine" class="tab-content">
                     <h4>Refine Components</h4>
-                    <div class="crafting-recipe">
-                        <span>10 Metal + 5 Magma = <strong>1 Volcanic Core</strong></span>
-                        <button class="action-btn small-btn">Refine</button>
                     </div>
-                    <div class="crafting-recipe">
-                        <span>20 Scrap + 20 Water... = <strong>1 Lucky Clover</strong></span>
-                        <button class="action-btn small-btn">Refine</button>
-                    </div>
-                </div>
-
+    
                 <div id="tab-craft" class="tab-content">
                     <h4>Craft & Embed</h4>
-                    <div class="crafting-recipe">
-                        <span>10 Scrap = <strong>1 Rustic Chestplate (Empty)</strong></span>
-                        <button class="action-btn small-btn">Craft</button>
                     </div>
-                    <div class="crafting-recipe">
-                        <span>Rustic Chestplate + 1 Defense Plate = <strong>Crystal Chest (Lvl 1)</strong></span>
-                        <button class="action-btn small-btn">Embed</button>
-                    </div>
-                    <div class="crafting-recipe">
-                        <span>Rustic Chestplate + 1 Lucky Clover = <strong>Lucky Chest (Lvl 1)</strong></span>
-                        <button class="action-btn small-btn">Embed</button>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
