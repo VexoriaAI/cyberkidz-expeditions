@@ -4,11 +4,12 @@
     --color-accent-blue: #00e0ff; /* Azul Ciber */
     --color-accent-red: #ff3a5c; /* Vermelho/Mutação */
     --color-text-light: #e0e0e0;
+    --color-text-dark: #1a1a2e;
+    --color-hp-bar: #00ff6a; /* Verde para HP */
     
-    /* Variáveis do Mapa Hexagonal (Ajuste o tamanho aqui) */
-    --hex-size: 60px; /* Tamanho (largura) de um hexágono */
-    --hex-height: calc(var(--hex-size) * 1.1547); /* Altura (largura * sqrt(3)/2 * 2) */
-    --hex-margin: calc(var(--hex-size) * -0.25); /* Sobreposição horizontal */
+    /* Variáveis do Mapa Hexagonal */
+    --hex-size: 50px; /* Largura do hexágono */
+    --hex-height: calc(var(--hex-size) * 1.1547); 
 }
 
 * {
@@ -26,7 +27,7 @@ body {
 }
 
 /* ==================================================================== */
-/* HEADER UNIVERSAL */
+/* HEADER UNIVERSAL E NOVO DISPLAY DE TOKEN */
 /* ==================================================================== */
 header {
     display: flex;
@@ -46,11 +47,25 @@ h1 {
 #wallet-status {
     display: flex;
     align-items: center;
+    gap: 15px;
 }
 
 #connection-status {
-    margin-right: 15px;
     color: var(--color-accent-red);
+    font-weight: bold;
+}
+
+/* NOVO: Display de Tezerium */
+#tezerium-display {
+    background-color: var(--color-panel-dark);
+    border: 1px solid var(--color-accent-blue);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    color: var(--color-accent-blue);
+}
+#tezerium-display span {
+    color: white;
 }
 
 /* ==================================================================== */
@@ -75,6 +90,8 @@ h1 {
     font-weight: bold;
     transition: background-color 0.2s, box-shadow 0.2s;
     width: 100%;
+    border-radius: 5px; /* Arredondado */
+    font-size: 0.9em;
 }
 
 .action-btn:hover:not(:disabled) {
@@ -85,12 +102,30 @@ h1 {
 .action-btn:disabled {
     background-color: #555;
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .action-btn.demo-btn {
     background-color: var(--color-accent-blue);
-    color: var(--color-bg-dark);
+    color: var(--color-text-dark);
 }
+
+/* NOVO: Botão End Day com cor diferente */
+#end-turn-btn {
+    background-color: var(--color-accent-blue);
+    color: var(--color-text-dark);
+}
+#end-turn-btn:hover:not(:disabled) {
+    background-color: #5effff;
+    box-shadow: 0 0 10px var(--color-accent-blue);
+}
+
+/* NOVO: Ícones dos botões */
+.action-btn span {
+    margin-right: 8px;
+    font-size: 1.1em;
+}
+
 
 /* ==================================================================== */
 /* ESTRUTURA DE TELAS */
@@ -107,12 +142,10 @@ h1 {
     margin: 50px auto;
     padding: 40px;
 }
-
 #logged-out-screen h2 {
     color: var(--color-accent-red);
     margin-bottom: 20px;
 }
-
 #logged-out-screen .action-btn {
     max-width: 300px;
     margin: 10px auto 0 auto;
@@ -125,34 +158,107 @@ h1 {
 }
 
 .dashboard-container {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1.2fr;
     gap: 20px;
 }
 
-#nft-selection-panel {
-    flex: 1;
-    min-width: 280px;
+#nft-selection-panel { min-width: 280px; }
+#equipment-panel { min-width: 400px; }
+#crafting-panel { min-width: 320px; }
+
+/* Lista de NFTs (Painel Esquerdo) */
+#nft-list-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+.nft-list-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+.nft-list-item:hover {
+    background-color: #3c3c57;
+}
+.nft-list-item.selected {
+    background-color: var(--color-bg-dark);
+    border-color: var(--color-accent-blue);
+    box-shadow: 0 0 5px var(--color-accent-blue);
+}
+.nft-list-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+.nft-list-item-info {
+    display: flex;
+    flex-direction: column;
+}
+.nft-list-item-info p {
+    margin: 0;
+    font-size: 0.9em;
+}
+.nft-list-item-info p strong {
+    color: var(--color-accent-red);
+    font-size: 1.1em;
 }
 
-#equipment-panel {
-    flex: 2;
-    min-width: 400px;
+/* Painel de Detalhes (Meio) */
+#kid-details-placeholder {
+    text-align: center;
+    padding: 50px 20px;
+    color: #888;
+    font-size: 1.2em;
 }
-
-#crafting-panel {
-    flex: 1.5;
-    min-width: 320px;
+#kid-details-content h3 {
+    display: flex;
+    align-items: center;
 }
-
-/* Layout dos Slots de Equipamento */
+#edit-name-icon {
+    font-size: 0.8em;
+    margin-left: 10px;
+    cursor: pointer;
+    color: var(--color-accent-blue);
+}
+#edit-name-icon:hover { color: white; }
+.kid-details-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+#dash-kid-image {
+    width: 150px;
+    height: 150px;
+    border: 2px solid var(--color-accent-blue);
+    border-radius: 5px;
+    flex-shrink: 0;
+}
+#dash-kid-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.kid-details-info p {
+    font-size: 1.1em;
+    margin: 5px 0;
+}
 .equipment-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
     margin-bottom: 20px;
 }
-
 .equip-slot {
     height: 100px;
     border: 2px dashed var(--color-text-light);
@@ -171,7 +277,6 @@ h1 {
     border-bottom: 1px solid var(--color-accent-blue);
     margin-bottom: 10px;
 }
-
 .tab-btn {
     background: none;
     border: none;
@@ -180,20 +285,12 @@ h1 {
     cursor: pointer;
     font-size: 1em;
 }
-
 .tab-btn.active {
     color: var(--color-accent-blue);
     border-bottom: 2px solid var(--color-accent-blue);
 }
-
-.tab-content {
-    display: none; /* Escondido por padrão */
-}
-
-.tab-content.active {
-    display: block; /* Visível */
-}
-
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 .crafting-recipe {
     padding: 10px;
     border: 1px solid #444;
@@ -202,163 +299,121 @@ h1 {
     justify-content: space-between;
     align-items: center;
 }
-
 .action-btn.small-btn {
     width: auto;
     padding: 5px 10px;
 }
-
 #inventory-list-materials {
     list-style: none;
     padding: 0;
 }
 
-/* Lista de NFTs (Painel Esquerdo) */
-#nft-list-container {
-    max-height: 500px;
-    overflow-y: auto;
-}
-
-.nft-list-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border: 1px solid #444;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-
-.nft-list-item:hover {
-    background-color: #3c3c57; /* Cor de hover mais clara */
-}
-
-.nft-list-item.selected {
-    background-color: var(--color-bg-dark);
-    border-color: var(--color-accent-blue);
-    box-shadow: 0 0 5px var(--color-accent-blue);
-}
-
-.nft-list-item img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 5px;
-    margin-right: 15px;
-    flex-shrink: 0;
-}
-
-.nft-list-item-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.nft-list-item-info p {
-    margin: 0;
-    font-size: 0.9em;
-}
-.nft-list-item-info p strong {
-    color: var(--color-accent-red);
-    font-size: 1.1em;
-}
-
-/* Painel de Detalhes (Painel do Meio) */
-#kid-details-placeholder {
-    text-align: center;
-    padding: 50px 20px;
-    color: #888;
-    font-size: 1.2em;
-}
-
-#kid-details-content h3 {
-    display: flex;
-    align-items: center;
-}
-
-#edit-name-icon {
-    font-size: 0.8em;
-    margin-left: 10px;
-    cursor: pointer;
-    color: var(--color-accent-blue);
-}
-#edit-name-icon:hover {
-    color: white;
-}
-
-.kid-details-header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 15px;
-    margin-bottom: 15px;
-}
-
-#dash-kid-image {
-    width: 150px;
-    height: 150px;
-    border: 2px solid var(--color-accent-blue);
-    border-radius: 5px;
-    flex-shrink: 0;
-}
-#dash-kid-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.kid-details-info {
-    flex-grow: 1;
-}
-
-.kid-details-info p {
-    font-size: 1.1em;
-    margin: 5px 0;
-}
-
 /* --- TELA 3: JOGO --- */
 #game-screen .game-container {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
     gap: 20px;
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
 }
 
-#game-screen #status-panel {
-    flex: 1;
-    min-width: 280px;
+/* NOVO: Seções do Painel de Status */
+.info-section {
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
 }
-#game-screen #map-panel {
-    flex: 2;
-    min-width: 500px; /* Precisa de mais espaço para o hex map */
-}
-#game-screen #action-panel {
-    flex: 1;
-    min-width: 280px;
+.info-section h4 {
+    color: var(--color-accent-red);
+    margin-top: 0;
+    margin-bottom: 10px;
 }
 
-/* Imagem do Kid no Jogo */
+/* Seção 1: Identidade do Kid */
+.kid-identity {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 #kid-image-container {
-    height: 150px; 
-    width: 150px; 
-    margin: 0 auto 15px auto;
+    width: 100px;
+    height: 100px;
     border: 2px solid var(--color-accent-red);
     border-radius: 5px;
     overflow: hidden;
+    flex-shrink: 0;
 }
-
 #kid-image-container img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
+}
+.kid-identity-details p {
+    font-size: 1.1em;
+    margin: 5px 0;
 }
 
+/* Seção 2: Barra de HP e Stats */
+.hp-bar-container {
+    width: 100%;
+    height: 30px;
+    background-color: #111;
+    border: 1px solid #555;
+    border-radius: 5px;
+    position: relative;
+    margin-bottom: 10px;
+}
+.hp-bar-fill {
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-hp-bar);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+.hp-bar-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--color-text-dark);
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 10px;
+    font-size: 0.9em;
+}
+
+/* Seção 3: Recursos */
 #resource-list {
     list-style: none;
     padding-left: 0;
+    font-size: 0.9em;
+}
+
+/* Painel de Ações: AP/MP Display */
+.ap-mp-display {
+    display: flex;
+    justify-content: space-around;
+    background-color: #111;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+.ap-mp-display div {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+#ap-display {
+    color: var(--color-accent-blue);
+}
+#mp-display {
+    color: var(--color-hp-bar);
 }
 
 #game-log {
@@ -369,7 +424,6 @@ h1 {
     padding: 10px;
     margin-top: 15px;
 }
-
 .log-entry {
     margin-bottom: 5px;
     font-size: 0.9em;
@@ -377,38 +431,35 @@ h1 {
 }
 
 /* ==================================================================== */
-/* MAPA HEXAGONAL (Substitui o antigo .map-cell) */
+/* MAPA HEXAGONAL (CORRIGIDO) */
 /* ==================================================================== */
-#game-map {
-    position: relative; /* Contêiner para posicionamento absoluto */
+.hex-map-container {
+    position: relative; 
     width: 100%;
-    aspect-ratio: 1 / 1; /* Mantém proporção, mas pode precisar de ajuste */
-    overflow: hidden; /* Garante que os hexágonos não saiam */
-    margin-top: 10px;
+    height: 100%;
+    min-height: 500px; /* Garante altura para o cálculo */
+    overflow: hidden; /* Corta hexágonos fora da borda */
     background-color: #000;
 }
 
 .hex-cell {
-    /* Define a forma de "pointy-top" hex */
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    
     width: var(--hex-size);
     height: var(--hex-height);
     background-color: #333;
-    
-    position: absolute; /* Posição será definida pelo JavaScript */
+    position: absolute; 
     cursor: pointer;
-    transition: transform 0.2s ease;
-
-    /* Para centralizar o texto (ex: '🤖' ou '⚠️') */
+    transition: transform 0.2s ease, filter 0.2s ease;
+    
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.5em; /* Aumenta o tamanho do ícone */
+    font-size: 1.5em; 
 }
 
 .hex-cell:hover {
     transform: scale(1.1);
+    filter: brightness(1.3);
     z-index: 5;
 }
 
@@ -416,30 +467,34 @@ h1 {
     background-color: var(--color-accent-blue) !important;
     border: 2px solid white;
     box-shadow: 0 0 10px var(--color-accent-blue);
-    z-index: 2; /* Garante que o Kid fique por cima */
+    z-index: 2; 
+    transform: scale(1.1);
 }
 
 /* ==================================================================== */
 /* RESPONSIVIDADE */
 /* ==================================================================== */
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
     /* Stacka o Dashboard */
     .dashboard-container {
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
     
     /* Stacka o Jogo */
-    .game-container {
-        flex-direction: column;
+    #game-screen .game-container {
+        grid-template-columns: 1fr;
     }
+}
 
-    .panel {
-        min-width: 100%;
-        margin-bottom: 20px;
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
     }
-
-    #map-panel {
-        flex: auto;
-        min-height: 400px; /* Garante altura mínima em mobile */
+    h1 {
+        font-size: 1.2em;
     }
-
+    #tezerium-display {
+        font-size: 0.8em;
+        padding: 4px 8px;
+    }
+}
