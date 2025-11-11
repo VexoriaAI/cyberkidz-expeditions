@@ -272,7 +272,7 @@ function renderEquippedItems() {
     }
 }
 
-// ATUALIZADO: Renderiza o grid de 3 colunas
+// **CORREÇÃO: Renderiza o grid de 3 colunas**
 function renderInventory() {
     const inventoryGrid = document.getElementById('inventory-grid-materials');
     inventoryGrid.innerHTML = ''; // Limpa o grid
@@ -290,7 +290,7 @@ function renderInventory() {
     }
 }
 
-// ATUALIZADO: Renderiza receitas com ícones
+// **CORREÇÃO: Renderiza receitas com ícones**
 function renderCraftingRecipes() {
     const tabRefine = document.getElementById('tab-refine');
     const tabCraft = document.getElementById('tab-craft');
@@ -301,9 +301,13 @@ function renderCraftingRecipes() {
     for (const compId in RECIPES_REFINE) {
         const recipe = RECIPES_REFINE[compId];
         // Cria o HTML para os ícones
-        let costHtml = Object.entries(recipe.cost).map(([matId, amt]) => `
-            <img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}" onerror="this.style.display='none'"> x${amt}
-        `).join(' + ');
+        let costHtml = Object.entries(recipe.cost).map(([matId, amt]) => {
+            // Verifica se o material existe no nosso DB
+            if (MATERIALS[matId]) {
+                return `<img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}" onerror="this.style.display='none'"> x${amt}`;
+            }
+            return `? x${amt}`;
+        }).join(' + ');
 
         tabRefine.innerHTML += `
             <div class="crafting-recipe">
@@ -315,9 +319,12 @@ function renderCraftingRecipes() {
     // Gera receitas de Craft (Vazio)
     for (const itemId in RECIPES_CRAFT_EMPTY) {
         const recipe = RECIPES_CRAFT_EMPTY[itemId];
-        let costHtml = Object.entries(recipe.cost).map(([matId, amt]) => `
-            <img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}" onerror="this.style.display='none'"> x${amt}
-        `).join(' + ');
+        let costHtml = Object.entries(recipe.cost).map(([matId, amt]) => {
+            if (MATERIALS[matId]) {
+                return `<img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}" onerror="this.style.display='none'"> x${amt}`;
+            }
+            return `? x${amt}`;
+        }).join(' + ');
 
         tabCraft.innerHTML += `
             <div class="crafting-recipe">
@@ -326,6 +333,7 @@ function renderCraftingRecipes() {
             </div>`;
     }
 }
+
 
 function craftEmptyItem(itemId) {
     alert(`(Simulado) Crafting: ${RECIPES_CRAFT_EMPTY[itemId].name}`);
