@@ -1,6 +1,6 @@
 // ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT LÓGICO
-// VERSÃO 3.2: UI do Dashboard (Crafting/Inventory) Atualizada
+// VERSÃO 3.3: Modal de Equipamento Interativo
 // ====================================================================
 
 // ====================================================================
@@ -55,33 +55,27 @@ const ENEMY = {
     MUTANT: { name: "Wasteland Mutant", strength: 8, hp: 15, reward: 5 }
 };
 
-// --- 1.4: Banco de Dados de Crafting (COM ÍCONES) ---
+// --- 1.4: Banco de Dados de Crafting ---
 const MATERIALS = {
-    // (Os nomes dos ícones devem corresponder aos seus arquivos em /images/)
     scrap: { name: "Scrap", type: "Base", icon: "icon_scrap.png" }, 
     water: { name: "Clean Water", type: "Base", icon: "icon_water.png" }, 
     food: { name: "Food", type: "Base", icon: "icon_food.png" },
-    
     metal: { name: "Metal", type: "Volcanic", icon: "icon_metal.png" }, 
     magma: { name: "Magma", type: "Volcanic", icon: "icon_magma.png" }, 
     pumice: { name: "Volcanic Pumice Stone", type: "Volcanic", icon: "icon_pumice.png" }, 
     obsidian: { name: "Obsidian Tears", type: "Volcanic", icon: "icon_obsidian.png" },
-    
     crystal: { name: "Energized Crystals", type: "Undergrounder", icon: "icon_crystal.png" }, 
     pure_water: { name: "Pure Water", type: "Undergrounder", icon: "icon_pure_water.png" }, 
     clay: { name: "Special Clay", type: "Undergrounder", icon: "icon_clay.png" }, 
     glass: { name: "Glass", type: "Undergrounder", icon: "icon_glass.png" },
-    
     polymer: { name: "Polymer", type: "Nocturnal", icon: "icon_polymer.png" }, 
     nanochips: { name: "Nanochips", type: "Nocturnal", icon: "icon_nanochips.png" }, 
     implants: { name: "Cybernetic Implants", type: "Nocturnal", icon: "icon_implants.png" }, 
     quantum_core: { name: "Quantum Energy Core", type: "Nocturnal", icon: "icon_quantum_core.png" },
-    
     healing_plants: { name: "Healing Plants", type: "Reptilian", icon: "icon_healing_plants.png" }, 
     fungi: { name: "Hallucinogenic Fungi", type: "Reptilian", icon: "icon_fungi.png" }, 
     reptile_blood: { name: "Reptilian Blood", type: "Reptilian", icon: "icon_reptile_blood.png" }, 
     animal_skin: { name: "Animal Skin", type: "Reptilian", icon: "icon_animal_skin.png" },
-    
     strange_fluid: { name: "Strange Fluid", type: "Radioactive", icon: "icon_strange_fluid.png" }, 
     parasitic_fungus: { name: "Parasitic Fungus", type: "Radioactive", icon: "icon_parasitic_fungus.png" }, 
     venom_glands: { name: "Venom Glands", type: "Radioactive", icon: "icon_venom_glands.png" }, 
@@ -126,8 +120,13 @@ let gameState = {
         tezerium: 1000, 
         inventory: {
             materials: { scrap: 100, water: 100, food: 100, metal: 5, magma: 2, pumice: 1, crystal: 5, clay: 2, glass: 1, polymer: 0, nanochips: 0, implants: 0, quantum_core: 0, healing_plants: 0, fungi: 0, reptile_blood: 0, animal_skin: 0, strange_fluid: 0, parasitic_fungus: 0, venom_glands: 0, luminescent_algae: 0 },
-            components: { volcanic_core: 0, defense_plate: 0, precision_lens: 0, speed_injector: 0, heal_totem: 0, lucky_clover: 0 },
-            equipment: []
+            components: { volcanic_core: 1, defense_plate: 1, precision_lens: 1, speed_injector: 1, heal_totem: 1, lucky_clover: 1 },
+            // NOVO: Inventário de equipamento simulado
+            equipment: [
+                { id: 'h1', name: 'Capacete de Cristal (Nv 1)', slot: 'helmet', stats: { defense: 5, blockChance: 3 }, components: ['defense_plate'], icon: '🛡️' },
+                { id: 'a1', name: 'Armadura da Sorte (Nv 1)', slot: 'armor', stats: { luck: 5 }, components: ['lucky_clover'], icon: '🍀' },
+                { id: 'w1', name: 'Lâmina Vulcânica (Nv 1)', slot: 'weapon', stats: { damage: 5, critDamage: 5 }, components: ['volcanic_core'], icon: '⚔️' }
+            ]
         },
         equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null }
     },
@@ -253,34 +252,37 @@ function selectActiveKid(nft) {
     calculateFinalStats();
 }
 
+// ATUALIZADO: Gerencia os botões '+' e 'X'
 function renderEquippedItems() {
-    const equipmentGrid = document.querySelector('.equipment-grid');
-    equipmentGrid.querySelectorAll('.equip-slot').forEach(slot => {
-        slot.innerHTML = `<span>${slot.id.replace('equip-slot-', '')}</span>`;
-        slot.style.borderColor = '#aaa';
-    });
-    
     for (const slotName of EQUIPMENT_SLOTS) {
+        const slotDiv = document.getElementById(`equip-slot-${slotName}`);
+        const removeBtn = document.querySelector(`.equip-remove-btn[data-slot="${slotName}"]`);
+        
         const itemId = gameState.player.equipped[slotName];
-        if (itemId) {
-            const item = gameState.player.inventory.equipment.find(e => e.id === itemId);
-            if (item) {
-                document.getElementById(`equip-slot-${slotName}`).innerHTML = `<p>${item.name}</p>`;
-                document.getElementById(`equip-slot-${slotName}`).style.borderColor = 'lime';
-            }
+        const item = gameState.player.inventory.equipment.find(e => e.id === itemId);
+
+        if (item) {
+            // Item Equipado
+            slotDiv.innerHTML = `<img src="images/icon_item_placeholder.png" alt="${item.name}" title="${item.name}">`; // Usar item.icon se tiver
+            slotDiv.classList.add('equipped');
+            removeBtn.style.display = 'block';
+        } else {
+            // Slot Vazio
+            slotDiv.innerHTML = '<span>+</span>';
+            slotDiv.classList.remove('equipped');
+            removeBtn.style.display = 'none';
         }
     }
 }
 
-// **CORREÇÃO: Renderiza o grid de 3 colunas**
+
 function renderInventory() {
     const inventoryGrid = document.getElementById('inventory-grid-materials');
-    inventoryGrid.innerHTML = ''; // Limpa o grid
+    inventoryGrid.innerHTML = ''; 
     for (const materialId in gameState.player.inventory.materials) {
         const material = MATERIALS[materialId];
         const amount = gameState.player.inventory.materials[materialId];
         if (material) {
-            // Adiciona as 3 colunas
             inventoryGrid.innerHTML += `
                 <img src="images/${material.icon}" alt="${material.name}" class="inventory-item-icon" title="${material.name}" onerror="this.style.display='none'">
                 <span class="inventory-item-name">${material.name}:</span>
@@ -290,19 +292,15 @@ function renderInventory() {
     }
 }
 
-// **CORREÇÃO: Renderiza receitas com ícones**
 function renderCraftingRecipes() {
     const tabRefine = document.getElementById('tab-refine');
     const tabCraft = document.getElementById('tab-craft');
     tabRefine.innerHTML = '<h4>Refine Components</h4>';
     tabCraft.innerHTML = '<h4>Craft Empty Gear</h4>';
 
-    // Gera receitas de Refino
     for (const compId in RECIPES_REFINE) {
         const recipe = RECIPES_REFINE[compId];
-        // Cria o HTML para os ícones
         let costHtml = Object.entries(recipe.cost).map(([matId, amt]) => {
-            // Verifica se o material existe no nosso DB
             if (MATERIALS[matId]) {
                 return `<img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}" onerror="this.style.display='none'"> x${amt}`;
             }
@@ -316,7 +314,6 @@ function renderCraftingRecipes() {
             </div>`;
     }
 
-    // Gera receitas de Craft (Vazio)
     for (const itemId in RECIPES_CRAFT_EMPTY) {
         const recipe = RECIPES_CRAFT_EMPTY[itemId];
         let costHtml = Object.entries(recipe.cost).map(([matId, amt]) => {
@@ -333,7 +330,6 @@ function renderCraftingRecipes() {
             </div>`;
     }
 }
-
 
 function craftEmptyItem(itemId) {
     alert(`(Simulado) Crafting: ${RECIPES_CRAFT_EMPTY[itemId].name}`);
@@ -371,6 +367,62 @@ function calculateFinalStats() {
     document.getElementById('dash-stat-def').textContent = finalStats.defense;
     document.getElementById('dash-stat-crit').textContent = `${finalStats.critChance}%`;
     document.getElementById('dash-stat-luck').textContent = `${finalStats.luck}%`;
+}
+
+// --- 5.4: Lógica do Modal de Equipamento ---
+function openEquipmentModal(slotName) {
+    const modal = document.getElementById('equipment-select-modal');
+    const title = document.getElementById('modal-equip-title');
+    const list = document.getElementById('modal-equip-list');
+    
+    title.textContent = `Select ${slotName}`;
+    list.innerHTML = ''; // Limpa a lista
+
+    // Filtra o inventário por itens que correspondem ao slot
+    const itemsForSlot = gameState.player.inventory.equipment.filter(item => item.slot === slotName);
+
+    if (itemsForSlot.length === 0) {
+        list.innerHTML = '<p>No items found for this slot. Go craft some!</p>';
+    } else {
+        itemsForSlot.forEach(item => {
+            // Constrói a string de stats
+            const statsHtml = Object.entries(item.stats).map(([stat, value]) => {
+                return `<p class="item-stats">${stat}: +${value}</p>`;
+            }).join('');
+            
+            // Constrói a string de componentes
+            const componentsHtml = `<p class="item-components">Components: ${item.components.join(', ')}</p>`;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'equip-list-item';
+            itemDiv.innerHTML = `
+                <h4>${item.name}</h4>
+                ${statsHtml}
+                ${componentsHtml}
+            `;
+            itemDiv.onclick = () => equipItem(item.id, slotName);
+            list.appendChild(itemDiv);
+        });
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeEquipmentModal() {
+    document.getElementById('equipment-select-modal').style.display = 'none';
+}
+
+function equipItem(itemId, slotName) {
+    gameState.player.equipped[slotName] = itemId;
+    renderEquippedItems();
+    calculateFinalStats();
+    closeEquipmentModal();
+}
+
+function unequipItem(slotName) {
+    gameState.player.equipped[slotName] = null;
+    renderEquippedItems();
+    calculateFinalStats();
 }
 
 
@@ -703,14 +755,12 @@ function endDay() {
 }
 
 function gameOver(success) {
-    // 1. Adicionar recursos da expedição ao inventário principal
     for (const res in gameState.expedition.resourcesFound) {
         if (gameState.player.inventory.materials.hasOwnProperty(res)) {
             gameState.player.inventory.materials[res] += gameState.expedition.resourcesFound[res];
         }
     }
     
-    // 2. Logar e voltar ao Dashboard
     if (success) {
         logMessage("Expedition Successful. Resources transferred to inventory.", 'lime');
     } else {
@@ -770,6 +820,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 6. Iniciar na Tela 1
+    // 6. NOVO: Listeners para o Modal de Equipamento
+    document.getElementById('modal-equip-close').addEventListener('click', closeEquipmentModal);
+
+    // Adiciona listeners aos 7 slots de equipamento e 7 botões de remover
+    document.querySelectorAll('.equip-slot').forEach(slot => {
+        slot.addEventListener('click', () => {
+            const slotName = slot.dataset.slot;
+            if (!gameState.player.equipped[slotName]) { // Só abre o modal se o slot estiver vazio
+                openEquipmentModal(slotName);
+            }
+        });
+    });
+
+    document.querySelectorAll('.equip-remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const slotName = btn.dataset.slot;
+            unequipItem(slotName);
+        });
+    });
+
+    // 7. Iniciar na Tela 1
     showScreen('logged-out-screen');
 });
