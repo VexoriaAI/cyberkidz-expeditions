@@ -101,11 +101,11 @@
                 </div>
             </div>
 
-            <!-- Coluna da Direita: Inventário e Crafting (ATUALIZADO) -->
+            <!-- Coluna da Direita: Inventário e Crafting (CORRIGIDO) -->
             <div id="crafting-panel" class="panel">
                 <h3>Inventory & Crafting</h3>
                 
-                <!-- Abas Atualizadas (4 Abas) -->
+                <!-- Abas com 4 abas -->
                 <div class="tabs">
                     <button class="tab-btn active" data-tab="inventory">Materials</button>
                     <button class="tab-btn" data-tab="refine">Refine</button>
@@ -113,11 +113,12 @@
                     <button class="tab-btn" data-tab="embed">Embed</button>
                 </div>
 
-                <!-- Painel do Inventário (Layout de 3 colunas) -->
+                <!-- CORREÇÃO: Removida a <ul>, substituída por um <div> com o ID correto -->
                 <div id="tab-inventory" class="tab-content active">
                     <h4>Wasteland Materials</h4>
-                    <!-- O JS irá preencher este grid -->
-                    <div id="inventory-grid-materials"></div>
+                    <div id="inventory-grid-materials">
+                        <!-- O JS irá preencher este grid -->
+                    </div>
                 </div>
 
                 <!-- Painel de Refino (com ícones) -->
@@ -132,7 +133,7 @@
                     <!-- JS irá gerar receitas -->
                 </div>
                 
-                <!-- NOVO: Painel de Embed -->
+                <!-- Painel de Embed -->
                 <div id="tab-embed" class="tab-content">
                     <h4>Embed Component</h4>
                     <p>Combine an Empty Gear + Component to create your item.</p>
@@ -182,7 +183,7 @@
                             <p><strong>Atk Speed:</strong> <span id="kid-atk-speed">0</span></p>
                             <p><strong>HP Regen:</strong> <span id="kid-hp-regen">0</span></p>
                             <p><strong>Block:</strong> <span id="kid-block">0%</span></p>
-                            <p><strong>Luck:</strong> <span id="kid-luck">0%</span></p>
+                            <p><strong>Luck:</strong> <span id_part="4" id="kid-luck">0%</span></p>
                         </div>
                     </div>
 
