@@ -373,19 +373,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Funções Auxiliares do Mapa Hexagonal ---
     function axialToPixel(q, r) {
-        // Pegamos a largura completa (var(--hex-size) ) e a altura (var(--hex-height))
-        const hexWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size'));
-        const hexHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height'));
+        const s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size'));
+        const h = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height'));
     
-        // A compensação é baseada na largura (3/4 da largura total por coluna)
-        const x = hexWidth * (3/4 * q); 
-        
-        // A compensação vertical depende de Q (para o offset) e de R (para a linha)
-        // q/2 faz a compensação de offset (metade da altura) a cada nova coluna
-        const y = hexHeight * (r + q / 2); 
+        // 1. Compensação Horizontal (X)
+        // O offset depende da coluna (q) ser par ou ímpar (r & 1)
+        const x = s * 1.5 * q;
+    
+        // 2. Compensação Vertical (Y)
+        // A cada linha (r) move-se verticalmente pela metade da altura do hexágono (h/2)
+        // O offset de 'q' é aplicado para compensar o deslocamento da coluna
+        const y = h * r + h * (q & 1) / 2;
         
         return { x, y };
     }
+    
     function axialDistance(q1, r1, q2, r2) {
         return (Math.abs(q1 - q2) 
               + Math.abs(q1 + r1 - q2 - r2) 
@@ -882,45 +884,40 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderStaticHexMap() {
         DOM.game.mapContent.innerHTML = '';
         
-        const hexWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size')) * 2;
-        const hexHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height')) * 2;
+        // Obter dimensões do hexágono
+        const s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size'));
+        const h = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height'));
+        const hexWidth = s * 2;
+        const hexHeight = h;
         
-        // Calcula as dimensões mínimas e máximas do mapa (para determinar o centro)
+        // Variáveis para encontrar o ponto mais negativo (topo-esquerda)
         let minX = Infinity, minY = Infinity;
-        let maxX = -Infinity, maxY = -Infinity;
-        
+    
+        // 1. Primeira passada: Encontrar o ponto de origem (0,0) corrigido
         const positions = [];
-        
         STATIC_MAP_DATA.forEach((cell, key) => {
             const [q, r] = key.split(',').map(Number);
             const pixel = axialToPixel(q, r);
             
             positions.push({ pixel, cell, q, r, key });
             
-            // Determina as fronteiras do mapa
+            // Encontrar o ponto mais à esquerda/topo
             minX = Math.min(minX, pixel.x);
             minY = Math.min(minY, pixel.y);
-            maxX = Math.max(maxX, pixel.x);
-            maxY = Math.max(maxY, pixel.y);
         });
     
-        // Calcula o centro de todos os hexágonos
-        const mapCenterCorrectionX = (maxX + minX) / 2;
-        const mapCenterCorrectionY = (maxY + minY) / 2;
-    
-        // Ajuste: Centralizamos o mapa e garantimos que o container acomode
+        // 2. Segunda passada: Renderizar com a compensação (offset)
         positions.forEach(({ pixel, cell, q, r, key }) => {
             
-            // Centraliza o mapa dentro do contentor (map-content)
-            const leftPos = pixel.x - mapCenterCorrectionX;
-            const topPos = pixel.y - mapCenterCorrectionY;
+            // Compensação: Subtrai a posição mais extrema (minX, minY)
+            // E compensa pelo tamanho da célula (largura/altura)
+            const leftPos = pixel.x - minX - (hexWidth / 2);
+            const topPos = pixel.y - minY - (hexHeight / 2);
     
             const cellDiv = document.createElement('div');
             cellDiv.className = 'hex-cell';
-            
-            // Posição ajustada, subtraindo metade da largura/altura do hex para centralizar o DIV
-            cellDiv.style.left = `${leftPos - (hexWidth / 2)}px`;
-            cellDiv.style.top = `${topPos - (hexHeight / 2)}px`;
+            cellDiv.style.left = `${leftPos}px`;
+            cellDiv.style.top = `${topPos}px`;
             
             cellDiv.dataset.q = q;
             cellDiv.dataset.r = r;
@@ -932,15 +929,8 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.game.mapContent.appendChild(cellDiv);
         });
         
-        // NOVO: Centraliza o mapa inteiro dentro do container
         // O mapa-content agora tem a largura e altura necessárias.
-        const finalMapWidth = maxX - minX + hexWidth;
-        const finalMapHeight = maxY - minY + hexHeight;
-    
-        DOM.game.mapContent.style.width = `${finalMapWidth}px`;
-        DOM.game.mapContent.style.height = `${finalMapHeight}px`;
-    
-        // Remove o overflow/interação de Pan/Zoom (pois queremos que ele seja estático)
+        // Simplificamos a centralização para que o mapa preencha o canto superior esquerdo do container.
         DOM.game.mapContainer.style.overflow = 'hidden'; 
     }
 
