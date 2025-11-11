@@ -302,24 +302,28 @@ p {
 
 /* Garante que a imagem do mapa se ajuste */
 #map-image {
-    object-fit: contain; /* Garante que a imagem caiba sem distorcer */
+    object-fit: fill; /* Força a imagem a preencher 100% do container */
 }
 
 /* Estilo para cada hexágono de neblina (Div de overlay) */
 .hex-fog {
     position: absolute;
-    /* Tamanho baseado nas variáveis Root (100px x 86.6px) */
     width: var(--hex-visual-width); 
     height: var(--hex-visual-height);
     
-    /* Forma de Hexágono Pointy Top */
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    transform: translate(-50%, -50%); /* Centraliza o div no ponto (x,y) do JS */
+    transform: translate(-50%, -50%); 
     
-    background-color: rgba(0, 0, 0, 0.9); /* Cor da Neblina */
-    pointer-events: none; /* Não bloqueia o clique na imagem abaixo */
-    opacity: 0; /* Começa invisível por padrão */
+    background-color: rgba(0, 0, 0, 0.9); 
+    pointer-events: none; 
+    
+    /* MUDANÇA: Começa LIGADO (opacidade 1) */
+    opacity: 1; 
     transition: opacity 0.5s ease;
+}
+
+.hex-fog.revealed {
+    opacity: 0;
 }
 
 /* Estado da Neblina Ativa */
