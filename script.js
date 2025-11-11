@@ -626,7 +626,9 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.game.log.innerHTML = ''; 
         logMessage(`--- DAY 1 START ---`, 'day');
         renderGameStatusPanel();
-        renderImageMap(); // NOVO!
+        
+        // NOVO: Renderiza o Image Map e o Fog
+        renderImageMap(); 
         revealAdjacentHexes(gameState.expedition.playerPos);
         updateFogOfWar();
         updatePlayerHexPosition();
@@ -658,7 +660,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const { x: centerX, y: centerY } = axialToPixelCenter(q, r, HEX_SIZE_VISUAL);
             
             // Aplica o deslocamento (offset) para começar no canto superior esquerdo (0,0)
-            // Os valores '+ HEX_SIZE_VISUAL' são margens de segurança para o desenho do polígono.
             const mapX = centerX - minX + HEX_SIZE_VISUAL; 
             const mapY = centerY - minY + HEX_SIZE_VISUAL;
             
@@ -671,6 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
             areaTag.dataset.q = q;
             areaTag.dataset.r = r;
             areaTag.dataset.key = key;
+            areaTag.href = "#"; // Necessário para o clique funcionar em alguns navegadores
             areaTag.addEventListener('click', (e) => {
                 e.preventDefault(); 
                 handleHexMoveAttempt(q, r);
@@ -679,21 +681,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Geração do Overlay de Fog of War (Divs) ---
             const fogDiv = document.createElement('div');
-            fogDiv.className = 'hex-fog';
+            fogDiv.className = 'hex-fog'; // Começa com neblina (ver CSS)
             fogDiv.dataset.key = key;
-            // O posicionamento do div usa o ponto central (x, y)
             fogDiv.style.left = `${mapX}px`;
             fogDiv.style.top = `${mapY}px`;
             
             DOM.game.fogOverlay.appendChild(fogDiv);
         });
         
-        // 3. Ajuste o tamanho da imagem e do overlay (Ajuste para sua imagem real de 500x400)
-        // Estes valores devem corresponder ao tamanho da sua imagem wasteland_map_full.png
-        DOM.game.mapImage.style.width = '500px'; 
-        DOM.game.mapImage.style.height = '400px';
-        DOM.game.fogOverlay.style.width = '500px';
-        DOM.game.fogOverlay.style.height = '400px';
+        // 3. Ajuste o tamanho da imagem e do overlay
+        // O CSS (padding-top: 80%) cuida da proporção.
+        // O JS só precisa que o container exista.
     }
 
     /**
@@ -723,7 +721,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Remove marcadores antigos
         document.querySelectorAll('.kid-marker').forEach(marker => marker.remove());
         
-        const targetFogDiv = document.querySelector(`.hex-fog[data-key="${key}"]`);
+        // Encontra o hexágono de destino no overlay
+        const targetFogDiv = DOM.game.fogOverlay.querySelector(`.hex-fog[data-key="${key}"]`);
         
         if (targetFogDiv) {
             const marker = document.createElement('div');
@@ -732,16 +731,16 @@ document.addEventListener('DOMContentLoaded', () => {
             marker.style.left = targetFogDiv.style.left;
             marker.style.top = targetFogDiv.style.top;
             
-            // Ajuste para a posição do marcador (centro-fundo)
             marker.style.transform = 'translate(-50%, -100%)'; 
             marker.textContent = '🤖';
             
+            // Adiciona o marcador dentro do mapContainer
             DOM.game.mapContainer.appendChild(marker);
         }
     }
 
 
-    function renderGameStatusPanel() { /* ... (Mantém a lógica de atualização do painel) ... */
+    function renderGameStatusPanel() {
         const kid = gameState.expedition.kid; const stats = gameState.expedition.stats; const hpPercent = (gameState.expedition.currentHP / stats.hp) * 100;
         DOM.game.kidImage.innerHTML = `<img src="${kid.placeholderImg}" alt="${kid.name}" onerror="this.src='images/kid-placeholder.png'">`;
         DOM.game.kidTribe.textContent = kid.tribe.name; DOM.game.kidId.textContent = kid.id;
@@ -783,28 +782,120 @@ document.addEventListener('DOMContentLoaded', () => {
             
             logMessage(`Moved to [${q},${r}]. MP remaining: ${gameState.expedition.currentMP}`);
             
-            revealAdjacentHexes({ q, r }); updateFogOfWar(); updatePlayerHexPosition(); renderGameStatusPanel(); 
+            revealAdjacentHexes({ q, r }); 
+            updateFogOfWar(); 
+            updatePlayerHexPosition(); 
+            renderGameStatusPanel(); 
         } else {
              logMessage("Invalid move! Can only move to adjacent hex.", 'error'); 
         }
     }
     
-    function handleCollect() { /* ... */ }
-    function handleInvestigate() { /* ... */ }
-    function handleSearchEnemy() { /* ... */ }
-    function endDay() { /* ... */ }
-    function gameOver(isSuccess) { /* ... */ }
+    function handleCollect() {
+        gameState.expedition.currentAP--;
+        const luck = gameState.expedition.stats.luck / 100;
+        let amount = Math.ceil((Math.floor(Math.random() * 3) + 1) * (1 + luck));
+        const biome = STATIC_MAP_DATA.get(`${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`).biome;
+        const resourceId = BIOMES[biome].resource;
+        
+        if (!gameState.expedition.resourcesFound[resourceId]) {
+            gameState.expedition.resourcesFound[resourceId] = 0;
+        }
+        gameState.expedition.resourcesFound[resourceId] += amount;
+
+        logMessage(`Collected ${amount}x ${MATERIALS[resourceId].name}!`, 'reward');
+        showActionFeedback("Collection Succeeded!", `You found ${amount}x ${MATERIALS[resourceId].name}`);
+        renderGameStatusPanel();
+    }
+    
+    function handleInvestigate() {
+        gameState.expedition.currentAP--;
+        const luck = gameState.expedition.stats.luck;
+        const roll = Math.random() * 100;
+
+        if (roll < (10 + luck)) { 
+            logMessage("You found a secret stash!", 'reward');
+            showActionFeedback("Success!", `You found a secret stash! (+10 Scrap)`);
+            if (!gameState.expedition.resourcesFound.scrap) gameState.expedition.resourcesFound.scrap = 0;
+            gameState.expedition.resourcesFound.scrap += 10;
+        } else if (roll < (30 + luck)) { 
+             logMessage("It's an ambush!", 'combat');
+             showActionFeedback("Ambush!", `A Drone appeared!`);
+             startCombat(ENEMIES.DRONE);
+        } else {
+            logMessage("Investigation revealed nothing.");
+            showActionFeedback("Nothing Found", `You found nothing of interest.`);
+        }
+        renderGameStatusPanel();
+    }
+    
+    function handleSearchEnemy() {
+        gameState.expedition.currentAP -= 2;
+        logMessage("Searching for trouble...", 'combat');
+        showActionFeedback("Searching...", `A Mutant appeared!`);
+        startCombat(ENEMIES.MUTANT);
+        renderGameStatusPanel();
+    }
+    
+    function showActionFeedback(title, description) {
+        if (DOM.game.skipAnimationsCheck.checked) return;
+        DOM.modals.feedbackTitle.textContent = title;
+        DOM.modals.feedbackDesc.textContent = description;
+        DOM.modals.feedback.style.display = 'flex';
+        setTimeout(() => {
+            DOM.modals.feedback.style.display = 'none';
+        }, 3000); // 3 seconds
+    }
+
+    function endDay() {
+        if (gameState.expedition.currentDay >= MAX_DAYS) {
+            logMessage("Expedition finished (10 days).", 'day');
+            gameOver(true); // Success
+            return;
+        }
+        
+        gameState.expedition.currentDay++;
+        gameState.expedition.currentAP = gameState.expedition.stats.ap;
+        gameState.expedition.currentMP = gameState.expedition.stats.speed;
+        
+        gameState.expedition.currentHP += gameState.expedition.stats.hpRegen;
+        if (gameState.expedition.currentHP > gameState.expedition.stats.hp) {
+            gameState.expedition.currentHP = gameState.expedition.stats.hp;
+        }
+        
+        logMessage(`--- DAY ${gameState.expedition.currentDay} START ---`, 'day');
+        renderGameStatusPanel();
+    }
+
+    function gameOver(isSuccess) {
+        if (isSuccess) {
+            for (const resId in gameState.expedition.resourcesFound) {
+                if (!gameState.player.inventory.materials[resId]) {
+                    gameState.player.inventory.materials[resId] = 0;
+                }
+                gameState.player.inventory.materials[resId] += gameState.expedition.resourcesFound[resId];
+            }
+            const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
+            if (kid) kid.expeditions++;
+            
+            alert("Expedition Successful! Resources transferred to Hub.");
+        } else {
+            alert("Expedition Failed! All resources found were lost.");
+        }
+        
+        renderHubPreparationScreen(); 
+        showScreen('hub-preparation-screen');
+    }
 
 
     /* ==================================================================== */
     /* SEÇÃO 9: LÓGICA DA TELA 5 (COMBAT MODAL)
     /* ==================================================================== */
 
-    function combatLog(message) { /* ... */
+    function combatLog(message) {
         const p = document.createElement('p'); p.textContent = message; DOM.modals.combatLog.prepend(p);
-        while (DOM.modals.combatLog.children.length > 50) { DOM.modals.combatLog.removeChild(DOM.modals.combatLog.lastChild); }
     }
-    function toggleAutoAttack() { /* ... */
+    function toggleAutoAttack() {
         if (!gameState.combat.isActive) return; gameState.combat.isAutoAttack = !gameState.combat.isAutoAttack;
         if (gameState.combat.isAutoAttack) {
             DOM.modals.combatAutoBtn.textContent = "Cancel Auto"; DOM.modals.combatAutoBtn.classList.add('auto-active');
@@ -813,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.modals.combatAutoBtn.textContent = "Auto Attack"; DOM.modals.combatAutoBtn.classList.remove('auto-active');
         }
     }
-    function startCombat(enemy) { /* ... */
+    function startCombat(enemy) {
         gameState.combat.isActive = true; gameState.combat.enemy = { ...enemy, currentHp: enemy.hp }; const playerStats = gameState.expedition.stats;
         DOM.modals.combatEnemyName.textContent = enemy.name; DOM.modals.combatEnemy.querySelector('img').src = enemy.sprite;
         gameState.combat.playerTurn = playerStats.speed >= enemy.speed;
@@ -829,13 +920,13 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.modals.combatFleeBtn.disabled = false; DOM.modals.combatAutoBtn.disabled = false;
         }
     }
-    function updateCombatUI() { /* ... */
+    function updateCombatUI() {
         const playerHPPercent = (gameState.expedition.currentHP / gameState.expedition.stats.hp) * 100;
         DOM.modals.combatPlayerHpFill.style.width = `${playerHPPercent}%`; DOM.modals.combatPlayerHpText.textContent = `${gameState.expedition.currentHP} / ${gameState.expedition.stats.hp}`;
         const enemy = gameState.combat.enemy; const enemyHPPercent = (enemy.currentHp / enemy.hp) * 100;
         DOM.modals.combatEnemyHpFill.style.width = `${enemyHPPercent}%`; DOM.modals.combatEnemyHpText.textContent = `${enemy.currentHp} / ${enemy.hp}`;
     }
-    function handleCombatAttack() { /* ... */
+    function handleCombatAttack() {
         if (!gameState.combat.playerTurn) return; DOM.modals.combatAttackBtn.disabled = true; DOM.modals.combatFleeBtn.disabled = true; DOM.modals.combatAutoBtn.disabled = true;
         const playerStats = gameState.expedition.stats; const enemy = gameState.combat.enemy;
         let damage = Math.max(1, playerStats.damage - (enemy.defense || 0)); enemy.currentHp -= damage;
@@ -844,7 +935,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (enemy.currentHp <= 0) { endCombat(true); return; }
         gameState.combat.playerTurn = false; setTimeout(runEnemyTurn, 1000);
     }
-    function runEnemyTurn() { /* ... */
+    function runEnemyTurn() {
         if (gameState.combat.playerTurn) return;
         const playerStats = gameState.expedition.stats; const enemy = gameState.combat.enemy;
         let damage = Math.max(1, enemy.strength - (playerStats.defense || 0)); gameState.expedition.currentHP -= damage;
@@ -856,7 +947,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gameState.combat.isAutoAttack) { setTimeout(handleCombatAttack, 500); } 
         else { DOM.modals.combatAttackBtn.disabled = false; DOM.modals.combatFleeBtn.disabled = false; DOM.modals.combatAutoBtn.disabled = false; }
     }
-    function handleCombatFlee() { /* ... */
+    function handleCombatFlee() {
         if (!gameState.combat.playerTurn) return;
         if (gameState.combat.isAutoAttack) { toggleAutoAttack(); }
         const luck = gameState.expedition.stats.luck;
@@ -867,7 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(runEnemyTurn, 1000);
         }
     }
-    function endCombat(isVictory) { /* ... */
+    function endCombat(isVictory) {
         DOM.modals.combatPhaseBattle.style.display = 'none';
         if (isVictory) {
             const enemy = gameState.combat.enemy; DOM.modals.victoryEnemyName.textContent = enemy.name; DOM.modals.victoryRewardList.innerHTML = '';
@@ -895,20 +986,24 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("CyberKidz Expedition v4.0 Initialized (Image Map).");
 
         // --- Tela 1 ---
-        DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); DOM.loggedOut.bodyConnectBtn.addEventListener('click', handleConnectWallet);
+        DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
+        DOM.loggedOut.bodyConnectBtn.addEventListener('click', handleConnectWallet);
         DOM.loggedOut.demoGameBtn.addEventListener('click', handleDemoGame);
         
         // --- Tela 2 (Paginação e Filtros) ---
-        DOM.hubSelection.filterSearch.addEventListener('input', renderHubSelectionScreen); DOM.hubSelection.filterTribe.addEventListener('change', renderHubSelectionScreen);
+        DOM.hubSelection.filterSearch.addEventListener('input', renderHubSelectionScreen); 
+        DOM.hubSelection.filterTribe.addEventListener('change', renderHubSelectionScreen);
         DOM.hubSelection.filterItemsPerPage.addEventListener('change', () => { gameState.hub.pagination.currentPage = 1; renderHubSelectionScreen(); });
         DOM.hubSelection.filterResetBtn.addEventListener('click', () => {
             DOM.hubSelection.filterSearch.value = ''; DOM.hubSelection.filterTribe.value = 'all'; DOM.hubSelection.filterItemsPerPage.value = '10';
             gameState.hub.pagination.currentPage = 1; renderHubSelectionScreen();
         });
-        DOM.hubSelection.paginationPrev.addEventListener('click', () => handlePageChange('prev')); DOM.hubSelection.paginationNext.addEventListener('click', () => handlePageChange('next'));
+        DOM.hubSelection.paginationPrev.addEventListener('click', () => handlePageChange('prev')); 
+        DOM.hubSelection.paginationNext.addEventListener('click', () => handlePageChange('next'));
 
         // --- Tela 3 (Abas e Manequim) ---
-        DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen')); DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
+        DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen')); 
+        DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
         DOM.hubPreparation.mannequin.addEventListener('click', (e) => {
             if (e.target.closest('.equip-slot')) {
                 const slotDiv = e.target.closest('.equip-slot'); if (!slotDiv.classList.contains('equipped')) { openEquipmentModal(slotDiv.dataset.slot); }
@@ -925,22 +1020,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
+        // --- Tela 4 (CORREÇÃO: Listeners Adicionados) ---
+        DOM.game.exitExpeditionBtn.addEventListener('click', () => gameOver(true));
+        DOM.game.collectBtn.addEventListener('click', handleCollect);
+        DOM.game.investigateBtn.addEventListener('click', handleInvestigate);
+        DOM.game.searchEnemyBtn.addEventListener('click', handleSearchEnemy);
+        DOM.game.endTurnBtn.addEventListener('click', endDay);
+        
         // --- Modais ---
-        DOM.modals.equipCloseBtn.addEventListener('click', closeEquipmentModal); DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
-        DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal); DOM.modals.editNameSave.addEventListener('click', saveEditName);
+        DOM.modals.equipCloseBtn.addEventListener('click', closeEquipmentModal); 
+        DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
+        DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal); 
+        DOM.modals.editNameSave.addEventListener('click', saveEditName);
         
         // Modal de Embed
-        DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal); DOM.modals.embedCancelBtn.addEventListener('click', closeEmbedConfirmModal);
+        DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal); 
+        DOM.modals.embedCancelBtn.addEventListener('click', closeEmbedConfirmModal);
         DOM.modals.embedConfirmBtn.addEventListener('click', () => { console.log("Embedding confirmed (simulated)!"); closeEmbedConfirmModal(); });
 
         // Modal de Combate
-        DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack); DOM.modals.combatAutoBtn.addEventListener('click', toggleAutoAttack);
-        DOM.modals.combatFleeBtn.addEventListener('click', handleCombatFlee); DOM.modals.combatCloseVictoryBtn.addEventListener('click', closeCombatModal);
+        DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack); 
+        DOM.modals.combatAutoBtn.addEventListener('click', toggleAutoAttack);
+        DOM.modals.combatFleeBtn.addEventListener('click', handleCombatFlee); 
+        DOM.modals.combatCloseVictoryBtn.addEventListener('click', closeCombatModal);
         DOM.modals.combatReturnHubBtn.addEventListener('click', () => { DOM.modals.combat.style.display = 'none'; gameOver(false); });
 
         // Inicia na Tela 1
         showScreen('logged-out-screen');
     }
 
+    // Inicia o jogo!
     initialize();
 });
