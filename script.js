@@ -881,18 +881,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderStaticHexMap() {
         DOM.game.mapContent.innerHTML = '';
-        const mapRect = DOM.game.mapContainer.getBoundingClientRect();
-        const centerX = mapRect.width / 2;
-        const centerY = mapRect.height / 2;
-
+        
+        const hexWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size')) * 2;
+        const hexHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height')) * 2;
+        
+        // Calcula as dimensões mínimas e máximas do mapa (para determinar o centro)
+        let minX = Infinity, minY = Infinity;
+        let maxX = -Infinity, maxY = -Infinity;
+        
+        const positions = [];
+        
         STATIC_MAP_DATA.forEach((cell, key) => {
             const [q, r] = key.split(',').map(Number);
             const pixel = axialToPixel(q, r);
             
+            positions.push({ pixel, cell, q, r, key });
+            
+            // Determina as fronteiras do mapa
+            minX = Math.min(minX, pixel.x);
+            minY = Math.min(minY, pixel.y);
+            maxX = Math.max(maxX, pixel.x);
+            maxY = Math.max(maxY, pixel.y);
+        });
+    
+        // Calcula o centro de todos os hexágonos
+        const mapCenterCorrectionX = (maxX + minX) / 2;
+        const mapCenterCorrectionY = (maxY + minY) / 2;
+    
+        // Ajuste: Centralizamos o mapa e garantimos que o container acomode
+        positions.forEach(({ pixel, cell, q, r, key }) => {
+            
+            // Centraliza o mapa dentro do contentor (map-content)
+            const leftPos = pixel.x - mapCenterCorrectionX;
+            const topPos = pixel.y - mapCenterCorrectionY;
+    
             const cellDiv = document.createElement('div');
             cellDiv.className = 'hex-cell';
-            cellDiv.style.left = `${centerX + pixel.x - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size')) / 2)}px`;
-            cellDiv.style.top = `${centerY + pixel.y - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height')) / 2)}px`;
+            
+            // Posição ajustada, subtraindo metade da largura/altura do hex para centralizar o DIV
+            cellDiv.style.left = `${leftPos - (hexWidth / 2)}px`;
+            cellDiv.style.top = `${topPos - (hexHeight / 2)}px`;
             
             cellDiv.dataset.q = q;
             cellDiv.dataset.r = r;
@@ -900,8 +928,20 @@ document.addEventListener('DOMContentLoaded', () => {
             cellDiv.dataset.biome = cell.biome;
             
             cellDiv.addEventListener('click', () => handleHexMoveAttempt(q, r));
+            
             DOM.game.mapContent.appendChild(cellDiv);
         });
+        
+        // NOVO: Centraliza o mapa inteiro dentro do container
+        // O mapa-content agora tem a largura e altura necessárias.
+        const finalMapWidth = maxX - minX + hexWidth;
+        const finalMapHeight = maxY - minY + hexHeight;
+    
+        DOM.game.mapContent.style.width = `${finalMapWidth}px`;
+        DOM.game.mapContent.style.height = `${finalMapHeight}px`;
+    
+        // Remove o overflow/interação de Pan/Zoom (pois queremos que ele seja estático)
+        DOM.game.mapContainer.style.overflow = 'hidden'; 
     }
 
     function updateFogOfWar() {
