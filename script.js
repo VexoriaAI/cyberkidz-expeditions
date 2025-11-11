@@ -1,6 +1,6 @@
 // ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT LÓGICO
-// VERSÃO 3.1: Atributo "Luck" e correção de bugs
+// VERSÃO 3.2: UI do Dashboard (Crafting/Inventory) Atualizada
 // ====================================================================
 
 // ====================================================================
@@ -11,7 +11,6 @@ const MAX_DAYS = 10;
 const HEX_MAP_RADIUS = 3; 
 
 // --- 1.1: Atributos Base das Tribos ---
-// **CORREÇÃO 1: Corrigido o bug onde HP e Luck (antigo dropChance) estavam faltando.**
 const TRIBES = {
     VOLCANICS: {
         name: "Volcanics",
@@ -42,12 +41,12 @@ const TRIBES = {
 
 // --- 1.2: Biomas do Jogo ---
 const BIOMES = [
-    { name: "Burning Ridge", resource: "Scrap", affinity: "Volcanics", color: '#8B4513' },
-    { name: "Covenant Swamp", resource: "Food", affinity: "Reptilians", color: '#3CB371' },
-    { name: "Lake Rancid", resource: "Food", affinity: "Radioactives", color: '#20B2AA' },
-    { name: "Ancient Ruins", resource: "Scrap", affinity: "Nocturnals", color: '#4F4F4F' },
-    { name: "Abandoned Mines", resource: "Clean Water", affinity: "Undergrounders", color: '#696969' },
-    { name: "Wasteland", resource: "Scrap", affinity: "None", color: '#555555' }
+    { name: "Burning Ridge", resource: "scrap", affinity: "Volcanics", color: '#8B4513' },
+    { name: "Covenant Swamp", resource: "food", affinity: "Reptilians", color: '#3CB371' },
+    { name: "Lake Rancid", resource: "food", affinity: "Radioactives", color: '#20B2AA' },
+    { name: "Ancient Ruins", resource: "scrap", affinity: "Nocturnals", color: '#4F4F4F' },
+    { name: "Abandoned Mines", resource: "water", affinity: "Undergrounders", color: '#696969' },
+    { name: "Wasteland", resource: "scrap", affinity: "None", color: '#555555' }
 ];
 
 // --- 1.3: Inimigos ---
@@ -56,14 +55,37 @@ const ENEMY = {
     MUTANT: { name: "Wasteland Mutant", strength: 8, hp: 15, reward: 5 }
 };
 
-// --- 1.4: Banco de Dados de Crafting ---
+// --- 1.4: Banco de Dados de Crafting (COM ÍCONES) ---
 const MATERIALS = {
-    scrap: { name: "Scrap", type: "Base" }, water: { name: "Clean Water", type: "Base" }, food: { name: "Food", type: "Base" },
-    metal: { name: "Metal", type: "Volcanic" }, magma: { name: "Magma", type: "Volcanic" }, pumice: { name: "Volcanic Pumice Stone", type: "Volcanic" }, obsidian: { name: "Obsidian Tears", type: "Volcanic" },
-    crystal: { name: "Energized Crystals", type: "Undergrounder" }, pure_water: { name: "Pure Water", type: "Undergrounder" }, clay: { name: "Special Clay", type: "Undergrounder" }, glass: { name: "Glass", type: "Undergrounder" },
-    polymer: { name: "Polymer", type: "Nocturnal" }, nanochips: { name: "Nanochips", type: "Nocturnal" }, implants: { name: "Cybernetic Implants", type: "Nocturnal" }, quantum_core: { name: "Quantum Energy Core", type: "Nocturnal" },
-    healing_plants: { name: "Healing Plants", type: "Reptilian" }, fungi: { name: "Hallucinogenic Fungi", type: "Reptilian" }, reptile_blood: { name: "Reptilian Blood", type: "Reptilian" }, animal_skin: { name: "Animal Skin", type: "Reptilian" },
-    strange_fluid: { name: "Strange Fluid", type: "Radioactive" }, parasitic_fungus: { name: "Parasitic Fungus", type: "Radioactive" }, venom_glands: { name: "Venom Glands", type: "Radioactive" }, luminescent_algae: { name: "Luminescent Algae", type: "Radioactive" }
+    // (Os nomes dos ícones devem corresponder aos seus arquivos em /images/)
+    scrap: { name: "Scrap", type: "Base", icon: "icon_scrap.png" }, 
+    water: { name: "Clean Water", type: "Base", icon: "icon_water.png" }, 
+    food: { name: "Food", type: "Base", icon: "icon_food.png" },
+    
+    metal: { name: "Metal", type: "Volcanic", icon: "icon_metal.png" }, 
+    magma: { name: "Magma", type: "Volcanic", icon: "icon_magma.png" }, 
+    pumice: { name: "Volcanic Pumice Stone", type: "Volcanic", icon: "icon_pumice.png" }, 
+    obsidian: { name: "Obsidian Tears", type: "Volcanic", icon: "icon_obsidian.png" },
+    
+    crystal: { name: "Energized Crystals", type: "Undergrounder", icon: "icon_crystal.png" }, 
+    pure_water: { name: "Pure Water", type: "Undergrounder", icon: "icon_pure_water.png" }, 
+    clay: { name: "Special Clay", type: "Undergrounder", icon: "icon_clay.png" }, 
+    glass: { name: "Glass", type: "Undergrounder", icon: "icon_glass.png" },
+    
+    polymer: { name: "Polymer", type: "Nocturnal", icon: "icon_polymer.png" }, 
+    nanochips: { name: "Nanochips", type: "Nocturnal", icon: "icon_nanochips.png" }, 
+    implants: { name: "Cybernetic Implants", type: "Nocturnal", icon: "icon_implants.png" }, 
+    quantum_core: { name: "Quantum Energy Core", type: "Nocturnal", icon: "icon_quantum_core.png" },
+    
+    healing_plants: { name: "Healing Plants", type: "Reptilian", icon: "icon_healing_plants.png" }, 
+    fungi: { name: "Hallucinogenic Fungi", type: "Reptilian", icon: "icon_fungi.png" }, 
+    reptile_blood: { name: "Reptilian Blood", type: "Reptilian", icon: "icon_reptile_blood.png" }, 
+    animal_skin: { name: "Animal Skin", type: "Reptilian", icon: "icon_animal_skin.png" },
+    
+    strange_fluid: { name: "Strange Fluid", type: "Radioactive", icon: "icon_strange_fluid.png" }, 
+    parasitic_fungus: { name: "Parasitic Fungus", type: "Radioactive", icon: "icon_parasitic_fungus.png" }, 
+    venom_glands: { name: "Venom Glands", type: "Radioactive", icon: "icon_venom_glands.png" }, 
+    luminescent_algae: { name: "Luminescent Algae", type: "Radioactive", icon: "icon_luminescent_algae.png" }
 };
 const COMPONENTS = {
     volcanic_core: { name: "Volcanic Core", type: "Damage", stats: { damage: 5, critDamage: 5 } },
@@ -71,7 +93,6 @@ const COMPONENTS = {
     precision_lens: { name: "Precision Lens", type: "Crit", stats: { critChance: 5 } },
     speed_injector: { name: "Speed Injector", type: "Speed", stats: { speed: 2, attackSpeed: 3 } },
     heal_totem: { name: "Heal Totem", type: "Heal", stats: { hpRegen: 3 } },
-    // **CORREÇÃO 2: Renomeado de dropChance para luck**
     lucky_clover: { name: "Lucky Clover", type: "Universal", stats: { luck: 5 } }
 };
 const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
@@ -123,7 +144,7 @@ let gameState = {
     gameMap: new Map()
 };
 
-// **CORREÇÃO 3: MOCK_WALLET definida ANTES de ser usada**
+// Carteira Simulada (MOCK_WALLET)
 const MOCK_WALLET = [
     { 
         id: '#313', 
@@ -144,22 +165,11 @@ const MOCK_WALLET = [
         img: 'https://via.placeholder.com/150/FF0000/FFFFFF?text=CKC+111'
     }
 ];
-const DEMO_KID = MOCK_WALLET[0]; // Demo Kid é o primeiro da lista
+const DEMO_KID = MOCK_WALLET[0];
 
 
 // ====================================================================
-// SEÇÃO 3: REFERÊNCIAS DO DOM
-// ====================================================================
-
-// Tela 1 (Carregamento imediato)
-const loggedOutScreen = document.getElementById('logged-out-screen');
-const connectWalletBtn = document.getElementById('connect-wallet-btn');
-const demoGameBtn = document.getElementById('demo-game-btn');
-const connectionStatus = document.getElementById('connection-status');
-
-
-// ====================================================================
-// SEÇÃO 4: GERENCIAMENTO DE TELA
+// SEÇÃO 3: GERENCIAMENTO DE TELA
 // ====================================================================
 
 function showScreen(screenId) {
@@ -174,7 +184,7 @@ function showScreen(screenId) {
 }
 
 // ====================================================================
-// SEÇÃO 5: LÓGICA DO DASHBOARD (HUB)
+// SEÇÃO 4: LÓGICA DO DASHBOARD (HUB)
 // ====================================================================
 
 function setupDashboardTabs() {
@@ -262,40 +272,54 @@ function renderEquippedItems() {
     }
 }
 
+// ATUALIZADO: Renderiza o grid de 3 colunas
 function renderInventory() {
-    const inventoryList = document.getElementById('inventory-list-materials');
-    inventoryList.innerHTML = '';
+    const inventoryList = document.getElementById('inventory-grid-materials');
+    inventoryList.innerHTML = ''; // Limpa o grid
     for (const materialId in gameState.player.inventory.materials) {
         const material = MATERIALS[materialId];
         const amount = gameState.player.inventory.materials[materialId];
         if (material) {
-            inventoryList.innerHTML += `<li>${material.name}: <span id="inv-${materialId}">${amount}</span></li>`;
+            // Adiciona as 3 colunas
+            inventoryList.innerHTML += `
+                <img src="images/${material.icon}" alt="${material.name}" class="inventory-item-icon" title="${material.name}">
+                <span class="inventory-item-name">${material.name}:</span>
+                <span class="inventory-item-qty" id="inv-${materialId}">${amount}</span>
+            `;
         }
     }
 }
 
+// ATUALIZADO: Renderiza receitas com ícones
 function renderCraftingRecipes() {
     const tabRefine = document.getElementById('tab-refine');
     const tabCraft = document.getElementById('tab-craft');
     tabRefine.innerHTML = '<h4>Refine Components</h4>';
-    tabCraft.innerHTML = '<h4>Craft & Embed</h4>';
+    tabCraft.innerHTML = '<h4>Craft Empty Gear</h4>';
 
     for (const compId in RECIPES_REFINE) {
         const recipe = RECIPES_REFINE[compId];
-        let costText = Object.entries(recipe.cost).map(([matId, amt]) => `${MATERIALS[matId].name} x${amt}`).join(' + ');
+        // Cria o HTML para os ícones
+        let costHtml = Object.entries(recipe.cost).map(([matId, amt]) => `
+            <img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}"> x${amt}
+        `).join(' + ');
+
         tabRefine.innerHTML += `
             <div class="crafting-recipe">
-                <span>${costText} = <strong>1 ${recipe.name}</strong></span>
+                <span class="recipe-cost">${costHtml} = <strong>${recipe.name}</strong></span>
                 <button class="action-btn small-btn" onclick="refineComponent('${compId}')">Refine</button>
             </div>`;
     }
 
     for (const itemId in RECIPES_CRAFT_EMPTY) {
         const recipe = RECIPES_CRAFT_EMPTY[itemId];
-        let costText = Object.entries(recipe.cost).map(([matId, amt]) => `${MATERIALS[matId].name} x${amt}`).join(' + ');
+        let costHtml = Object.entries(recipe.cost).map(([matId, amt]) => `
+            <img src="images/${MATERIALS[matId].icon}" class="recipe-icon" title="${MATERIALS[matId].name}"> x${amt}
+        `).join(' + ');
+
         tabCraft.innerHTML += `
             <div class="crafting-recipe">
-                <span>${costText} = <strong>1 ${recipe.name}</strong></span>
+                <span class="recipe-cost">${costHtml} = <strong>${recipe.name}</strong></span>
                 <button class="action-btn small-btn" onclick="craftEmptyItem('${itemId}')">Craft</button>
             </div>`;
     }
@@ -314,8 +338,7 @@ function calculateFinalStats() {
 
     let baseStats = gameState.player.activeKid.tribe.baseStats;
     let finalStats = { ...baseStats }; 
-
-    // **CORREÇÃO 4: Renomeado de dropChance para luck**
+    
     if (!finalStats.luck) finalStats.luck = 0;
     if (!finalStats.hp) finalStats.hp = 100;
 
@@ -482,6 +505,7 @@ function initializeGame() {
     logMessage(`Day ${gameState.currentDay} started! You have ${gameState.expedition.currentAP} AP and ${gameState.expedition.currentMP} MP.`, 'lime');
 }
 
+// ATUALIZADO: Preenche todos os novos campos da UI
 function updateGameStatusPanel() {
     const kid = gameState.player.activeKid;
     const stats = gameState.expedition.stats;
@@ -503,7 +527,6 @@ function updateGameStatusPanel() {
     document.getElementById('kid-atk-speed').textContent = stats.attackSpeed;
     document.getElementById('kid-hp-regen').textContent = stats.hpRegen;
     document.getElementById('kid-block').textContent = `${stats.blockChance}%`;
-    // **CORREÇÃO 5: Renomeado de dropChance para luck**
     document.getElementById('kid-luck').textContent = `${stats.luck}%`;
 
     // Seção 3: Resources Found
@@ -512,7 +535,7 @@ function updateGameStatusPanel() {
     let found = 0;
     for (const res in gameState.expedition.resourcesFound) {
         const amount = gameState.expedition.resourcesFound[res];
-        if (amount > 0) {
+        if (amount > 0 && MATERIALS[res]) { // Verifica se o material existe
             resourceList.innerHTML += `<li>${MATERIALS[res].name}: <span>${amount}</span></li>`;
             found++;
         }
@@ -570,7 +593,6 @@ function collectResource() {
     const resourceName = cell.biome.resource.toLowerCase().replace(' ', '');
     
     let collectedAmount = 1 + Math.floor(Math.random() * 3); 
-    // **CORREÇÃO 6: Renomeado de dropChance para luck**
     let luckBonus = 1 + (gameState.expedition.stats.luck / 100);
     collectedAmount = Math.ceil(collectedAmount * luckBonus);
     
@@ -660,7 +682,6 @@ function endDay() {
     gameState.expedition.currentAP = gameState.expedition.stats.ap;
     gameState.expedition.currentMP = gameState.expedition.stats.speed;
     
-    // Regenera HP
     gameState.expedition.currentHP += gameState.expedition.stats.hpRegen;
     if (gameState.expedition.currentHP > gameState.expedition.stats.hp) {
         gameState.expedition.currentHP = gameState.expedition.stats.hp;
@@ -704,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('connection-status').textContent = 'Connected (Simulated)';
         document.getElementById('connection-status').style.color = 'lime';
         showScreen('dashboard-screen');
-        renderDashboard(); // Renderiza o Dashboard
+        renderDashboard(); 
     });
 
     document.getElementById('demo-game-btn').addEventListener('click', startDemoGame);
@@ -724,6 +745,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Atualizar Saldo de Tezerium (Simulado)
     document.getElementById('tezerium-balance').textContent = gameState.player.tezerium;
 
-    // 5. Iniciar na Tela 1
+    // 5. Adicionar listener de Edição de Nome
+    document.getElementById('edit-name-icon').addEventListener('click', () => {
+        if (!gameState.player.activeKid) return;
+        
+        const newName = prompt("Enter a new name for your Kid:", gameState.player.activeKid.name);
+        if (newName && newName.trim() !== "") {
+            const kidInWallet = MOCK_WALLET.find(k => k.id === gameState.player.activeKid.id);
+            if (kidInWallet) {
+                kidInWallet.name = newName;
+            }
+            gameState.player.activeKid.name = newName;
+            document.getElementById('dash-kid-name').textContent = newName;
+            console.log(`Kid name updated to ${newName}`);
+        }
+    });
+
+    // 6. Iniciar na Tela 1
     showScreen('logged-out-screen');
 });
