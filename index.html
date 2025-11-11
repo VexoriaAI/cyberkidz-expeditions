@@ -54,7 +54,7 @@
                 </div>
             </div>
 
-            <!-- Coluna Central: Detalhes do Kid e Equipamento -->
+            <!-- Coluna Central: Detalhes do Kid e Equipamento (ATUALIZADO) -->
             <div id="equipment-panel" class="panel">
                 
                 <div id="kid-details-placeholder">
@@ -79,14 +79,44 @@
                     <hr>
                     
                     <h4>Equipment</h4>
+                    <!-- NOVO: Grid de Equipamento Interativo -->
                     <div class="equipment-grid">
-                        <div class="equip-slot" id="equip-slot-helmet"><span>Helmet</span></div>
-                        <div class="equip-slot" id="equip-slot-weapon"><span>Weapon</span></div>
-                        <div class="equip-slot" id="equip-slot-accessory"><span>Accessory</span></div>
-                        <div class="equip-slot" id="equip-slot-armor"><span>Armor</span></div>
-                        <div class="equip-slot" id="equip-slot-gloves"><span>Gloves</span></div>
-                        <div class="equip-slot" id="equip-slot-implant"><span>Implant</span></div>
-                        <div class="equip-slot" id="equip-slot-boots"><span>Boots</span></div>
+                        <!-- 7 Slots -->
+                        <div class="equip-slot-wrapper">
+                            <div class="equip-slot" id="equip-slot-helmet" data-slot="helmet"><span>+</span></div>
+                            <div class="equip-slot-label">Helmet</div>
+                            <button class="equip-remove-btn" data-slot="helmet">X</button>
+                        </div>
+                        <div class="equip-slot-wrapper">
+                            <div class="equip-slot" id="equip-slot-weapon" data-slot="weapon"><span>+</span></div>
+                            <div class="equip-slot-label">Weapon</div>
+                            <button class="equip-remove-btn" data-slot="weapon">X</button>
+                        </div>
+                        <div class="equip-slot-wrapper">
+                            <div class="equip-slot" id="equip-slot-accessory" data-slot="accessory"><span>+</span></div>
+                            <div class="equip-slot-label">Accessory</div>
+                            <button class="equip-remove-btn" data-slot="accessory">X</button>
+                        </div>
+                        <div class="equip-slot-wrapper">
+                            <div class="equip-slot" id="equip-slot-armor" data-slot="armor"><span>+</span></div>
+                            <div class="equip-slot-label">Armor</div>
+                            <button class="equip-remove-btn" data-slot="armor">X</button>
+                        </div>
+                        <div class="equip-slot-wrapper">
+                            <div class="equip-slot" id="equip-slot-gloves" data-slot="gloves"><span>+</span></div>
+                            <div class="equip-slot-label">Gloves</div>
+                            <button class="equip-remove-btn" data-slot="gloves">X</button>
+                        </div>
+                        <div class="equip-slot-wrapper">
+                            <div class="equip-slot" id="equip-slot-implant" data-slot="implant"><span>+</span></div>
+                            <div class="equip-slot-label">Implant</div>
+                            <button class="equip-remove-btn" data-slot="implant">X</button>
+                        </div>
+                        <div class="equip-slot-wrapper">
+                            <div class="equip-slot" id="equip-slot-boots" data-slot="boots"><span>+</span></div>
+                            <div class="equip-slot-label">Boots</div>
+                            <button class="equip-remove-btn" data-slot="boots">X</button>
+                        </div>
                     </div>
                     
                     <div class="stats-display">
@@ -101,11 +131,10 @@
                 </div>
             </div>
 
-            <!-- Coluna da Direita: Inventário e Crafting (CORRIGIDO) -->
+            <!-- Coluna da Direita: Inventário e Crafting -->
             <div id="crafting-panel" class="panel">
                 <h3>Inventory & Crafting</h3>
                 
-                <!-- Abas com 4 abas -->
                 <div class="tabs">
                     <button class="tab-btn active" data-tab="inventory">Materials</button>
                     <button class="tab-btn" data-tab="refine">Refine</button>
@@ -113,27 +142,21 @@
                     <button class="tab-btn" data-tab="embed">Embed</button>
                 </div>
 
-                <!-- CORREÇÃO: Removida a <ul>, substituída por um <div> com o ID correto -->
                 <div id="tab-inventory" class="tab-content active">
                     <h4>Wasteland Materials</h4>
-                    <div id="inventory-grid-materials">
-                        <!-- O JS irá preencher este grid -->
-                    </div>
+                    <div id="inventory-grid-materials"></div>
                 </div>
 
-                <!-- Painel de Refino (com ícones) -->
                 <div id="tab-refine" class="tab-content">
                     <h4>Refine Components</h4>
                     <!-- JS irá gerar receitas -->
                 </div>
 
-                <!-- Painel de Craft (Craft Gear Vazio) -->
                 <div id="tab-craft" class="tab-content">
                     <h4>Craft Empty Gear</h4>
                     <!-- JS irá gerar receitas -->
                 </div>
                 
-                <!-- Painel de Embed -->
                 <div id="tab-embed" class="tab-content">
                     <h4>Embed Component</h4>
                     <p>Combine an Empty Gear + Component to create your item.</p>
@@ -143,9 +166,7 @@
                         <div id="embed-slot-component" class="embed-slot"><span>Select Component</span></div>
                     </div>
                     <button id="embed-button" class="action-btn small-btn" disabled>Embed</button>
-                    <div id="embed-result" class="crafting-recipe" style="display: none;">
-                        <!-- JS mostra o resultado aqui -->
-                    </div>
+                    <div id="embed-result" class="crafting-recipe" style="display: none;"></div>
                 </div>
             </div>
         </div>
@@ -183,7 +204,7 @@
                             <p><strong>Atk Speed:</strong> <span id="kid-atk-speed">0</span></p>
                             <p><strong>HP Regen:</strong> <span id="kid-hp-regen">0</span></p>
                             <p><strong>Block:</strong> <span id="kid-block">0%</span></p>
-                            <p><strong>Luck:</strong> <span id_part="4" id="kid-luck">0%</span></p>
+                            <p><strong>Luck:</strong> <span id="kid-luck">0%</span></p>
                         </div>
                     </div>
 
@@ -225,6 +246,20 @@
 
         </main>
     </section>
+
+    <!-- ==================================================================== -->
+    <!-- NOVO: MODAL DE SELEÇÃO DE EQUIPAMENTO (Inicia escondido) -->
+    <!-- ==================================================================== -->
+    <div id="equipment-select-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modal-equip-title">Select Equipment</h2>
+            <button id="modal-equip-close" class="modal-close-btn">X</button>
+            <div id="modal-equip-list">
+                <!-- JS irá gerar a lista de equipamentos aqui -->
+            </div>
+        </div>
+    </div>
+
 
     <script src="script.js"></script>
 </body>
