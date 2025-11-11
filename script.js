@@ -201,10 +201,10 @@ document.addEventListener('DOMContentLoaded', () => {
             connectionStatus: document.getElementById('connection-status')
         },
         screens: {
-            loggedOut: document.getElementById('logged-out-screen'),
-            hubSelection: document.getElementById('hub-selection-screen'),
-            hubPreparation: document.getElementById('hub-preparation-screen'),
-            game: document.getElementById('game-screen')
+            'logged-out-screen': document.getElementById('logged-out-screen'),
+            'hub-selection-screen': document.getElementById('hub-selection-screen'),
+            'hub-preparation-screen': document.getElementById('hub-preparation-screen'),
+            'game-screen': document.getElementById('game-screen')
         },
         // --- Tela 1 (Logged Out) ---
         loggedOut: {
@@ -311,12 +311,20 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {string} screenId (ex: 'logged-out-screen')
      */
     function showScreen(screenId) {
-        Object.values(DOM.screens).forEach(screen => {
-            screen.style.display = 'none';
-        });
-        DOM.screens[screenId.replace(/-/g, '_').replace('_screen', '')].style.display = 'block';
-        gameState.currentScreen = screenId;
-    }
+            // Esconde todas as telas
+            Object.values(DOM.screens).forEach(screen => {
+                screen.style.display = 'none';
+            });
+            
+            // Mostra a tela correta usando a ID exata como chave
+            if (DOM.screens[screenId]) {
+                DOM.screens[screenId].style.display = 'block';
+            } else {
+                console.error(`showScreen: Tela com ID '${screenId}' não encontrada no DOM cache.`);
+            }
+            
+            gameState.currentScreen = screenId;
+        }
 
     /**
      * Adiciona uma mensagem ao log do jogo (Tela 4).
