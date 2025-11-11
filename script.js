@@ -510,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h4>${kid.name}</h4>
                     <p>ID: ${kid.id}</p>
                     <p>Tribe: ${kid.tribe.name}</p>
-                    <button classs="action-btn select-kid-btn" data-kid-id="${kid.id}">Manage & Equip</button>
+                    <button class="action-btn select-kid-btn" data-kid-id="${kid.id}">Manage & Equip</button>
                 `;
                 // Adiciona listener direto no botão (mais seguro)
                 card.querySelector('.select-kid-btn').addEventListener('click', () => handleKidSelect(kid.id));
