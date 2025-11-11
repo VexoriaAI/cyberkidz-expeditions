@@ -15,27 +15,27 @@ const TRIBES = {
     VOLCANICS: {
         name: "Volcanics",
         bonus: "Burning Ridge",
-        baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 12, attackSpeed: 1, hpRegen: 1, ap: 3 }
+        baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 12, attackSpeed: 1, hpRegen: 1, ap: 3, hp: 100 }
     },
     UNDERGROUNDERS: {
         name: "Undergrounders",
         bonus: "Abandoned Mines",
-        baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 4 }
+        baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 4, hp: 120 }
     },
     NOCTURNALS: {
         name: "Nocturnals",
         bonus: "Ancient Ruins",
-        baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 4 }
+        baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 4, hp: 100 }
     },
     RADIOACTIVES: {
         name: "Radioactives",
         bonus: "Lake Rancid",
-        baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 5 }
+        baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 5, hp: 80 }
     },
     REPTILIANS: {
         name: "Reptilians",
         bonus: "Covenant Swamp",
-        baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 3 }
+        baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 3, hp: 100 }
     }
 };
 
@@ -90,7 +90,6 @@ const RECIPES_REFINE = {
     lucky_clover: { name: "Lucky Clover", cost: { scrap: 20, water: 20, food: 20 } }
 };
 
-
 // ====================================================================
 // SEÇÃO 2: ESTADO GLOBAL DO JOGO (MASTER STATE)
 // ====================================================================
@@ -120,19 +119,34 @@ let gameState = {
     gameMap: new Map()
 };
 
-// Dados Mockados para o Demo
-const DEMO_KID = { 
-    id: 'CKC-DEMO', 
-    name: 'Demo Nocturnal', 
-    tribe: TRIBES.NOCTURNALS, 
-    img: `https://via.placeholder.com/150/purple/FFFFFF?text=DEMO-KID` 
-};
+// **CORREÇÃO 1: MOCK_WALLET (Carteira Simulada) definida**
+const MOCK_WALLET = [
+    { 
+        id: '#313', 
+        name: 'Blue Mutant', 
+        tribe: TRIBES.RADIOACTIVES, 
+        img: 'https://i.imgur.com/L8J3tS2.png' // Imagem do seu upload
+    },
+    { 
+        id: '#222', 
+        name: 'Demo Nocturnal', 
+        tribe: TRIBES.NOCTURNALS, 
+        img: 'https://via.placeholder.com/150/4B0082/FFFFFF?text=CKC+222' 
+    },
+    { 
+        id: '#111', 
+        name: 'Demo Volcanic', 
+        tribe: TRIBES.VOLCANICS, 
+        img: 'https://via.placeholder.com/150/FF0000/FFFFFF?text=CKC+111'
+    }
+];
+
+const DEMO_KID = MOCK_WALLET[0]; // O Demo Kid é o primeiro da lista
+
 
 // ====================================================================
-// SEÇÃO 3: REFERÊNCIAS DO DOM (Lazy Loading)
+// SEÇÃO 3: REFERÊNCIAS DO DOM
 // ====================================================================
-// Para evitar erros de "null", vamos pegar os elementos apenas quando precisarmos deles,
-// exceto os da Tela 1.
 
 // Tela 1 (Carregamento imediato)
 const loggedOutScreen = document.getElementById('logged-out-screen');
@@ -146,12 +160,10 @@ const connectionStatus = document.getElementById('connection-status');
 // ====================================================================
 
 function showScreen(screenId) {
-    // Esconde todas as telas
     document.getElementById('logged-out-screen').style.display = 'none';
     document.getElementById('dashboard-screen').style.display = 'none';
     document.getElementById('game-screen').style.display = 'none';
     
-    // Mostra a tela requisitada
     const screen = document.getElementById(screenId);
     if (screen) {
         screen.style.display = 'block';
@@ -178,19 +190,30 @@ function setupDashboardTabs() {
     });
 }
 
+// **CORREÇÃO 2: Layout do Dashboard e nome da variável (mockNfts)**
 function renderDashboard() {
     const nftListContainer = document.getElementById('nft-list-container');
     nftListContainer.innerHTML = '<h4>Your Kidz (Simulated)</h4>';
     
-    const mockNfts = [
-        DEMO_KID,
-        { id: 'CKC-002', name: 'Demo Volcanic', tribe: TRIBES.VOLCANICS, img: `https://via.placeholder.com/150/red/FFFFFF?text=VOLC-KID` }
-    ];
-    
-    mockNfts.forEach(nft => {
+    // Mostra o placeholder e esconde os detalhes
+    document.getElementById('kid-details-placeholder').style.display = 'block';
+    document.getElementById('kid-details-content').style.display = 'none';
+    document.getElementById('start-expedition-btn').disabled = true;
+
+    // **CORREÇÃO AQUI: Usa MOCK_WALLET e a nova estrutura HTML**
+    MOCK_WALLET.forEach(nft => {
         const nftDiv = document.createElement('div');
-        nftDiv.className = 'nft-list-item'; 
-        nftDiv.innerHTML = `<img src="${nft.img}" width="50" style="vertical-align: middle; margin-right: 10px;"><p style="display: inline;">${nft.name}</p>`;
+        nftDiv.className = 'nft-list-item';
+        nftDiv.dataset.nftId = nft.id; // Para encontrar o item
+        
+        // Estrutura: Image, Tribe, ID
+        nftDiv.innerHTML = `
+            <img src="${nft.img}" alt="${nft.name}">
+            <div class="nft-list-item-info">
+                <p><strong>${nft.tribe.name}</strong></p>
+                <p>${nft.id}</p>
+            </div>
+        `;
         nftDiv.onclick = () => selectActiveKid(nft);
         nftListContainer.appendChild(nftDiv);
     });
@@ -199,11 +222,32 @@ function renderDashboard() {
     renderCraftingRecipes();
 }
 
+// **CORREÇÃO 3: Função selectActiveKid para preencher os detalhes**
 function selectActiveKid(nft) {
     gameState.player.activeKid = nft;
+
+    // 1. Atualizar a lista (UI)
+    document.querySelectorAll('.nft-list-item').forEach(item => {
+        item.classList.remove('selected');
+        if (item.dataset.nftId === nft.id) {
+            item.classList.add('selected');
+        }
+    });
+
+    // 2. Esconder placeholder, mostrar conteúdo
+    document.getElementById('kid-details-placeholder').style.display = 'none';
+    document.getElementById('kid-details-content').style.display = 'block';
+
+    // 3. Preencher detalhes
     document.getElementById('dash-kid-name').textContent = nft.name;
+    document.getElementById('dash-kid-id').textContent = nft.id;
+    document.getElementById('dash-kid-tribe').textContent = nft.tribe.name;
+    document.getElementById('dash-kid-image').innerHTML = `<img src="${nft.img}" alt="${nft.name}">`;
+
+    // 4. Habilitar botão de expedição
     document.getElementById('start-expedition-btn').disabled = false;
     
+    // 5. Renderizar equipamento e stats
     renderEquippedItems();
     calculateFinalStats();
 }
@@ -244,7 +288,7 @@ function renderCraftingRecipes() {
 
     for (const compId in RECIPES_REFINE) {
         const recipe = RECIPES_REFINE[compId];
-        let costText = Object.entries(recipe.cost).map(([matId, amt]) => `${amt} ${MATERIALS[matId].name}`).join(' + ');
+        let costText = Object.entries(recipe.cost).map(([matId, amt]) => `${MATERIALS[matId].name} x${amt}`).join(' + ');
         tabRefine.innerHTML += `
             <div class="crafting-recipe">
                 <span>${costText} = <strong>1 ${recipe.name}</strong></span>
@@ -254,7 +298,7 @@ function renderCraftingRecipes() {
 
     for (const itemId in RECIPES_CRAFT_EMPTY) {
         const recipe = RECIPES_CRAFT_EMPTY[itemId];
-        let costText = Object.entries(recipe.cost).map(([matId, amt]) => `${amt} ${MATERIALS[matId].name}`).join(' + ');
+        let costText = Object.entries(recipe.cost).map(([matId, amt]) => `${MATERIALS[matId].name} x${amt}`).join(' + ');
         tabCraft.innerHTML += `
             <div class="crafting-recipe">
                 <span>${costText} = <strong>1 ${recipe.name}</strong></span>
@@ -265,17 +309,19 @@ function renderCraftingRecipes() {
 
 function craftEmptyItem(itemId) {
     console.log(`(Simulado) Crafting: ${RECIPES_CRAFT_EMPTY[itemId].name}`);
+    alert(`(Simulado) Crafting: ${RECIPES_CRAFT_EMPTY[itemId].name}`);
 }
 
 function refineComponent(compId) {
     console.log(`(Simulado) Refining: ${RECIPES_REFINE[compId].name}`);
+    alert(`(Simulado) Refining: ${RECIPES_REFINE[compId].name}`);
 }
 
 function calculateFinalStats() {
     if (!gameState.player.activeKid) return;
 
     let baseStats = gameState.player.activeKid.tribe.baseStats;
-    let finalStats = { ...baseStats, dropChance: 0, hp: 100 }; // Adiciona stats que não vêm da tribo
+    let finalStats = { ...baseStats, dropChance: 0 }; // 'hp' já está nos baseStats
 
     for (const slot of EQUIPMENT_SLOTS) {
         const itemId = gameState.player.equipped[slot];
@@ -339,9 +385,14 @@ function renderHexMap() {
     mapElement.innerHTML = ''; 
     const { q: playerQ, r: playerR } = gameState.expedition.playerPos;
 
-    const mapRect = mapElement.getBoundingClientRect();
-    const centerX = mapRect.width / 2;
-    const centerY = mapRect.height / 2;
+    // Garante que o mapElement tenha dimensões
+    if (mapElement.clientWidth === 0) {
+        console.error("Map element has no width, re-rendering might fail.");
+        return;
+    }
+    const centerX = mapElement.clientWidth / 2;
+    const centerY = mapElement.clientHeight / 2;
+    if (centerY === 0) console.warn("Map element height is 0.");
 
     gameState.gameMap.forEach(cell => {
         const { q, r, biome, hasEnemy } = cell;
@@ -349,8 +400,13 @@ function renderHexMap() {
         
         const cellDiv = document.createElement('div');
         cellDiv.className = 'hex-cell';
-        cellDiv.style.left = `${centerX + pixel.x - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size')) / 2)}px`;
-        cellDiv.style.top = `${centerY + pixel.y - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height')) / 2)}px`;
+        
+        // Ajuste para centralizar o grid (0,0)
+        let leftPos = centerX + pixel.x - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size')) / 2);
+        let topPos = centerY + pixel.y - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height')) / 2);
+
+        cellDiv.style.left = `${leftPos}px`;
+        cellDiv.style.top = `${topPos}px`;
         cellDiv.style.backgroundColor = biome.color;
         cellDiv.dataset.q = q;
         cellDiv.dataset.r = r;
@@ -374,6 +430,7 @@ function renderHexMap() {
 
 function logMessage(message, color = 'var(--color-accent-blue)') {
     const logElement = document.getElementById('game-log');
+    if (!logElement) return; // Proteção se a tela não estiver visível
     const p = document.createElement('p');
     p.classList.add('log-entry');
     p.style.color = color;
@@ -410,12 +467,17 @@ function startGameplay() {
 
     initializeGame();
     showScreen('game-screen');
+    
+    // **FORÇAR RENDERIZAÇÃO DO MAPA HEX**
+    // O mapa hexagonal precisa que seu contêiner (#map-panel) esteja visível
+    // para calcular o centro. Forçamos uma re-renderização após a tela ficar visível.
+    setTimeout(renderHexMap, 0);
 }
 
 function initializeGame() {
     gameState.currentDay = 1;
     generateHexMap();
-    renderHexMap();
+    // renderHexMap(); // Movido para startGameplay
     updateGameStatusPanel();
     toggleActionButtons(true);
     
@@ -497,7 +559,9 @@ function investigate() {
     updateGameStatusPanel();
 
     const { q, r } = gameState.expedition.playerPos;
-    const cell = gameState.gameMap.get(`${q},${r}`);
+    const cellKey = `${q},${r}`;
+    if (!gameState.gameMap.has(cellKey)) return;
+    const cell = gameState.gameMap.get(cellKey);
 
     if (cell.hasEnemy || Math.random() < 0.2) { 
         logMessage("Investigation reveals an enemy! Combat initiated!", 'red');
@@ -546,7 +610,7 @@ function startCombat(enemyType) {
         if (gameState.expedition.currentHP <= 0) {
             logMessage("Your CyberKid has been decommissioned. Expedition Failed!", 'red');
             gameOver(false);
-            return; // Sai da função de combate
+            return;
         }
         
         gameState.isCombat = false;
