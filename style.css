@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - CSS
-// VERSÃO 3.0 (Refatoração Pós-Consultoria V2)
+// VERSÃO 4.0 (Image Map / Correção de Visualização)
 // ==================================================================== */
 
 /* ==================================================================== */
@@ -17,9 +17,10 @@
     --color-hp-bar: #00ff6a; /* Verde para HP */
     --color-mp-bar: #3a8cff; /* Azul para MP */
 
-    /* Variáveis do Mapa Hexagonal */
-    --hex-size: 40px; /* Metade do comprimento lateral */
-    --hex-height: calc(var(--hex-size) * 1.732); /* 2 * --hex-size * (sqrt(3)/2) -> Altura total */
+    /* Variáveis do Mapa Hexagonal (Baseado no JS: HEX_SIZE_VISUAL = 50px) */
+    --hex-visual-size: 50px;
+    --hex-visual-width: calc(var(--hex-visual-size) * 2); /* 100px */
+    --hex-visual-height: calc(var(--hex-visual-size) * 1.732); /* ~86.6px */
 }
 
 * {
@@ -50,7 +51,6 @@ p {
 /* SEÇÃO 2: COMPONENTES UNIVERSAIS
 /* ==================================================================== */
 
-/* --- Painel Base --- */
 .panel {
     background-color: var(--color-panel-dark);
     border: 1px solid var(--color-accent-blue);
@@ -59,7 +59,6 @@ p {
     box-shadow: 0 0 10px rgba(0, 224, 255, 0.2);
 }
 
-/* --- Botões de Ação --- */
 .action-btn {
     background-color: var(--color-accent-red);
     color: var(--color-text-light);
@@ -77,44 +76,20 @@ p {
     align-items: center;
     gap: 8px;
 }
-.action-btn:hover:not(:disabled) {
-    background-color: #ff607d;
-    box-shadow: 0 0 10px var(--color-accent-red);
-}
-.action-btn:disabled {
-    background-color: #555;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
+.action-btn:hover:not(:disabled) { background-color: #ff607d; box-shadow: 0 0 10px var(--color-accent-red); }
+.action-btn:disabled { background-color: #555; cursor: not-allowed; opacity: 0.7; }
+.action-btn.demo-btn { background-color: var(--color-accent-blue); color: var(--color-text-dark); }
+.action-btn.demo-btn:hover:not(:disabled) { background-color: #5effff; box-shadow: 0 0 10px var(--color-accent-blue); }
+.action-btn.small-btn { width: auto; padding: 8px 12px; font-size: 0.9em; }
 
-/* Modificadores de Botão */
-.action-btn.demo-btn {
-    background-color: var(--color-accent-blue);
-    color: var(--color-text-dark);
-}
-.action-btn.demo-btn:hover:not(:disabled) {
-    background-color: #5effff;
-    box-shadow: 0 0 10px var(--color-accent-blue);
-}
-.action-btn.small-btn {
-    width: auto;
-    padding: 8px 12px;
-    font-size: 0.9em;
-}
-
-/* --- Stats Grids (Usado na Tela 3 e 4) --- */
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 5px 15px;
     font-size: 0.9em;
 }
-.stats-grid p {
-    margin: 0;
-    color: var(--color-text-light);
-}
+.stats-grid p { margin: 0; color: var(--color-text-light); }
 
-/* --- Barras de HP (Usado na Tela 4 e Modal) --- */
 .hp-bar-container {
     width: 100%;
     height: 30px;
@@ -124,28 +99,13 @@ p {
     position: relative;
     margin-bottom: 10px;
 }
-.hp-bar-fill {
-    width: 100%;
-    height: 100%;
-    background-color: var(--color-hp-bar);
-    border-radius: 4px;
-    transition: width 0.3s ease;
-}
-.hp-bar-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--color-text-dark);
-    font-weight: bold;
-    font-size: 0.9em;
-}
+.hp-bar-fill { width: 100%; height: 100%; background-color: var(--color-hp-bar); border-radius: 4px; transition: width 0.3s ease; }
+.hp-bar-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--color-text-dark); font-weight: bold; font-size: 0.9em; }
 
 /* ==================================================================== */
 /* SEÇÃO 3: LAYOUT UNIVERSAL (HEADER, FOOTER, SCREENS)
 /* ==================================================================== */
 
-/* --- Header Universal --- */
 #main-header {
     display: flex;
     justify-content: space-between;
@@ -162,15 +122,9 @@ p {
     font-weight: bold;
     color: var(--color-accent-blue);
 }
-#tezerium-display span {
-    color: white;
-}
-#wallet-status #connection-status {
-    color: var(--color-accent-blue);
-    font-weight: bold;
-}
+#tezerium-display span { color: white; }
+#wallet-status #connection-status { color: var(--color-accent-blue); font-weight: bold; }
 
-/* --- Footer Universal --- */
 #main-footer {
     text-align: center;
     margin-top: 40px;
@@ -180,11 +134,7 @@ p {
     font-size: 0.9em;
 }
 
-/* --- Gerenciamento de Tela --- */
-.screen {
-    width: 100%;
-    min-height: 70vh; /* Empurra o footer para baixo */
-}
+.screen { width: 100%; min-height: 70vh; }
 
 /* ==================================================================== */
 /* SEÇÃO 4: TELA 1 (LOGGED OUT)
@@ -199,37 +149,15 @@ p {
     margin: 50px auto;
     padding: 40px;
 }
-#game-logo {
-    width: 100%;
-    max-width: 300px;
-    margin-bottom: 30px;
-}
-#logged-out-screen h2 {
-    color: var(--color-accent-red);
-}
-.landing-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-    max-width: 350px;
-}
+#game-logo { width: 100%; max-width: 300px; margin-bottom: 30px; }
+#logged-out-screen h2 { color: var(--color-accent-red); }
+.landing-actions { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 350px; }
 
 /* ==================================================================== */
-/* SEÇÃO 5: TELA 2 (HUB - SELEÇÃO) (Atualizada)
+/* SEÇÃO 5: TELA 2 (HUB - SELEÇÃO)
 /* ==================================================================== */
-.hub-container {
-    max-width: 1400px;
-    margin: 0 auto;
-}
-.filter-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 20px;
-    padding: 15px;
-}
-/* Inputs e Selects do filtro */
+.hub-container { max-width: 1400px; margin: 0 auto; }
+.filter-toolbar { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; padding: 15px; }
 .filter-toolbar input,
 .filter-toolbar select {
     padding: 10px;
@@ -238,81 +166,29 @@ p {
     background-color: var(--color-bg-dark);
     color: var(--color-text-light);
     font-family: 'Roboto Mono', monospace;
-    flex-grow: 1; /* Fazem ocupar o espaço */
+    flex-grow: 1; 
 }
-/* Ajusta o tamanho do seletor de "itens por página" */
-#filter-items-per-page {
-    flex-grow: 0.5;
-}
+#filter-items-per-page { flex-grow: 0.5; }
 
-/* --- Grid de NFTs --- */
-.nft-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
-}
-.nft-card {
-    padding: 0; 
-    overflow: hidden; 
-    border-width: 2px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.nft-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0 15px var(--color-accent-blue);
-}
-.nft-card img {
-    width: 100%;
-    height: 250px;
-    object-fit: cover;
-    display: block;
-    background-color: var(--color-bg-dark); 
-}
-.nft-card h4 {
-    padding: 15px 15px 0 15px;
-    margin: 0;
-    color: var(--color-accent-red);
-}
-.nft-card p {
-    padding: 0 15px;
-    margin-bottom: 5px;
-    font-size: 0.9em;
-}
-.nft-card .action-btn {
-    margin: 15px;
-    width: calc(100% - 30px); /* Ajusta ao padding */
-}
+.nft-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
+.nft-card { padding: 0; overflow: hidden; border-width: 2px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.nft-card:hover { transform: translateY(-5px); box-shadow: 0 0 15px var(--color-accent-blue); }
+.nft-card img { width: 100%; height: 250px; object-fit: cover; display: block; background-color: var(--color-bg-dark); }
+.nft-card h4 { padding: 15px 15px 0 15px; margin: 0; color: var(--color-accent-red); }
+.nft-card p { padding: 0 15px; margin-bottom: 5px; font-size: 0.9em; }
+.nft-card .action-btn { margin: 15px; width: calc(100% - 30px); }
 
-/* --- NOVO: Controles de Paginação --- */
-.pagination-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-}
-#pagination-info {
-    font-weight: bold;
-    color: var(--color-accent-blue);
-}
+.pagination-controls { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; }
+#pagination-info { font-weight: bold; color: var(--color-accent-blue); }
 
 /* ==================================================================== */
-/* SEÇÃO 6: TELA 3 (HUB - PREPARAÇÃO) (Refatorada)
+/* SEÇÃO 6: TELA 3 (HUB - PREPARAÇÃO)
 /* ==================================================================== */
 
-/* --- Layout de 2 Colunas --- */
-.preparation-header {
-    margin-bottom: 15px;
-}
-.preparation-container {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr; /* 2 colunas */
-    gap: 20px;
-    max-width: 1600px;
-    margin: 0 auto;
-}
+.preparation-header { margin-bottom: 15px; }
+.preparation-container { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; max-width: 1600px; margin: 0 auto; }
 
-/* --- Coluna Esquerda: Character Sheet (Sem mudanças) --- */
+/* --- Coluna Esquerda: Character Sheet --- */
 #character-sheet-panel { display: flex; flex-direction: column; gap: 20px; }
 .kid-info-box { display: flex; gap: 20px; border-bottom: 1px solid var(--color-accent-blue); padding-bottom: 20px; }
 #prep-kid-image { width: 150px; height: 150px; border: 2px solid var(--color-accent-blue); border-radius: 5px; flex-shrink: 0; }
@@ -322,13 +198,9 @@ p {
 #edit-name-btn:hover { color: white; }
 .kid-info-details p { margin: 5px 0; font-size: 1.1em; }
 
-/* --- Manequim de Equipamento (Sem mudanças) --- */
 .equipment-mannequin {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: auto auto auto;
-    gap: 15px;
-    grid-template-areas: " . helmet . " "weapon armor accessory" "gloves implant boots";
+    display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto auto auto;
+    gap: 15px; grid-template-areas: " . helmet . " "weapon armor accessory" "gloves implant boots";
     padding: 10px; background-color: rgba(0,0,0,0.2); border-radius: 5px;
 }
 #mannequin-helmet { grid-area: helmet; } #mannequin-weapon { grid-area: weapon; } #mannequin-accessory{ grid-area: accessory; } #mannequin-armor { grid-area: armor; } #mannequin-gloves { grid-area: gloves; } #mannequin-implant { grid-area: implant; } #mannequin-boots { grid-area: boots; }
@@ -342,177 +214,50 @@ p {
 .equip-slot.equipped + .equip-remove-btn { display: block; }
 #start-expedition-btn { margin-top: auto; padding: 15px; font-size: 1.2em; }
 
-/* --- Coluna Direita: WORKSHOP (Nova Estrutura) --- */
+/* --- Coluna Direita: WORKSHOP (Estrutura de Abas) --- */
+.tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--color-accent-blue); margin-bottom: 15px; }
+.tab-btn { background: none; border: none; color: var(--color-text-dim); padding: 10px 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+.tab-btn.active { color: var(--color-accent-blue); border-bottom: 2px solid var(--color-accent-blue); }
+.main-tabs .tab-btn { font-size: 1.1em; }
+.sub-tabs { margin-left: -10px; margin-right: -10px; padding: 0 10px; border-bottom: 1px solid #444; }
+.sub-tabs .tab-btn { font-size: 0.9em; padding: 8px 12px; }
 
-/* Abas Principais (Inventory/Workshop) */
-.tabs {
-    display: flex;
-    flex-wrap: wrap;
-    border-bottom: 1px solid var(--color-accent-blue);
-    margin-bottom: 15px;
-}
-.tab-btn {
-    background: none; border: none; color: var(--color-text-dim);
-    padding: 10px 15px; cursor: pointer; font-weight: bold; text-transform: uppercase;
-}
-.tab-btn.active {
-    color: var(--color-accent-blue);
-    border-bottom: 2px solid var(--color-accent-blue);
-}
-/* Abas Principais (Letra maior) */
-.main-tabs .tab-btn {
-    font-size: 1.1em;
-}
-/* Sub-Abas (Letra menor) */
-.sub-tabs {
-    margin-left: -10px; /* Alinha com o padding do painel */
-    margin-right: -10px;
-    padding: 0 10px;
-    border-bottom: 1px solid #444; /* Borda mais sutil */
-}
-.sub-tabs .tab-btn {
-    font-size: 0.9em;
-    padding: 8px 12px;
-}
-
-/* Gerenciamento de Conteúdo de Abas */
 .main-tab-content { display: none; }
 .main-tab-content.active { display: block; }
 .sub-tab-content { display: none; }
 .sub-tab-content.active { display: block; }
 
-/* --- Sub-Aba: INVENTORY - Materials --- */
-.inventory-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-.inventory-table th,
-.inventory-table td {
-    padding: 10px;
-    border: 1px solid #444;
-    text-align: left;
-}
-.inventory-table th {
-    background-color: var(--color-bg-dark);
-    color: var(--color-accent-blue);
-}
-.inventory-table td {
-    vertical-align: middle;
-}
-.inventory-table img {
-    width: 24px;
-    height: 24px;
-    vertical-align: middle;
-    margin-right: 10px;
-}
+.inventory-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.inventory-table th, .inventory-table td { padding: 10px; border: 1px solid #444; text-align: left; }
+.inventory-table th { background-color: var(--color-bg-dark); color: var(--color-accent-blue); }
+.inventory-table td { vertical-align: middle; }
+.inventory-table img { width: 24px; height: 24px; vertical-align: middle; margin-right: 10px; }
 
-/* --- Sub-Aba: WORKSHOP - Refine --- */
-.refine-ui {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    margin: 30px 0;
-}
-.refine-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 40px);
-    grid-template-rows: repeat(3, 40px);
-    gap: 5px;
-    padding: 5px;
-    background-color: rgba(0,0,0,0.2);
-    border: 1px solid #444;
-}
-.refine-slot {
-    width: 40px;
-    height: 40px;
-    border: 2px dashed #888;
-    background-color: var(--color-bg-dark);
-}
-.refine-arrow {
-    font-size: 2em;
-    font-weight: bold;
-    color: var(--color-accent-blue);
-}
-.refine-result {
-    padding: 5px;
-    background-color: rgba(0,0,0,0.2);
-    border: 1px solid #444;
-}
-.refine-result .refine-slot {
-    border-style: solid;
-    border-color: var(--color-accent-blue);
-}
+.refine-ui { display: flex; justify-content: center; align-items: center; gap: 20px; margin: 30px 0; }
+.refine-grid { display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 5px; padding: 5px; background-color: rgba(0,0,0,0.2); border: 1px solid #444; }
+.refine-slot { width: 40px; height: 40px; border: 2px dashed #888; background-color: var(--color-bg-dark); }
+.refine-arrow { font-size: 2em; font-weight: bold; color: var(--color-accent-blue); }
+.refine-result { padding: 5px; background-color: rgba(0,0,0,0.2); border: 1px solid #444; }
+.refine-result .refine-slot { border-style: solid; border-color: var(--color-accent-blue); }
 
-/* --- Sub-Aba: WORKSHOP - Craft --- */
-.craft-container {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 15px;
-    margin-top: 10px;
-}
-.craft-recipe-list {
-    max-height: 400px;
-    overflow-y: auto;
-    padding: 10px;
-    background-color: var(--color-bg-dark);
-}
-/* Estilo para item de receita (JS usará) */
-.recipe-item {
-    padding: 10px;
-    border: 1px solid #444;
-    border-radius: 5px;
-    margin-bottom: 5px;
-    cursor: pointer;
-}
-.recipe-item:hover {
-    background-color: var(--color-panel-dark);
-}
-.recipe-item.selected {
-    border-color: var(--color-accent-blue);
-}
-.craft-recipe-details {
-    padding: 15px;
-    background-color: var(--color-bg-dark);
-}
+.craft-container { display: grid; grid-template-columns: 1fr 2fr; gap: 15px; margin-top: 10px; }
+.craft-recipe-list { max-height: 400px; overflow-y: auto; padding: 10px; background-color: var(--color-bg-dark); }
+.recipe-item { padding: 10px; border: 1px solid #444; border-radius: 5px; margin-bottom: 5px; cursor: pointer; }
+.recipe-item:hover { background-color: var(--color-panel-dark); }
+.recipe-item.selected { border-color: var(--color-accent-blue); }
+.craft-recipe-details { padding: 15px; background-color: var(--color-bg-dark); }
 
-/* --- Sub-Aba: WORKSHOP - Embed --- */
-.embed-ui {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    margin: 30px 0;
-}
-.embed-slot {
-    width: 150px;
-    height: 150px;
-    padding: 10px;
-    border-width: 2px;
-    border-style: dashed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    color: var(--color-text-dim);
-    cursor: pointer;
-}
-.embed-slot:hover {
-    border-color: var(--color-accent-blue);
-}
-.embed-plus {
-    font-size: 2em;
-    font-weight: bold;
-    color: var(--color-accent-red);
-}
+.embed-ui { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 30px 0; }
+.embed-slot { width: 150px; height: 150px; padding: 10px; border-width: 2px; border-style: dashed; display: flex; justify-content: center; align-items: center; text-align: center; color: var(--color-text-dim); cursor: pointer; }
+.embed-slot:hover { border-color: var(--color-accent-blue); }
+.embed-plus { font-size: 2em; font-weight: bold; color: var(--color-accent-red); }
 
 /* ==================================================================== */
-/* SEÇÃO 7: TELA 4 (GAME SCREEN) (Sem mudanças)
+/* SEÇÃO 7: TELA 4 (GAME SCREEN) - REVISÃO IMAGE MAP
 /* ==================================================================== */
 .game-container {
     display: grid;
-    grid-template-columns: 1fr 2.5fr 1fr;
+    grid-template-columns: 1fr 1.5fr 1fr; /* Ajustado para mapa menor */
     gap: 20px;
     max-width: 1800px;
     margin: 0 auto;
@@ -529,21 +274,70 @@ p {
 #game-resource-list { list-style: none; padding-left: 0; font-size: 0.9em; }
 #exit-expedition-btn { margin-top: auto; }
 
-/* --- Coluna Central: Map Panel --- */
+/* --- Coluna Central: Map Panel (IMAGE MAP) --- */
 #map-panel { display: flex; flex-direction: column; padding: 10px; }
 #map-panel h3 { margin: 5px 10px; flex-shrink: 0; }
-.hex-map-container { position: relative; width: 100%; height: 100%; overflow: hidden; background-color: #000; flex-grow: 1; border-radius: 5px; }
-#game-map-content { position: absolute; }
-.hex-cell { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); width: calc(var(--hex-size) * 2); height: var(--hex-height); background-color: #333; /* Cor 'Fog of War' */ position: absolute; cursor: pointer; transition: transform 0.2s ease, filter 0.2s ease; display: flex; justify-content: center; align-items: center; font-size: 1.5em; color: white; }
-.hex-cell:hover { transform: scale(1.1); filter: brightness(1.3); z-index: 5; }
-.hex-kid { background-color: var(--color-accent-blue) !important; border: 2px solid white; box-shadow: 0 0 10px var(--color-accent-blue); z-index: 2; transform: scale(1.1); }
-/* Cores dos Biomas (para o JS) */
-.hex-cell.volcanics { background-color: #B22222; } /* Vermelho */
-.hex-cell.nocturnals { background-color: #00008B; } /* Azul */
-.hex-cell.undergrounders { background-color: #8B4513; } /* Marrom */
-.hex-cell.radioactives { background-color: #ADFF2F; } /* Verde Claro */
-.hex-cell.reptilians { background-color: #006400; } /* Verde Escuro */
-.hex-cell.wasteland { background-color: #FFD700; } /* Amarelo */
+
+#game-map-container {
+    position: relative; 
+    width: 100%;
+    /* Altura definida pela proporção da imagem (ajuste conforme necessário) */
+    /* Ex: Se a imagem tiver 500x400, e a largura for 100%, a altura deve ser 80% */
+    padding-top: 80%; /* 80% (relação 5:4) -> 400/500 */
+    overflow: hidden; 
+    background-color: #000;
+    flex-grow: 1; 
+    border-radius: 5px;
+}
+
+/* A Imagem, o Overlay de Neblina e o Marcador */
+#map-image,
+#fog-of-war-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; /* Ocupa 100% do container */
+    height: 100%; /* Ocupa 100% do container */
+}
+
+/* Garante que a imagem do mapa se ajuste */
+#map-image {
+    object-fit: contain; /* Garante que a imagem caiba sem distorcer */
+}
+
+/* Estilo para cada hexágono de neblina (Div de overlay) */
+.hex-fog {
+    position: absolute;
+    /* Tamanho baseado nas variáveis Root (100px x 86.6px) */
+    width: var(--hex-visual-width); 
+    height: var(--hex-visual-height);
+    
+    /* Forma de Hexágono Pointy Top */
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    transform: translate(-50%, -50%); /* Centraliza o div no ponto (x,y) do JS */
+    
+    background-color: rgba(0, 0, 0, 0.9); /* Cor da Neblina */
+    pointer-events: none; /* Não bloqueia o clique na imagem abaixo */
+    opacity: 0; /* Começa invisível por padrão */
+    transition: opacity 0.5s ease;
+}
+
+/* Estado da Neblina Ativa */
+.hex-fog.fog-active {
+    opacity: 1;
+}
+
+/* Marcador do Jogador */
+.kid-marker {
+    position: absolute;
+    font-size: 2em;
+    color: var(--color-accent-blue);
+    text-shadow: 0 0 5px white;
+    transform: translate(-50%, -100%); /* Posição (centro, base) */
+    pointer-events: none;
+    z-index: 10;
+}
+
 
 /* --- Coluna Direita: Actions & Log --- */
 #action-panel { display: flex; flex-direction: column; }
@@ -558,7 +352,7 @@ p {
 .log-entry.day { color: yellow; font-weight: bold; } .log-entry.action { color: white; } .log-entry.reward { color: var(--color-hp-bar); } .log-entry.combat { color: var(--color-accent-red); } .log-entry.error { color: var(--color-accent-red); font-weight: bold; }
 
 /* ==================================================================== */
-/* SEÇÃO 8: MODAIS UNIVERSAIS (Atualizada)
+/* SEÇÃO 8: MODAIS UNIVERSAIS
 /* ==================================================================== */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -583,109 +377,109 @@ p {
     display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;
 }
 
-/* --- Modal: Seleção de Equipamento --- */
 .equip-list-item { background-color: var(--color-bg-dark); border: 1px solid #444; border-radius: 5px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s; }
 .equip-list-item:hover { background-color: #3c3c57; }
 .equip-list-item h4 { color: var(--color-accent-blue); margin-top: 0; }
 .equip-list-item p { margin: 3px 0; color: #ccc; }
 .item-stats { color: var(--color-hp-bar); font-weight: bold; }
 
-/* --- Modal: Editar Nome --- */
 #edit-name-modal input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--color-accent-blue); background-color: var(--color-bg-dark); color: var(--color-text-light); font-size: 1.1em; }
 
-/* --- Modal: Feedback de Ação --- */
 .feedback-modal { max-width: 400px; text-align: center; }
 
-/* --- NOVO: Modal: Confirmação de Embed --- */
-.embed-comparison {
-    display: flex;
-    justify-content: space-around;
-    gap: 15px;
-    margin-top: 20px;
-}
-#embed-before,
-#embed-after {
-    width: 50%;
-    padding: 10px;
-    border: 1px solid #444;
-    border-radius: 5px;
-    background-color: var(--color-bg-dark);
-}
-#embed-before h4,
-#embed-after h4 {
-    color: var(--color-text-dim);
-    border-bottom: 1px solid #444;
-    padding-bottom: 5px;
-}
-#embed-after {
-    border-color: var(--color-hp-bar); /* Destaca o "Depois" */
-}
-#embed-after h4 {
-    color: var(--color-hp-bar);
-}
-
+.embed-comparison { display: flex; justify-content: space-around; gap: 15px; margin-top: 20px; }
+#embed-before, #embed-after { width: 50%; padding: 10px; border: 1px solid #444; border-radius: 5px; background-color: var(--color-bg-dark); }
+#embed-before h4, #embed-after h4 { color: var(--color-text-dim); border-bottom: 1px solid #444; padding-bottom: 5px; }
+#embed-after { border-color: var(--color-hp-bar); }
+#embed-after h4 { color: var(--color-hp-bar); }
 
 /* ==================================================================== */
-/* SEÇÃO 9: MODAL DE COMBATE (ESPECÍFICO) (Sem mudanças)
+/* SEÇÃO 9: MODAL DE COMBATE (Revisado para Auto-Attack)
 /* ==================================================================== */
 .combat-modal { max-width: 800px; }
 .combat-arena { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
-.combatant { display: flex; flex-direction: column; align-items: center; width: 40%; }
-.combatant img { width: 100%; max-width: 200px; height: auto; margin-bottom: 10px; }
-.combatant h4 { font-size: 1.2em; color: var(--color-accent-red); }
+
+/* "VS" entre os combatentes */
+.combat-vs {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: var(--color-accent-red);
+    text-shadow: 0 0 5px var(--color-accent-red);
+}
+
+.combatant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 35%; /* Reduzido */
+}
+/* Imagem reduzida em 50% */
+.combatant img {
+    width: 100%;
+    max-width: 100px; /* Reduzido de 200px */
+    height: auto;
+    margin-bottom: 10px;
+}
+.combatant h4 { font-size: 1.1em; color: var(--color-accent-red); }
+.combatant .hp-bar-container {
+    width: 100%;
+    max-width: 150px; /* Ajustado */
+}
 .combatant.hit { animation: hit-shake 0.3s ease; }
 @keyframes hit-shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px) rotate(-2deg); } 50% { transform: translateX(10px) rotate(2deg); } 100% { transform: translateX(0); } }
+
 #combat-log { height: 100px; overflow-y: scroll; background-color: #111; border: 1px solid #444; padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 0.9em; }
-#combat-actions { justify-content: center; }
+
+/* Ajuste para 3 botões */
+#combat-actions {
+    justify-content: space-around;
+}
+/* Botão Auto Attack Ativo */
+#combat-auto-btn.auto-active {
+    background-color: #ff9d00;
+    color: var(--color-text-dark);
+}
+#combat-auto-btn.auto-active:hover {
+    background-color: #ffc266;
+}
+
 #combat-phase-victory, #combat-phase-defeat { text-align: center; }
 #victory-reward-list { list-style: none; padding: 0; color: var(--color-hp-bar); font-size: 1.1em; margin: 10px 0; }
 
 /* ==================================================================== */
-/* SEÇÃO 10: RESPONSIVIDADE (Atualizada)
+/* SEÇÃO 10: RESPONSIVIDADE
 /* ==================================================================== */
 
-/* Tablet (e abaixo) - Empilha os layouts principais */
 @media (max-width: 1200px) {
-    /* Empilha Tela 3 (Hub Preparação) */
-    .preparation-container {
-        grid-template-columns: 1fr;
-    }
-
-    /* Empilha Tela 4 (Game Screen) */
-    .game-container {
-        grid-template-columns: 1fr;
-        height: auto; 
-    }
-    #map-panel {
-        min-height: 500px; 
-    }
+    .preparation-container { grid-template-columns: 1fr; }
+    .game-container { grid-template-columns: 1fr; height: auto; }
+    #map-panel { min-height: 500px; }
 }
 
-/* Mobile (e abaixo) */
 @media (max-width: 600px) {
     body { padding: 10px; }
-    /* Empilha o Header */
     #main-header { flex-direction: column; gap: 10px; align-items: stretch; }
     #main-header > div { text-align: center; }
     .panel { padding: 15px; }
 
-    /* Tela 2 */
     .filter-toolbar { flex-direction: column; }
     .nft-grid { grid-template-columns: 1fr; }
 
-    /* Tela 3 */
     .kid-info-box { flex-direction: column; }
     .equipment-mannequin { gap: 10px; }
     .equip-slot { font-size: 1.5em; }
     .equip-remove-btn { width: 20px; height: 20px; top: -5px; right: -5px; }
     
-    /* Abas do Workshop */
     .refine-ui { flex-direction: column; }
     .craft-container { grid-template-columns: 1fr; }
     .embed-ui { flex-direction: column; }
     .embed-slot { width: 100%; height: 100px; }
-
-    /* Modal de Comparação */
     .embed-comparison { flex-direction: column; }
     #embed-before, #embed-after { width: 100%; }
+
+    /* Ajuste do Mapa para Mobile (Image Map) */
+    #game-map-container {
+        /* Reduz a proporção (pode precisar de ajuste fino) */
+        padding-top: 100%; /* 1:1 ratio */
+    }
 }
