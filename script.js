@@ -704,11 +704,11 @@ document.addEventListener('DOMContentLoaded', () => {
         hexFogs.forEach(fogDiv => {
             const key = fogDiv.dataset.key;
             if (gameState.expedition.revealedHexes.has(key)) {
-                // Hexágono explorado: remove neblina
-                fogDiv.classList.remove('fog-active');
+                // Se está no set, adiciona a classe para REVELAR (ficar transparente)
+                fogDiv.classList.add('revealed');
             } else {
-                // Não explorado: adiciona neblina
-                fogDiv.classList.add('fog-active');
+                // Se não está, remove a classe (garante que fique com neblina)
+                fogDiv.classList.remove('revealed');
             }
         });
     }
