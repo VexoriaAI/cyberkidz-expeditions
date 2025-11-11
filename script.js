@@ -1,6 +1,6 @@
 // ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT LÓGICO
-// VERSÃO FINAL COM 3 TELAS, DASHBOARD DE CRAFTING E MAPA HEXAGONAL
+// VERSÃO CORRIGIDA (Botões da Tela 1 funcionam)
 // ====================================================================
 
 // ====================================================================
@@ -8,34 +8,34 @@
 // ====================================================================
 
 const MAX_DAYS = 10;
-const HEX_MAP_RADIUS = 3; // O "tamanho" do mapa. Raio 3 = 37 células.
+const HEX_MAP_RADIUS = 3; 
 
 // --- 1.1: Atributos Base das Tribos ---
 const TRIBES = {
     VOLCANICS: {
         name: "Volcanics",
         bonus: "Burning Ridge",
-        baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 2, attackSpeed: 1, hpRegen: 1, ap: 3 }
+        baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 12, attackSpeed: 1, hpRegen: 1, ap: 3 }
     },
     UNDERGROUNDERS: {
         name: "Undergrounders",
         bonus: "Abandoned Mines",
-        baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 2, attackSpeed: 2, hpRegen: 2, ap: 4 }
+        baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 4 }
     },
     NOCTURNALS: {
         name: "Nocturnals",
         bonus: "Ancient Ruins",
-        baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 4, attackSpeed: 4, hpRegen: 1, ap: 4 }
+        baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 4 }
     },
     RADIOACTIVES: {
         name: "Radioactives",
         bonus: "Lake Rancid",
-        baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 5, attackSpeed: 5, hpRegen: 1, ap: 5 }
+        baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 5 }
     },
     REPTILIANS: {
         name: "Reptilians",
         bonus: "Covenant Swamp",
-        baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 3, attackSpeed: 2, hpRegen: 5, ap: 3 }
+        baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 3 }
     }
 };
 
@@ -56,39 +56,14 @@ const ENEMY = {
 };
 
 // --- 1.4: Materiais, Componentes e Equipamentos (O Banco de Dados de Crafting) ---
-
 const MATERIALS = {
-    // Básicos
-    scrap: { name: "Scrap", type: "Base" },
-    water: { name: "Clean Water", type: "Base" },
-    food: { name: "Food", type: "Base" },
-    // Volcanics
-    metal: { name: "Metal", type: "Volcanic" },
-    magma: { name: "Magma", type: "Volcanic" },
-    pumice: { name: "Volcanic Pumice Stone", type: "Volcanic" },
-    obsidian: { name: "Obsidian Tears", type: "Volcanic" },
-    // Undergrounders
-    crystal: { name: "Energized Crystals", type: "Undergrounder" },
-    pure_water: { name: "Pure Water", type: "Undergrounder" },
-    clay: { name: "Special Clay", type: "Undergrounder" },
-    glass: { name: "Glass", type: "Undergrounder" },
-    // Nocturnals
-    polymer: { name: "Polymer", type: "Nocturnal" },
-    nanochips: { name: "Nanochips", type: "Nocturnal" },
-    implants: { name: "Cybernetic Implants", type: "Nocturnal" },
-    quantum_core: { name: "Quantum Energy Core", type: "Nocturnal" },
-    // Reptilians
-    healing_plants: { name: "Healing Plants", type: "Reptilian" },
-    fungi: { name: "Hallucinogenic Fungi", type: "Reptilian" },
-    reptile_blood: { name: "Reptilian Blood", type: "Reptilian" },
-    animal_skin: { name: "Animal Skin", type: "Reptilian" },
-    // Radioactives
-    strange_fluid: { name: "Strange Fluid", type: "Radioactive" },
-    parasitic_fungus: { name: "Parasitic Fungus", type: "Radioactive" },
-    venom_glands: { name: "Venom Glands", type: "Radioactive" },
-    luminescent_algae: { name: "Luminescent Algae", type: "Radioactive" }
+    scrap: { name: "Scrap", type: "Base" }, water: { name: "Clean Water", type: "Base" }, food: { name: "Food", type: "Base" },
+    metal: { name: "Metal", type: "Volcanic" }, magma: { name: "Magma", type: "Volcanic" }, pumice: { name: "Volcanic Pumice Stone", type: "Volcanic" }, obsidian: { name: "Obsidian Tears", type: "Volcanic" },
+    crystal: { name: "Energized Crystals", type: "Undergrounder" }, pure_water: { name: "Pure Water", type: "Undergrounder" }, clay: { name: "Special Clay", type: "Undergrounder" }, glass: { name: "Glass", type: "Undergrounder" },
+    polymer: { name: "Polymer", type: "Nocturnal" }, nanochips: { name: "Nanochips", type: "Nocturnal" }, implants: { name: "Cybernetic Implants", type: "Nocturnal" }, quantum_core: { name: "Quantum Energy Core", type: "Nocturnal" },
+    healing_plants: { name: "Healing Plants", type: "Reptilian" }, fungi: { name: "Hallucinogenic Fungi", type: "Reptilian" }, reptile_blood: { name: "Reptilian Blood", type: "Reptilian" }, animal_skin: { name: "Animal Skin", type: "Reptilian" },
+    strange_fluid: { name: "Strange Fluid", type: "Radioactive" }, parasitic_fungus: { name: "Parasitic Fungus", type: "Radioactive" }, venom_glands: { name: "Venom Glands", type: "Radioactive" }, luminescent_algae: { name: "Luminescent Algae", type: "Radioactive" }
 };
-
 const COMPONENTS = {
     volcanic_core: { name: "Volcanic Core", type: "Damage", stats: { damage: 5, critDamage: 5 } },
     defense_plate: { name: "Defense Plate", type: "Defense", stats: { defense: 5, blockChance: 3 } },
@@ -97,31 +72,21 @@ const COMPONENTS = {
     heal_totem: { name: "Heal Totem", type: "Heal", stats: { hpRegen: 3 } },
     lucky_clover: { name: "Lucky Clover", type: "Universal", stats: { dropChance: 5 } }
 };
-
 const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
-
-// Regras de Sinergia: Quais tipos de componentes cada slot aceita
 const SYNERGY_MAP = {
-    helmet: ['Defense', 'Crit', 'Universal'],
-    weapon: ['Damage', 'Crit', 'Speed', 'Universal'],
-    accessory: ['Damage', 'Crit', 'Speed', 'Heal', 'Defense', 'Universal'], // Aceita tudo
-    armor: ['Defense', 'Heal', 'Universal'],
-    gloves: ['Damage', 'Speed', 'Crit', 'Universal'],
-    implant: ['Damage', 'Crit', 'Speed', 'Heal', 'Defense', 'Universal'], // Aceita tudo
+    helmet: ['Defense', 'Crit', 'Universal'], weapon: ['Damage', 'Crit', 'Speed', 'Universal'],
+    accessory: ['Damage', 'Crit', 'Speed', 'Heal', 'Defense', 'Universal'], armor: ['Defense', 'Heal', 'Universal'],
+    gloves: ['Damage', 'Speed', 'Crit', 'Universal'], implant: ['Damage', 'Crit', 'Speed', 'Heal', 'Defense', 'Universal'],
     boots: ['Defense', 'Speed', 'Universal']
 };
-
 const RECIPES_CRAFT_EMPTY = {
     empty_helmet: { name: "Rustic Helmet (Empty)", cost: { scrap: 8 } },
     empty_weapon: { name: "Rustic Blade (Empty)", cost: { scrap: 10 } },
     empty_armor: { name: "Rustic Chestplate (Empty)", cost: { scrap: 15 } },
-    // ...etc para todos os 7 slots
 };
-
 const RECIPES_REFINE = {
     volcanic_core: { name: "Volcanic Core", cost: { metal: 10, magma: 5, pumice: 2 } },
     defense_plate: { name: "Defense Plate", cost: { crystal: 10, clay: 5, glass: 2 } },
-    // ...etc para todos os 5 componentes tribais
     lucky_clover: { name: "Lucky Clover", cost: { scrap: 20, water: 20, food: 20 } }
 };
 
@@ -133,38 +98,26 @@ const RECIPES_REFINE = {
 let gameState = {
     currentDay: 0,
     isCombat: false,
-    
-    // Perfil do Jogador (Salvo no DB)
     player: {
-        activeKid: null, // Objeto do Kid selecionado
+        activeKid: null,
         inventory: {
             materials: { scrap: 100, water: 100, food: 100, metal: 5, magma: 2, pumice: 1, crystal: 5, clay: 2, glass: 1, polymer: 0, nanochips: 0, implants: 0, quantum_core: 0, healing_plants: 0, fungi: 0, reptile_blood: 0, animal_skin: 0, strange_fluid: 0, parasitic_fungus: 0, venom_glands: 0, luminescent_algae: 0 },
             components: { volcanic_core: 0, defense_plate: 0, precision_lens: 0, speed_injector: 0, heal_totem: 0, lucky_clover: 0 },
-            equipment: [] // Array de todos os equipamentos (Ex: { id: 'item_1', name: 'Crystal Chest (Lvl 1)', ... })
+            equipment: []
         },
-        equipped: { // IDs dos itens equipados no Kid ativo
-            helmet: null,
-            weapon: null,
-            accessory: null,
-            armor: null,
-            gloves: null,
-            implant: null,
-            boots: null
-        }
+        equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null }
     },
-    
-    // Status da Expedição (Resetado a cada expedição)
     expedition: {
-        playerPos: { q: 0, r: 0 }, // Posição no mapa Hex
-        stats: {}, // Stats Finais (Base + Equipamento)
+        playerPos: { q: 0, r: 0 },
+        stats: {},
+        currentHP: 100,
         currentAP: 0,
         maxAP: 0,
         currentMP: 0,
         maxMP: 0,
-        resourcesFound: { scrap: 0, water: 0, food: 0 } // Coletados nesta viagem
+        resourcesFound: { scrap: 0, water: 0, food: 0 }
     },
-
-    gameMap: new Map() // Usar um Map para coordenadas hex { 'q,r': { biome, ... } }
+    gameMap: new Map()
 };
 
 // Dados Mockados para o Demo
@@ -175,71 +128,30 @@ const DEMO_KID = {
     img: `https://via.placeholder.com/150/purple/FFFFFF?text=DEMO-KID` 
 };
 
-
 // ====================================================================
-// SEÇÃO 3: REFERÊNCIAS DO DOM
+// SEÇÃO 3: REFERÊNCIAS DO DOM (Lazy Loading)
 // ====================================================================
+// Para evitar erros de "null", vamos pegar os elementos apenas quando precisarmos deles,
+// exceto os da Tela 1.
 
-// Telas
+// Tela 1 (Carregamento imediato)
 const loggedOutScreen = document.getElementById('logged-out-screen');
-const dashboardScreen = document.getElementById('dashboard-screen');
-const gameScreen = document.getElementById('game-screen');
-
-// Header
-const connectionStatus = document.getElementById('connection-status');
-
-// Tela 1: Login
 const connectWalletBtn = document.getElementById('connect-wallet-btn');
 const demoGameBtn = document.getElementById('demo-game-btn');
-
-// Tela 2: Dashboard
-const nftListContainer = document.getElementById('nft-list-container');
-const startExpeditionBtn = document.getElementById('start-expedition-btn');
-const dashKidName = document.getElementById('dash-kid-name');
-const equipmentGrid = document.querySelector('.equipment-grid');
-const dashStatDmg = document.getElementById('dash-stat-dmg');
-const dashStatDef = document.getElementById('dash-stat-def');
-const dashStatCrit = document.getElementById('dash-stat-crit');
-const dashStatDrop = document.getElementById('dash-stat-drop');
-const inventoryListMaterials = document.getElementById('inventory-list-materials');
-const tabInventory = document.getElementById('tab-inventory');
-const tabRefine = document.getElementById('tab-refine');
-const tabCraft = document.getElementById('tab-craft');
-const craftingPanel = document.getElementById('crafting-panel');
-
-
-// Tela 3: Jogo
-const mapElement = document.getElementById('game-map');
-const logElement = document.getElementById('game-log');
-const turnCounterElement = document.getElementById('turn-counter');
-const kidTribeElement = document.getElementById('kid-tribe');
-const kidStrengthElement = document.getElementById('kid-strength');
-const kidHpElement = document.getElementById('kid-hp');
-const kidDefenseElement = document.getElementById('kid-defense');
-const kidDropChanceElement = document.getElementById('kid-drop-chance');
-const kidApElement = document.getElementById('kid-ap');
-const kidMpElement = document.getElementById('kid-mp');
-const resScrapElement = document.getElementById('res-scrap');
-const resWaterElement = document.getElementById('res-water');
-const resFoodElement = document.getElementById('res-food');
-const kidImageContainer = document.getElementById('kid-image-container');
-const collectBtn = document.getElementById('collect-btn');
-const investigateBtn = document.getElementById('investigate-btn');
-const callAttentionBtn = document.getElementById('call-attention-btn');
-const endTurnBtn = document.getElementById('end-turn-btn');
-const exitExpeditionBtn = document.getElementById('exit-expedition-btn');
+const connectionStatus = document.getElementById('connection-status');
 
 
 // ====================================================================
 // SEÇÃO 4: GERENCIAMENTO DE TELA
 // ====================================================================
 
-/** Mostra a tela desejada e esconde as outras */
 function showScreen(screenId) {
-    loggedOutScreen.style.display = 'none';
-    dashboardScreen.style.display = 'none';
-    gameScreen.style.display = 'none';
+    // Esconde todas as telas
+    document.getElementById('logged-out-screen').style.display = 'none';
+    document.getElementById('dashboard-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'none';
     
+    // Mostra a tela requisitada
     const screen = document.getElementById(screenId);
     if (screen) {
         screen.style.display = 'block';
@@ -248,119 +160,88 @@ function showScreen(screenId) {
     }
 }
 
-/** Inicia o jogo no modo DEMO */
-function startDemoGame() {
-    logMessage("Starting DEMO MODE...", 'yellow');
-    
-    // Seleciona o Kid Demo e inicia o jogo
-    selectActiveKid(DEMO_KID); // Usa o DEMO_KID
-    startGameplay(); // Pula direto para a tela do jogo
-}
-
-/** Inicia o jogo (chamado após a seleção do NFT ou no modo Demo) */
-function initializeGame() {
-    gameState.currentDay = 1;
-    generateHexMap();
-    renderHexMap();
-    updateGameStatusPanel();
-    toggleActionButtons(true);
-    
-    logMessage(`Day ${gameState.currentDay} started! You have ${gameState.expedition.currentAP} AP and ${gameState.expedition.currentMP} MP.`, 'lime');
-}
-
-
 // ====================================================================
 // SEÇÃO 5: LÓGICA DO DASHBOARD (HUB)
 // ====================================================================
 
-// --- 5.1: Gerenciamento de Abas (Tabs) ---
 function setupDashboardTabs() {
+    const craftingPanel = document.getElementById('crafting-panel');
     craftingPanel.addEventListener('click', (e) => {
         if (!e.target.classList.contains('tab-btn')) return;
-
         const tabName = e.target.dataset.tab;
         
-        // Remove 'active' de todos
         craftingPanel.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         craftingPanel.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         
-        // Adiciona 'active' ao clicado
         e.target.classList.add('active');
         document.getElementById(`tab-${tabName}`).classList.add('active');
     });
 }
 
-// --- 5.2: Renderização do Dashboard ---
 function renderDashboard() {
-    // 1. Renderizar lista de NFTs (simulado)
+    const nftListContainer = document.getElementById('nft-list-container');
     nftListContainer.innerHTML = '<h4>Your Kidz (Simulated)</h4>';
+    
     const mockNfts = [
-        DEMO_KID, // Adiciona o Kid Demo
+        DEMO_KID,
         { id: 'CKC-002', name: 'Demo Volcanic', tribe: TRIBES.VOLCANICS, img: `https://via.placeholder.com/150/red/FFFFFF?text=VOLC-KID` }
     ];
     
     mockNfts.forEach(nft => {
         const nftDiv = document.createElement('div');
-        nftDiv.className = 'nft-list-item'; // (Estilo a ser adicionado no CSS)
-        nftDiv.innerHTML = `<img src="${nft.img}" width="50"><p>${nft.name}</p>`;
+        nftDiv.className = 'nft-list-item'; 
+        nftDiv.innerHTML = `<img src="${nft.img}" width="50" style="vertical-align: middle; margin-right: 10px;"><p style="display: inline;">${nft.name}</p>`;
         nftDiv.onclick = () => selectActiveKid(nft);
         nftListContainer.appendChild(nftDiv);
     });
 
-    // 2. Renderizar Inventário
     renderInventory();
-    
-    // 3. Renderizar Receitas
     renderCraftingRecipes();
 }
 
 function selectActiveKid(nft) {
     gameState.player.activeKid = nft;
-    dashKidName.textContent = nft.name;
-    startExpeditionBtn.disabled = false;
+    document.getElementById('dash-kid-name').textContent = nft.name;
+    document.getElementById('start-expedition-btn').disabled = false;
     
-    // Renderizar equipamento e stats
     renderEquippedItems();
     calculateFinalStats();
 }
 
 function renderEquippedItems() {
-    // Limpa todos os slots
+    const equipmentGrid = document.querySelector('.equipment-grid');
     equipmentGrid.querySelectorAll('.equip-slot').forEach(slot => {
         slot.innerHTML = `<span>${slot.id.replace('equip-slot-', '')}</span>`;
-        slot.style.borderColor = '#aaa'; // Cor padrão
+        slot.style.borderColor = '#aaa';
     });
     
-    // Preenche com itens equipados
     for (const slotName of EQUIPMENT_SLOTS) {
         const itemId = gameState.player.equipped[slotName];
         if (itemId) {
             const item = gameState.player.inventory.equipment.find(e => e.id === itemId);
             if (item) {
-                document.getElementById(`equip-slot-${slotName}`).innerHTML = `<p>${item.name}</p>`; // Simplificado
-                document.getElementById(`equip-slot-${slotName}`).style.borderColor = 'lime'; // Cor de equipado
+                document.getElementById(`equip-slot-${slotName}`).innerHTML = `<p>${item.name}</p>`;
+                document.getElementById(`equip-slot-${slotName}`).style.borderColor = 'lime';
             }
         }
     }
 }
 
 function renderInventory() {
-    // Atualiza a lista de materiais
     for (const materialId in gameState.player.inventory.materials) {
         const span = document.getElementById(`inv-${materialId}`);
         if (span) {
             span.textContent = gameState.player.inventory.materials[materialId];
         }
     }
-    // (Fazer o mesmo para componentes e equipamentos)
 }
 
 function renderCraftingRecipes() {
-    // Limpa receitas
+    const tabRefine = document.getElementById('tab-refine');
+    const tabCraft = document.getElementById('tab-craft');
     tabRefine.innerHTML = '<h4>Refine Components</h4>';
     tabCraft.innerHTML = '<h4>Craft & Embed</h4>';
 
-    // Adiciona Receitas de Refino
     for (const compId in RECIPES_REFINE) {
         const recipe = RECIPES_REFINE[compId];
         let costText = Object.entries(recipe.cost).map(([matId, amt]) => `${amt} ${MATERIALS[matId].name}`).join(' + ');
@@ -371,7 +252,6 @@ function renderCraftingRecipes() {
             </div>`;
     }
 
-    // Adiciona Receitas de Craft (Vazio)
     for (const itemId in RECIPES_CRAFT_EMPTY) {
         const recipe = RECIPES_CRAFT_EMPTY[itemId];
         let costText = Object.entries(recipe.cost).map(([matId, amt]) => `${amt} ${MATERIALS[matId].name}`).join(' + ');
@@ -381,40 +261,27 @@ function renderCraftingRecipes() {
                 <button class="action-btn small-btn" onclick="craftEmptyItem('${itemId}')">Craft</button>
             </div>`;
     }
-    
-    // (A lógica de "Embed" seria mais complexa)
 }
 
-
-// --- 5.3: Lógica de Crafting (Simulada) ---
 function craftEmptyItem(itemId) {
-    logMessage(`(Simulado) Crafting: ${RECIPES_CRAFT_EMPTY[itemId].name}`, 'yellow');
+    console.log(`(Simulado) Crafting: ${RECIPES_CRAFT_EMPTY[itemId].name}`);
 }
 
 function refineComponent(compId) {
-    logMessage(`(Simulado) Refining: ${RECIPES_REFINE[compId].name}`, 'yellow');
+    console.log(`(Simulado) Refining: ${RECIPES_REFINE[compId].name}`);
 }
 
 function calculateFinalStats() {
     if (!gameState.player.activeKid) return;
 
-    // Começa com os stats base da tribo do Kid ativo
     let baseStats = gameState.player.activeKid.tribe.baseStats;
-    let finalStats = { ...baseStats }; // Copia os stats base
+    let finalStats = { ...baseStats, dropChance: 0, hp: 100 }; // Adiciona stats que não vêm da tribo
 
-    // Adiciona o novo atributo
-    finalStats.dropChance = 0;
-    finalStats.hp = 100; // HP base
-
-    // Itera sobre os 7 slots de equipamento
     for (const slot of EQUIPMENT_SLOTS) {
         const itemId = gameState.player.equipped[slot];
         if (!itemId) continue;
-
         const item = gameState.player.inventory.equipment.find(e => e.id === itemId);
         if (!item || !item.stats) continue;
-
-        // Adiciona os stats do item aos stats finais
         for (const stat in item.stats) {
             if (finalStats.hasOwnProperty(stat)) {
                 finalStats[stat] += item.stats[stat];
@@ -422,14 +289,13 @@ function calculateFinalStats() {
         }
     }
 
-    // Salva os stats calculados no estado da expedição
     gameState.expedition.stats = finalStats;
 
-    // Atualiza o display do Dashboard
-    dashStatDmg.textContent = finalStats.damage;
-    dashStatDef.textContent = finalStats.defense;
-    dashStatCrit.textContent = `${finalStats.critChance}%`;
-    dashStatDrop.textContent = `${finalStats.dropChance}%`;
+    // Atualiza display do Dashboard
+    document.getElementById('dash-stat-dmg').textContent = finalStats.damage;
+    document.getElementById('dash-stat-def').textContent = finalStats.defense;
+    document.getElementById('dash-stat-crit').textContent = `${finalStats.critChance}%`;
+    document.getElementById('dash-stat-drop').textContent = `${finalStats.dropChance}%`;
 }
 
 
@@ -437,7 +303,6 @@ function calculateFinalStats() {
 // SEÇÃO 6: LÓGICA DO MAPA HEXAGONAL
 // ====================================================================
 
-// --- 6.1: Funções de Coordenadas Hex (Axial) ---
 function axialToPixel(q, r) {
     const size = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size')) / 2;
     const x = size * (3/2 * q);
@@ -451,7 +316,6 @@ function axialDistance(q1, r1, q2, r2) {
           + Math.abs(r1 - r2)) / 2;
 }
 
-// --- 6.2: Geração e Renderização do Mapa ---
 function generateHexMap() {
     gameState.gameMap.clear();
     for (let q = -HEX_MAP_RADIUS; q <= HEX_MAP_RADIUS; q++) {
@@ -462,34 +326,31 @@ function generateHexMap() {
                 gameState.gameMap.set(key, {
                     q: q, r: r,
                     biome: randomBiome,
-                    hasEnemy: Math.random() < 0.2 // 20% de chance de inimigo
+                    hasEnemy: Math.random() < 0.2 
                 });
             }
         }
     }
-    // Define a posição inicial do jogador
     gameState.expedition.playerPos = { q: 0, r: 0 };
 }
 
 function renderHexMap() {
-    mapElement.innerHTML = ''; // Limpa o mapa
+    const mapElement = document.getElementById('game-map');
+    mapElement.innerHTML = ''; 
     const { q: playerQ, r: playerR } = gameState.expedition.playerPos;
 
-    // Encontra o centro do contêiner para centralizar o hex (0,0)
     const mapRect = mapElement.getBoundingClientRect();
     const centerX = mapRect.width / 2;
     const centerY = mapRect.height / 2;
 
     gameState.gameMap.forEach(cell => {
         const { q, r, biome, hasEnemy } = cell;
-        
         const pixel = axialToPixel(q, r);
         
         const cellDiv = document.createElement('div');
         cellDiv.className = 'hex-cell';
         cellDiv.style.left = `${centerX + pixel.x - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size')) / 2)}px`;
         cellDiv.style.top = `${centerY + pixel.y - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height')) / 2)}px`;
-        
         cellDiv.style.backgroundColor = biome.color;
         cellDiv.dataset.q = q;
         cellDiv.dataset.r = r;
@@ -511,80 +372,96 @@ function renderHexMap() {
 // SEÇÃO 7: LÓGICA DO JOGO (TELA 3)
 // ====================================================================
 
-// --- 7.1: Início e Atualização do Jogo ---
+function logMessage(message, color = 'var(--color-accent-blue)') {
+    const logElement = document.getElementById('game-log');
+    const p = document.createElement('p');
+    p.classList.add('log-entry');
+    p.style.color = color;
+    p.textContent = message;
+    logElement.prepend(p);
+    while (logElement.children.length > 20) {
+        logElement.removeChild(logElement.lastChild);
+    }
+}
+
+function toggleActionButtons(enable) {
+    document.getElementById('collect-btn').disabled = !enable;
+    document.getElementById('investigate-btn').disabled = !enable;
+    document.getElementById('call-attention-btn').disabled = !enable;
+    document.getElementById('end-turn-btn').disabled = !enable;
+}
+
 function startGameplay() {
     if (!gameState.player.activeKid) {
-        logMessage("ERROR: No active kid selected!", 'red');
+        alert("ERROR: No active kid selected!");
         showScreen('dashboard-screen');
         return;
     }
     
-    // 1. Calcular stats finais
     calculateFinalStats(); 
     
-    // 2. Definir stats da expedição
     const stats = gameState.expedition.stats;
-    gameState.expedition.currentAP = stats.ap; // (Usando 'ap' dos baseStats)
+    gameState.expedition.currentAP = stats.ap;
     gameState.expedition.maxAP = stats.ap;
-    gameState.expedition.currentMP = stats.speed; // STAT DE VELOCIDADE = PONTOS DE MOVIMENTO
+    gameState.expedition.currentMP = stats.speed; 
     gameState.expedition.maxMP = stats.speed;
+    gameState.expedition.currentHP = stats.hp;
     gameState.expedition.resourcesFound = { scrap: 0, water: 0, food: 0 };
 
-    // 3. Configurar UI
-    initializeGame(); // Chama a inicialização do mapa e stats
-    
+    initializeGame();
     showScreen('game-screen');
+}
+
+function initializeGame() {
+    gameState.currentDay = 1;
+    generateHexMap();
+    renderHexMap();
+    updateGameStatusPanel();
+    toggleActionButtons(true);
+    
+    logMessage(`Day ${gameState.currentDay} started! You have ${gameState.expedition.currentAP} AP and ${gameState.expedition.currentMP} MP.`, 'lime');
 }
 
 function updateGameStatusPanel() {
     const kid = gameState.player.activeKid;
     const stats = gameState.expedition.stats;
 
-    kidTribeElement.textContent = kid.tribe.name;
-    kidImageContainer.innerHTML = `<img src="${kid.img}" alt="Your CyberKid">`;
-    
-    // Atualiza com stats calculados
-    kidStrengthElement.textContent = stats.damage;
-    kidHpElement.textContent = `${stats.hp}/${stats.hp}`; // (HP atual)
-    kidDefenseElement.textContent = stats.defense;
-    kidDropChanceElement.textContent = `${stats.dropChance}%`;
-
-    // Atualiza AP/MP
-    kidApElement.textContent = gameState.expedition.currentAP;
-    kidMpElement.textContent = gameState.expedition.currentMP;
-    
-    // Atualiza recursos da viagem
-    resScrapElement.textContent = gameState.expedition.resourcesFound.scrap;
-    resWaterElement.textContent = gameState.expedition.resourcesFound.water;
-    resFoodElement.textContent = gameState.expedition.resourcesFound.food;
-    
-    turnCounterElement.textContent = `${gameState.currentDay}`;
+    document.getElementById('kid-tribe').textContent = kid.tribe.name;
+    document.getElementById('kid-image-container').innerHTML = `<img src="${kid.img}" alt="Your CyberKid">`;
+    document.getElementById('kid-strength').textContent = stats.damage;
+    document.getElementById('kid-hp').textContent = `${gameState.expedition.currentHP}/${stats.hp}`;
+    document.getElementById('kid-defense').textContent = stats.defense;
+    document.getElementById('kid-drop-chance').textContent = `${stats.dropChance}%`;
+    document.getElementById('kid-ap').textContent = gameState.expedition.currentAP;
+    document.getElementById('kid-mp').textContent = gameState.expedition.currentMP;
+    document.getElementById('res-scrap').textContent = gameState.expedition.resourcesFound.scrap;
+    document.getElementById('res-water').textContent = gameState.expedition.resourcesFound.water;
+    document.getElementById('res-food').textContent = gameState.expedition.resourcesFound.food;
+    document.getElementById('turn-counter').textContent = `${gameState.currentDay}`;
 
     // Lógica de habilitação de botões
-    collectBtn.disabled = (gameState.expedition.currentAP < 1 || gameState.isCombat);
-    investigateBtn.disabled = (gameState.expedition.currentAP < 1 || gameState.isCombat);
-    callAttentionBtn.disabled = (gameState.expedition.currentAP < 2 || gameState.isCombat);
+    document.getElementById('collect-btn').disabled = (gameState.expedition.currentAP < 1 || gameState.isCombat);
+    document.getElementById('investigate-btn').disabled = (gameState.expedition.currentAP < 1 || gameState.isCombat);
+    document.getElementById('call-attention-btn').disabled = (gameState.expedition.currentAP < 2 || gameState.isCombat);
     
     const apSpent = gameState.expedition.currentAP < gameState.expedition.maxAP;
     const mpSpent = gameState.expedition.currentMP < gameState.expedition.maxMP;
-    endTurnBtn.disabled = !(apSpent || mpSpent) || gameState.isCombat;
+    document.getElementById('end-turn-btn').disabled = !(apSpent || mpSpent) || gameState.isCombat;
 }
 
-// --- 7.2: Ações do Jogo ---
 function handleHexMoveAttempt(q, r) {
     if (gameState.expedition.currentMP <= 0 || gameState.isCombat) {
         logMessage("Out of Movement Points (MP) or in combat!", 'yellow');
         return;
     }
-
     const { q: playerQ, r: playerR } = gameState.expedition.playerPos;
     const distance = axialDistance(playerQ, playerR, q, r);
 
-    if (distance === 1) { // Movimento adjacente
+    if (distance === 1) { 
         gameState.expedition.playerPos = { q, r };
         gameState.expedition.currentMP--; 
         logMessage(`Moved to [${q},${r}]. MP remaining: ${gameState.expedition.currentMP}`);
-        renderHexMap(); // Re-renderiza para mover o '🤖'
+        renderHexMap(); 
         updateGameStatusPanel();
     } else {
         logMessage("Invalid move! Can only move to adjacent hex.", 'yellow');
@@ -597,22 +474,15 @@ function collectResource() {
     
     const { q, r } = gameState.expedition.playerPos;
     const cellKey = `${q},${r}`;
-    
-    if (!gameState.gameMap.has(cellKey)) {
-        logMessage("Error: Current cell is invalid.", 'red');
-        return;
-    }
+    if (!gameState.gameMap.has(cellKey)) return;
 
     const cell = gameState.gameMap.get(cellKey);
     const resourceName = cell.biome.resource.toLowerCase().replace(' ', '');
     
     let collectedAmount = 1 + Math.floor(Math.random() * 3); 
-
-    // Adiciona bônus de Drop Chance
     let dropBonus = 1 + (gameState.expedition.stats.dropChance / 100);
     collectedAmount = Math.ceil(collectedAmount * dropBonus);
     
-    // Adiciona à contagem da expedição
     if (gameState.expedition.resourcesFound.hasOwnProperty(resourceName)) {
         gameState.expedition.resourcesFound[resourceName] += collectedAmount;
     }
@@ -646,7 +516,6 @@ function callAttention() {
     if (gameState.isCombat || gameState.expedition.currentAP < 2) return;
     gameState.expedition.currentAP -= 2; 
     updateGameStatusPanel();
-    
     logMessage("You called attention from the Wasteland! A fierce Drone is approaching!", 'red');
     startCombat(ENEMY.DRONE);
 }
@@ -658,27 +527,27 @@ function startCombat(enemyType) {
     
     let playerDamage = gameState.expedition.stats.damage;
     let enemyDamage = enemyType.strength - gameState.expedition.stats.defense;
-    if (enemyDamage < 1) enemyDamage = 1; // Garante dano mínimo
+    if (enemyDamage < 1) enemyDamage = 1;
 
     let effectiveEnemyHP = enemyType.hp - playerDamage;
 
     if (effectiveEnemyHP <= 0) {
-        // Vitória
         gameState.isCombat = false;
         const reward = enemyType.reward;
         gameState.expedition.resourcesFound.scrap += reward;
-        
         const { q, r } = gameState.expedition.playerPos;
         gameState.gameMap.get(`${q},${r}`).hasEnemy = false;
-        
-        logMessage(`Victory! Defeated the ${enemyType.name} and gained ${reward} Scrap.`, 'lime');
+        logMessage(`Victory! Defeated ${enemyType.name} and gained ${reward} Scrap.`, 'lime');
         toggleActionButtons(true);
     } else {
-        // Dano do Inimigo no Kid
-        // (A lógica de HP precisa ser rastreada em gameState.expedition.stats.currentHP)
-        logMessage(`Kid took ${enemyDamage} damage.`, 'red');
+        gameState.expedition.currentHP -= enemyDamage;
+        logMessage(`Kid took ${enemyDamage} damage. ${gameState.expedition.currentHP} HP remaining.`, 'red');
         
-        // (Adicionar verificação de morte)
+        if (gameState.expedition.currentHP <= 0) {
+            logMessage("Your CyberKid has been decommissioned. Expedition Failed!", 'red');
+            gameOver(false);
+            return; // Sai da função de combate
+        }
         
         gameState.isCombat = false;
         logMessage(`The ${enemyType.name} escaped, but you survived.`, 'yellow');
@@ -695,15 +564,12 @@ function endDay() {
     }
     
     gameState.currentDay++;
-
-    // Reseta AP e MP (baseado nos stats calculados)
     gameState.expedition.currentAP = gameState.expedition.stats.ap;
     gameState.expedition.currentMP = gameState.expedition.stats.speed;
     
-    // Lógica de Ganhos IDLE (FUTURO)
-    // ...
+    // (Lógica de Ganhos IDLE - FUTURO)
     
-    generateHexMap(); // Novo mapa para o novo dia
+    generateHexMap(); 
     renderHexMap();
     updateGameStatusPanel();
     logMessage(`--- DAY ${gameState.currentDay} START --- AP and MP fully restored.`, 'yellow');
@@ -725,8 +591,8 @@ function gameOver(success) {
     }
     
     showScreen('dashboard-screen');
-    renderInventory(); // Atualiza o inventário no Dashboard
-    calculateFinalStats(); // Recalcula stats para o dashboard
+    renderInventory(); 
+    calculateFinalStats(); 
 }
 
 
@@ -737,23 +603,27 @@ function gameOver(success) {
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Configurar Listeners das Telas
     connectWalletBtn.addEventListener('click', () => {
-        logMessage("Connecting to wallet... (Simulated)", 'lime');
+        console.log("Connect Wallet button clicked");
         connectionStatus.textContent = 'Connected (Simulated)';
         connectionStatus.style.color = 'lime';
         showScreen('dashboard-screen');
         renderDashboard(); // Renderiza o Dashboard
     });
 
-    demoGameBtn.addEventListener('click', startDemoGame); // Inicia o modo demo
+    demoGameBtn.addEventListener('click', () => {
+        console.log("Demo Game button clicked");
+        startDemoGame(); // Inicia o modo demo
+    });
     
-    startExpeditionBtn.addEventListener('click', startGameplay);
+    // Adiciona listener ao botão 'Start Expedition' do Dashboard
+    document.getElementById('start-expedition-btn').addEventListener('click', startGameplay);
 
-    // 2. Configurar Listeners do Jogo
-    collectBtn.addEventListener('click', collectResource);
-    investigateBtn.addEventListener('click', investigate);
-    callAttentionBtn.addEventListener('click', callAttention); 
-    endTurnBtn.addEventListener('click', endDay); 
-    exitExpeditionBtn.addEventListener('click', () => gameOver(true)); // Saída manual
+    // 2. Configurar Listeners do Jogo (TELA 3)
+    document.getElementById('collect-btn').addEventListener('click', collectResource);
+    document.getElementById('investigate-btn').addEventListener('click', investigate);
+    document.getElementById('call-attention-btn').addEventListener('click', callAttention); 
+    document.getElementById('end-turn-btn').addEventListener('click', endDay); 
+    document.getElementById('exit-expedition-btn').addEventListener('click', () => gameOver(true));
 
     // 3. Configurar Abas do Dashboard
     setupDashboardTabs();
