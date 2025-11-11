@@ -303,25 +303,31 @@ h1 {
 }
 
 /* **CORREÇÃO: Layout 3 Colunas (Materials)** */
+
+/* O contêiner principal para a lista de materiais */
 #inventory-grid-materials {
     display: grid;
-    grid-template-columns: auto 1fr auto; /* Ícone, Nome, Qtd */
-    gap: 5px 10px;
+    /* Define 3 colunas: Ícone (auto), Nome (flex), Qtd (auto) */
+    grid-template-columns: auto 1fr auto; 
+    gap: 8px 10px; /* (espaçamento vertical e horizontal) */
     align-items: center;
+    padding-top: 10px;
 }
+
+/* Estilos para CADA UMA das 3 colunas */
 .inventory-item-icon {
     width: 24px;
     height: 24px;
     filter: drop-shadow(0 0 2px #000);
 }
 .inventory-item-name {
-    text-align: right;
+    text-align: right; /* Alinha o nome à direita */
     color: #aaa;
     font-size: 0.9em;
     padding-right: 10px;
 }
 .inventory-item-qty {
-    text-align: left;
+    text-align: left; /* Alinha a quantidade à esquerda */
     font-weight: bold;
     font-size: 1.1em;
     color: white;
