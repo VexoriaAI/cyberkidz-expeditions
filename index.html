@@ -9,9 +9,6 @@
 </head>
 <body>
 
-    <!-- ==================================================================== -->
-    <!-- HEADER UNIVERSAL -->
-    <!-- ==================================================================== -->
     <header>
         <h1>CYBERKIDZ CLUB: EXPEDITION</h1>
         <div id="wallet-status">
@@ -22,9 +19,6 @@
         </div>
     </header>
 
-    <!-- ==================================================================== -->
-    <!-- TELA 1: DESLOGADO (Inicia visível) -->
-    <!-- ==================================================================== -->
     <section id="logged-out-screen" class="screen">
         <div class="landing-container panel">
             <h2>WELCOME TO THE WASTELAND</h2>
@@ -34,9 +28,6 @@
         </div>
     </section>
 
-    <!-- ==================================================================== -->
-    <!-- TELA 2: DASHBOARD (Inicia escondida) -->
-    <!-- ==================================================================== -->
     <section id="dashboard-screen" class="screen" style="display: none;">
         
         <div class="dashboard-header">
@@ -46,15 +37,12 @@
 
         <div class="dashboard-container">
 
-            <!-- Coluna da Esquerda: Seleção de NFT (Lista) -->
             <div id="nft-selection-panel" class="panel">
                 <h3>Select Your Kid</h3>
                 <div id="nft-list-container">
-                    <!-- JS vai gerar a lista (Imagem, Tribo, ID) aqui -->
-                </div>
+                    </div>
             </div>
 
-            <!-- Coluna Central: Detalhes do Kid e Equipamento -->
             <div id="equipment-panel" class="panel">
                 
                 <div id="kid-details-placeholder">
@@ -94,48 +82,52 @@
                         <p>Damage: <span id="dash-stat-dmg">0</span></p>
                         <p>Defense: <span id="dash-stat-def">0</span></p>
                         <p>Crit Chance: <span id="dash-stat-crit">0%</span></p>
-                        <!-- ATUALIZADO AQUI -->
                         <p>Luck: <span id="dash-stat-luck">0%</span></p>
-                        <!-- (Restante dos 8 atributos) -->
                     </div>
                     
                     <button id="start-expedition-btn" class="action-btn" style="margin-top: 20px;" disabled>Start Expedition</button>
                 </div>
             </div>
 
-            <!-- Coluna da Direita: Inventário e Crafting -->
             <div id="crafting-panel" class="panel">
                 <h3>Inventory & Crafting</h3>
                 
                 <div class="tabs">
                     <button class="tab-btn active" data-tab="inventory">Materials</button>
                     <button class="tab-btn" data-tab="refine">Refine</button>
-                    <button class="tab-btn" data-tab="craft">Craft</button>
+                    <button class="tab-btn" data-tab="craft">Craft Gear</button>
+                    <button class="tab-btn" data-tab="embed">Embed</button>
                 </div>
 
                 <div id="tab-inventory" class="tab-content active">
                     <h4>Wasteland Materials</h4>
-                    <ul id="inventory-list-materials">
-                        <!-- JS irá preencher esta lista -->
-                    </ul>
+                    <div id="inventory-grid-materials"></div>
                 </div>
 
                 <div id="tab-refine" class="tab-content">
                     <h4>Refine Components</h4>
-                    <!-- JS irá gerar receitas -->
-                </div>
+                    </div>
 
                 <div id="tab-craft" class="tab-content">
-                    <h4>Craft & Embed</h4>
-                    <!-- JS irá gerar receitas -->
+                    <h4>Craft Empty Gear</h4>
+                    </div>
+                
+                <div id="tab-embed" class="tab-content">
+                    <h4>Embed Component</h4>
+                    <p>Combine an Empty Gear + Component to create your item.</p>
+                    <div class="embed-ui">
+                        <div id="embed-slot-gear" class="embed-slot"><span>Select Gear</span></div>
+                        <span class="plus-icon">+</span>
+                        <div id="embed-slot-component" class="embed-slot"><span>Select Component</span></div>
+                    </div>
+                    <button id="embed-button" class="action-btn small-btn" disabled>Embed</button>
+                    <div id="embed-result" class="crafting-recipe" style="display: none;">
+                        </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ==================================================================== -->
-    <!-- TELA 3: JOGO (Inicia escondida) -->
-    <!-- ==================================================================== -->
     <section id="game-screen" class="screen" style="display: none;">
         <main class="game-container">
             
@@ -165,7 +157,6 @@
                             <p><strong>Atk Speed:</strong> <span id="kid-atk-speed">0</span></p>
                             <p><strong>HP Regen:</strong> <span id="kid-hp-regen">0</span></p>
                             <p><strong>Block:</strong> <span id="kid-block">0%</span></p>
-                            <!-- ATUALIZADO AQUI -->
                             <p><strong>Luck:</strong> <span id="kid-luck">0%</span></p>
                         </div>
                     </div>
@@ -182,8 +173,7 @@
             <section id="map-panel" class="panel">
                 <h3>🗺️ WASTELAND: DAY <span id="turn-counter">0</span>/10</h3> 
                 <div id="game-map" class="hex-map-container">
-                    <!-- O mapa hexagonal será renderizado aqui -->
-                </div>
+                    </div>
             </section>
 
             <section id="action-panel" class="panel">
