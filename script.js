@@ -741,25 +741,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function renderGameStatusPanel() {
-        const kid = gameState.expedition.kid; const stats = gameState.expedition.stats; const hpPercent = (gameState.expedition.currentHP / stats.hp) * 100;
+        const kid = gameState.expedition.kid; 
+        const stats = gameState.expedition.stats; 
+        const hpPercent = (gameState.expedition.currentHP / stats.hp) * 100;
+
+        // Atualiza Bloco 1: Identidade
         DOM.game.kidImage.innerHTML = `<img src="${kid.placeholderImg}" alt="${kid.name}" onerror="this.src='images/kid-placeholder.png'">`;
-        DOM.game.kidTribe.textContent = kid.tribe.name; DOM.game.kidId.textContent = kid.id;
-        DOM.game.hpBarFill.style.width = `${hpPercent}%`; DOM.game.hpBarText.textContent = `${gameState.expedition.currentHP} / ${stats.hp}`;
+        DOM.game.kidTribe.textContent = kid.tribe.name; 
+        DOM.game.kidId.textContent = kid.id;
+        
+        // Atualiza Bloco 2: HP e Stats
+        DOM.game.hpBarFill.style.width = `${hpPercent}%`; 
+        DOM.game.hpBarText.textContent = `${gameState.expedition.currentHP} / ${stats.hp}`;
         DOM.game.statsDisplay.innerHTML = STATS_LIST.map(stat => `<p><strong>${stat}:</strong> ${stats[stat] || 0}</p>`).join('');
-        DOM.game.resourceList.innerHTML = ''; let found = 0;
+        
+        // Atualiza Bloco 3: Recursos
+        DOM.game.resourceList.innerHTML = ''; 
+        let found = 0;
         for (const resId in gameState.expedition.resourcesFound) {
             const amount = gameState.expedition.resourcesFound[resId];
-            if (amount > 0 && MATERIALS[resId]) { DOM.game.resourceList.innerHTML += `<li>${MATERIALS[resId].name}: <span>${amount}</span></li>`; found++; }
+            if (amount > 0 && MATERIALS[resId]) { 
+                DOM.game.resourceList.innerHTML += `<li>${MATERIALS[resId].name}: <span>${amount}</span></li>`; 
+                found++; 
+            }
         }
         if (found === 0) { DOM.game.resourceList.innerHTML = '<li>No resources found yet.</li>'; }
+        
+        // Atualiza Bloco 4: Painel de Ações (AP/MP, Botões)
         DOM.game.turnCounter.textContent = gameState.expedition.currentDay;
-        DOM.game.apDisplay.textContent = gameState.expedition.currentAP; DOM.game.maxApDisplay.textContent = gameState.expedition.maxAP;
-        DOM.game.mpDisplay.textContent = gameState.expedition.currentMP; DOM.game.maxMpDisplay.textContent = gameState.expedition.maxMP;
+        DOM.game.apDisplay.textContent = gameState.expedition.currentAP; 
+        DOM.game.maxApDisplay.textContent = gameState.expedition.maxAP;
+        DOM.game.mpDisplay.textContent = gameState.expedition.currentMP; 
+        DOM.game.maxMpDisplay.textContent = gameState.expedition.maxMP;
+        
+        // Lógica dos Botões (CORRIGIDA)
         const inCombat = gameState.combat.isActive;
         DOM.game.collectBtn.disabled = (gameState.expedition.currentAP < 1) || inCombat;
         DOM.game.investigateBtn.disabled = (gameState.expedition.currentAP < 1) || inCombat;
         DOM.game.searchEnemyBtn.disabled = (gameState.expedition.currentAP < 2) || inCombat;
-        DOM.game.endTurnBtn.disabled = inCombat; DOM.game.exitExpeditionBtn.disabled = inCombat;
+        
+        // Correção para Problema 1 e 2:
+        // Ambos os botões agora só são desabilitados se 'inCombat' for verdadeiro.
+        DOM.game.endTurnBtn.disabled = inCombat; 
+        DOM.game.exitExpeditionBtn.disabled = inCombat; // <-- ESTA LINHA ESTAVA FALTANDO
     }
 
     function revealAdjacentHexes({ q, r }) {
