@@ -1,6 +1,6 @@
 // ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT LÓGICO
-// VERSÃO 3.0: UI da Tela de Jogo Atualizada e Correção do Mapa Hex
+// VERSÃO 3.1: Atributo "Luck" e correção de bugs
 // ====================================================================
 
 // ====================================================================
@@ -8,34 +8,35 @@
 // ====================================================================
 
 const MAX_DAYS = 10;
-const HEX_MAP_RADIUS = 3; // Raio 3 = 37 células.
+const HEX_MAP_RADIUS = 3; 
 
-// --- 1.1: Atributos Base das Tribos (Atualizado com todos os stats) ---
+// --- 1.1: Atributos Base das Tribos ---
+// **CORREÇÃO 1: Corrigido o bug onde HP e Luck (antigo dropChance) estavam faltando.**
 const TRIBES = {
     VOLCANICS: {
         name: "Volcanics",
         bonus: "Burning Ridge",
-        baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 12, attackSpeed: 1, hpRegen: 1, ap: 3, hp: 110, dropChance: 0 }
+        baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 12, attackSpeed: 1, hpRegen: 1, ap: 3, hp: 110, luck: 0 }
     },
     UNDERGROUNDERS: {
         name: "Undergrounders",
         bonus: "Abandoned Mines",
-        baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 4, hp: 120, dropChance: 0 }
+        baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 4, hp: 120, luck: 0 }
     },
     NOCTURNALS: {
         name: "Nocturnals",
         bonus: "Ancient Ruins",
-        baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 4, hp: 100, dropChance: 0 }
+        baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 4, hp: 100, luck: 0 }
     },
     RADIOACTIVES: {
         name: "Radioactives",
         bonus: "Lake Rancid",
-        baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 5, hp: 80, dropChance: 0 }
+        baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 5, hp: 80, luck: 0 }
     },
     REPTILIANS: {
         name: "Reptilians",
         bonus: "Covenant Swamp",
-        baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 3, hp: 100, dropChance: 0 }
+        baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 3, hp: 100, luck: 0 }
     }
 };
 
@@ -57,7 +58,6 @@ const ENEMY = {
 
 // --- 1.4: Banco de Dados de Crafting ---
 const MATERIALS = {
-    // (IDs devem ser seguros para JS, sem espaços)
     scrap: { name: "Scrap", type: "Base" }, water: { name: "Clean Water", type: "Base" }, food: { name: "Food", type: "Base" },
     metal: { name: "Metal", type: "Volcanic" }, magma: { name: "Magma", type: "Volcanic" }, pumice: { name: "Volcanic Pumice Stone", type: "Volcanic" }, obsidian: { name: "Obsidian Tears", type: "Volcanic" },
     crystal: { name: "Energized Crystals", type: "Undergrounder" }, pure_water: { name: "Pure Water", type: "Undergrounder" }, clay: { name: "Special Clay", type: "Undergrounder" }, glass: { name: "Glass", type: "Undergrounder" },
@@ -71,7 +71,8 @@ const COMPONENTS = {
     precision_lens: { name: "Precision Lens", type: "Crit", stats: { critChance: 5 } },
     speed_injector: { name: "Speed Injector", type: "Speed", stats: { speed: 2, attackSpeed: 3 } },
     heal_totem: { name: "Heal Totem", type: "Heal", stats: { hpRegen: 3 } },
-    lucky_clover: { name: "Lucky Clover", type: "Universal", stats: { dropChance: 5 } }
+    // **CORREÇÃO 2: Renomeado de dropChance para luck**
+    lucky_clover: { name: "Lucky Clover", type: "Universal", stats: { luck: 5 } }
 };
 const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
 const SYNERGY_MAP = {
@@ -91,6 +92,7 @@ const RECIPES_REFINE = {
     lucky_clover: { name: "Lucky Clover", cost: { scrap: 20, water: 20, food: 20 } }
 };
 
+
 // ====================================================================
 // SEÇÃO 2: ESTADO GLOBAL DO JOGO (MASTER STATE)
 // ====================================================================
@@ -100,7 +102,7 @@ let gameState = {
     isCombat: false,
     player: {
         activeKid: null,
-        tezerium: 1000, // Saldo inicial simulado
+        tezerium: 1000, 
         inventory: {
             materials: { scrap: 100, water: 100, food: 100, metal: 5, magma: 2, pumice: 1, crystal: 5, clay: 2, glass: 1, polymer: 0, nanochips: 0, implants: 0, quantum_core: 0, healing_plants: 0, fungi: 0, reptile_blood: 0, animal_skin: 0, strange_fluid: 0, parasitic_fungus: 0, venom_glands: 0, luminescent_algae: 0 },
             components: { volcanic_core: 0, defense_plate: 0, precision_lens: 0, speed_injector: 0, heal_totem: 0, lucky_clover: 0 },
@@ -121,13 +123,13 @@ let gameState = {
     gameMap: new Map()
 };
 
-// Carteira Simulada (MOCK_WALLET)
+// **CORREÇÃO 3: MOCK_WALLET definida ANTES de ser usada**
 const MOCK_WALLET = [
     { 
         id: '#313', 
         name: 'Blue Mutant', 
         tribe: TRIBES.RADIOACTIVES, 
-        img: 'https://i.imgur.com/L8J3tS2.png' // Imagem real do upload
+        img: 'https://i.imgur.com/L8J3tS2.png' 
     },
     { 
         id: '#222', 
@@ -146,7 +148,18 @@ const DEMO_KID = MOCK_WALLET[0]; // Demo Kid é o primeiro da lista
 
 
 // ====================================================================
-// SEÇÃO 3: GERENCIAMENTO DE TELA
+// SEÇÃO 3: REFERÊNCIAS DO DOM
+// ====================================================================
+
+// Tela 1 (Carregamento imediato)
+const loggedOutScreen = document.getElementById('logged-out-screen');
+const connectWalletBtn = document.getElementById('connect-wallet-btn');
+const demoGameBtn = document.getElementById('demo-game-btn');
+const connectionStatus = document.getElementById('connection-status');
+
+
+// ====================================================================
+// SEÇÃO 4: GERENCIAMENTO DE TELA
 // ====================================================================
 
 function showScreen(screenId) {
@@ -161,7 +174,7 @@ function showScreen(screenId) {
 }
 
 // ====================================================================
-// SEÇÃO 4: LÓGICA DO DASHBOARD (HUB)
+// SEÇÃO 5: LÓGICA DO DASHBOARD (HUB)
 // ====================================================================
 
 function setupDashboardTabs() {
@@ -251,7 +264,7 @@ function renderEquippedItems() {
 
 function renderInventory() {
     const inventoryList = document.getElementById('inventory-list-materials');
-    inventoryList.innerHTML = ''; // Limpa a lista
+    inventoryList.innerHTML = '';
     for (const materialId in gameState.player.inventory.materials) {
         const material = MATERIALS[materialId];
         const amount = gameState.player.inventory.materials[materialId];
@@ -289,12 +302,10 @@ function renderCraftingRecipes() {
 }
 
 function craftEmptyItem(itemId) {
-    // (Lógica de verificação e craft)
     alert(`(Simulado) Crafting: ${RECIPES_CRAFT_EMPTY[itemId].name}`);
 }
 
 function refineComponent(compId) {
-    // (Lógica de verificação e refino)
     alert(`(Simulado) Refining: ${RECIPES_REFINE[compId].name}`);
 }
 
@@ -302,13 +313,12 @@ function calculateFinalStats() {
     if (!gameState.player.activeKid) return;
 
     let baseStats = gameState.player.activeKid.tribe.baseStats;
-    let finalStats = { ...baseStats }; // Copia os stats base
-    
-    // Adiciona stats que não vêm da tribo, se não existirem
-    if (!finalStats.dropChance) finalStats.dropChance = 0;
+    let finalStats = { ...baseStats }; 
+
+    // **CORREÇÃO 4: Renomeado de dropChance para luck**
+    if (!finalStats.luck) finalStats.luck = 0;
     if (!finalStats.hp) finalStats.hp = 100;
 
-    // Itera sobre os 7 slots de equipamento
     for (const slot of EQUIPMENT_SLOTS) {
         const itemId = gameState.player.equipped[slot];
         if (!itemId) continue;
@@ -327,7 +337,7 @@ function calculateFinalStats() {
     document.getElementById('dash-stat-dmg').textContent = finalStats.damage;
     document.getElementById('dash-stat-def').textContent = finalStats.defense;
     document.getElementById('dash-stat-crit').textContent = `${finalStats.critChance}%`;
-    document.getElementById('dash-stat-drop').textContent = `${finalStats.dropChance}%`;
+    document.getElementById('dash-stat-luck').textContent = `${finalStats.luck}%`;
 }
 
 
@@ -371,7 +381,6 @@ function renderHexMap() {
     mapElement.innerHTML = ''; 
     const { q: playerQ, r: playerR } = gameState.expedition.playerPos;
 
-    // CORREÇÃO: Garante que o mapElement tem dimensões
     const mapRect = mapElement.getBoundingClientRect();
     if (mapRect.width === 0) {
         console.error("Map Panel not visible. Cannot render hex map.");
@@ -447,7 +456,6 @@ function startGameplay() {
         return;
     }
     
-    // CORREÇÃO: Mover showScreen para ANTES da renderização
     showScreen('game-screen');
     
     calculateFinalStats(); 
@@ -462,8 +470,7 @@ function startGameplay() {
 
     initializeGame();
     
-    // CORREÇÃO: Renderizar o mapa DEPOIS que a tela está visível
-    renderHexMap();
+    setTimeout(renderHexMap, 0);
 }
 
 function initializeGame() {
@@ -475,7 +482,6 @@ function initializeGame() {
     logMessage(`Day ${gameState.currentDay} started! You have ${gameState.expedition.currentAP} AP and ${gameState.expedition.currentMP} MP.`, 'lime');
 }
 
-// ATUALIZADO: Preenche todos os novos campos da UI
 function updateGameStatusPanel() {
     const kid = gameState.player.activeKid;
     const stats = gameState.expedition.stats;
@@ -486,12 +492,10 @@ function updateGameStatusPanel() {
     document.getElementById('kid-image-container').innerHTML = `<img src="${kid.img}" alt="Your CyberKid">`;
     
     // Seção 2: Attributes
-    // Barra de HP
     const hpPercent = (gameState.expedition.currentHP / stats.hp) * 100;
     document.getElementById('hp-bar-fill').style.width = `${hpPercent}%`;
     document.getElementById('hp-bar-text').textContent = `${gameState.expedition.currentHP} / ${stats.hp}`;
     
-    // Grid de Stats
     document.getElementById('kid-strength').textContent = stats.damage;
     document.getElementById('kid-defense').textContent = stats.defense;
     document.getElementById('kid-crit-chance').textContent = `${stats.critChance}%`;
@@ -499,11 +503,12 @@ function updateGameStatusPanel() {
     document.getElementById('kid-atk-speed').textContent = stats.attackSpeed;
     document.getElementById('kid-hp-regen').textContent = stats.hpRegen;
     document.getElementById('kid-block').textContent = `${stats.blockChance}%`;
-    document.getElementById('kid-drop-chance').textContent = `${stats.dropChance}%`;
+    // **CORREÇÃO 5: Renomeado de dropChance para luck**
+    document.getElementById('kid-luck').textContent = `${stats.luck}%`;
 
     // Seção 3: Resources Found
     const resourceList = document.getElementById('resource-list');
-    resourceList.innerHTML = ''; // Limpa
+    resourceList.innerHTML = ''; 
     let found = 0;
     for (const res in gameState.expedition.resourcesFound) {
         const amount = gameState.expedition.resourcesFound[res];
@@ -522,7 +527,6 @@ function updateGameStatusPanel() {
     document.getElementById('kid-mp').textContent = gameState.expedition.currentMP;
     document.getElementById('kid-max-mp').textContent = gameState.expedition.maxMP;
     
-    // Outros
     document.getElementById('turn-counter').textContent = `${gameState.currentDay}`;
 
     // Lógica de habilitação de botões
@@ -566,8 +570,9 @@ function collectResource() {
     const resourceName = cell.biome.resource.toLowerCase().replace(' ', '');
     
     let collectedAmount = 1 + Math.floor(Math.random() * 3); 
-    let dropBonus = 1 + (gameState.expedition.stats.dropChance / 100);
-    collectedAmount = Math.ceil(collectedAmount * dropBonus);
+    // **CORREÇÃO 6: Renomeado de dropChance para luck**
+    let luckBonus = 1 + (gameState.expedition.stats.luck / 100);
+    collectedAmount = Math.ceil(collectedAmount * luckBonus);
     
     if (gameState.expedition.resourcesFound.hasOwnProperty(resourceName)) {
         gameState.expedition.resourcesFound[resourceName] += collectedAmount;
