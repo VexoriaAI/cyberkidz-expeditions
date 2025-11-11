@@ -55,7 +55,6 @@ h1 {
     font-weight: bold;
 }
 
-/* NOVO: Display de Tezerium */
 #tezerium-display {
     background-color: var(--color-panel-dark);
     border: 1px solid var(--color-accent-blue);
@@ -110,7 +109,6 @@ h1 {
     color: var(--color-text-dark);
 }
 
-/* NOVO: Botão End Day com cor diferente */
 #end-turn-btn {
     background-color: var(--color-accent-blue);
     color: var(--color-text-dark);
@@ -120,7 +118,6 @@ h1 {
     box-shadow: 0 0 10px var(--color-accent-blue);
 }
 
-/* NOVO: Ícones dos botões */
 .action-btn span {
     margin-right: 8px;
     font-size: 1.1em;
@@ -303,10 +300,70 @@ h1 {
     width: auto;
     padding: 5px 10px;
 }
-#inventory-list-materials {
-    list-style: none;
-    padding: 0;
+/* NOVO: Layout 3 Colunas (Materials) */
+#inventory-grid-materials {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 5px 10px;
+    align-items: center;
 }
+.inventory-item-icon {
+    width: 24px;
+    height: 24px;
+}
+.inventory-item-name {
+    text-align: right;
+    color: #aaa;
+}
+.inventory-item-qty {
+    text-align: left;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+/* NOVO: Ícones (Refine) */
+.recipe-cost {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.recipe-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+
+/* NOVO: UI de Embed */
+.embed-ui {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+.embed-slot {
+    width: 100px;
+    height: 100px;
+    border: 2px dashed #888;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #888;
+    cursor: pointer;
+}
+.embed-slot:hover {
+    border-color: var(--color-accent-blue);
+}
+.plus-icon {
+    font-size: 2em;
+    font-weight: bold;
+    color: var(--color-accent-red);
+}
+
 
 /* --- TELA 3: JOGO --- */
 #game-screen .game-container {
@@ -317,7 +374,7 @@ h1 {
     margin: 0 auto;
 }
 
-/* NOVO: Seções do Painel de Status */
+/* Seções do Painel de Status */
 .info-section {
     border: 1px solid #444;
     border-radius: 5px;
@@ -431,7 +488,7 @@ h1 {
 }
 
 /* ==================================================================== */
-/* MAPA HEXAGONAL (CORRIGIDO) */
+/* MAPA HEXAGONAL */
 /* ==================================================================== */
 .hex-map-container {
     position: relative; 
@@ -475,12 +532,9 @@ h1 {
 /* RESPONSIVIDADE */
 /* ==================================================================== */
 @media (max-width: 1200px) {
-    /* Stacka o Dashboard */
     .dashboard-container {
         grid-template-columns: 1fr;
     }
-    
-    /* Stacka o Jogo */
     #game-screen .game-container {
         grid-template-columns: 1fr;
     }
