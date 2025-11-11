@@ -18,8 +18,8 @@
     --color-mp-bar: #3a8cff; /* Azul para MP */
 
     /* Variáveis do Mapa Hexagonal */
-    --hex-size: 50px; /* Largura do hexágono (w) */
-    --hex-height: calc(var(--hex-size) * 1.732);
+    --hex-size: 50px; /* Metade da largura de centro-a-centro */
+    --hex-height: calc(var(--hex-size) * 0.866);
 }
 
 * {
@@ -534,7 +534,7 @@ p {
 #map-panel h3 { margin: 5px 10px; flex-shrink: 0; }
 .hex-map-container { position: relative; width: 100%; height: 100%; overflow: hidden; background-color: #000; flex-grow: 1; border-radius: 5px; }
 #game-map-content { position: absolute; }
-.hex-cell { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); width: var(--hex-size); height: var(--hex-height); background-color: #333; /* Cor 'Fog of War' */ position: absolute; cursor: pointer; transition: transform 0.2s ease, filter 0.2s ease; display: flex; justify-content: center; align-items: center; font-size: 1.5em; color: white; }
+.hex-cell { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); width: calc(var(--hex-size) * 2); height: calc(var(--hex-height) * 2); background-color: #333; /* Cor 'Fog of War' */ position: absolute; cursor: pointer; transition: transform 0.2s ease, filter 0.2s ease; display: flex; justify-content: center; align-items: center; font-size: 1.5em; color: white; }
 .hex-cell:hover { transform: scale(1.1); filter: brightness(1.3); z-index: 5; }
 .hex-kid { background-color: var(--color-accent-blue) !important; border: 2px solid white; box-shadow: 0 0 10px var(--color-accent-blue); z-index: 2; transform: scale(1.1); }
 /* Cores dos Biomas (para o JS) */
