@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.0 (Image Map / Correção de Visualização)
+// VERSÃO 4.1 (Correção de Listeners e Lógica de Botões)
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const MAX_DAYS = 10;
     const MAX_PLACEHOLDER_IMAGES_PER_TRIBE = 5;
-    const HEX_SIZE_VISUAL = 50; // Raio visual para cálculo do polígono (deve ser ajustado se a imagem mudar)
+    const HEX_SIZE_VISUAL = 50; // Raio visual para cálculo do polígono
 
     // --- 1.1: Atributos Base das Tribos ---
     const TRIBES = {
@@ -157,8 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
             kidImage: document.getElementById('game-kid-image'), kidTribe: document.getElementById('game-kid-tribe'), kidId: document.getElementById('game-kid-id'),
             hpBarFill: document.getElementById('game-hp-bar-fill'), hpBarText: document.getElementById('game-hp-bar-text'), statsDisplay: document.getElementById('game-stats-display'),
             resourceList: document.getElementById('game-resource-list'), exitExpeditionBtn: document.getElementById('exit-expedition-btn'), turnCounter: document.getElementById('turn-counter'),
-            mapContainer: document.getElementById('game-map-container'), mapImage: document.getElementById('map-image'), mapAreas: document.getElementById('map-areas'), // Novos IDs
-            fogOverlay: document.getElementById('fog-of-war-overlay'), // Novo ID
+            mapContainer: document.getElementById('game-map-container'), mapImage: document.getElementById('map-image'), mapAreas: document.getElementById('map-areas'),
+            fogOverlay: document.getElementById('fog-of-war-overlay'), 
             apDisplay: document.getElementById('game-kid-ap'), maxApDisplay: document.getElementById('game-kid-max-ap'), mpDisplay: document.getElementById('game-kid-mp'),
             maxMpDisplay: document.getElementById('game-kid-max-mp'), collectBtn: document.getElementById('collect-btn'), investigateBtn: document.getElementById('investigate-btn'),
             searchEnemyBtn: document.getElementById('search-enemy-btn'), endTurnBtn: document.getElementById('end-turn-btn'), skipAnimationsCheck: document.getElementById('skip-animations-check'),
@@ -248,24 +248,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Funções de Mapeamento Image Map (NOVO) ---
 
-    /**
-     * NOVO: Converte coordenadas axiais (q, r) para o PONTO CENTRAL de pixel (x, y).
-     * Adaptação para o centro da imagem estática.
-     */
     function axialToPixelCenter(q, r, size) {
-        // Fórmulas de Coordenadas Axiais (para Pointy Top Hexes)
         const x = size * (Math.sqrt(3) * q + Math.sqrt(3) / 2 * r);
         const y = size * (3/2 * r);
         return { x, y };
     }
 
-    /**
-     * NOVO: Define os 6 vértices (corners) de um hexágono a partir de seu centro (x, y).
-     */
     function getHexVertices(size, x, y) {
         const vertices = [];
         for (let i = 0; i < 6; i++) {
-            // Ângulo inicial de 30 graus para Pointy Top
             const angle_rad = Math.PI / 180 * (60 * i + 30); 
             const vx = x + size * Math.cos(angle_rad);
             const vy = y + size * Math.sin(angle_rad);
@@ -625,13 +616,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         DOM.game.log.innerHTML = ''; 
         logMessage(`--- DAY 1 START ---`, 'day');
-        renderGameStatusPanel();
         
         // NOVO: Renderiza o Image Map e o Fog
         renderImageMap(); 
         revealAdjacentHexes(gameState.expedition.playerPos);
         updateFogOfWar();
         updatePlayerHexPosition();
+        
+        // Renderiza o painel de status POR ÚLTIMO (para habilitar/desabilitar botões)
+        renderGameStatusPanel(); 
         
         showScreen('game-screen');
     }
@@ -672,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
             areaTag.dataset.q = q;
             areaTag.dataset.r = r;
             areaTag.dataset.key = key;
-            areaTag.href = "#"; // Necessário para o clique funcionar em alguns navegadores
+            areaTag.href = "#"; // Necessário para o clique
             areaTag.addEventListener('click', (e) => {
                 e.preventDefault(); 
                 handleHexMoveAttempt(q, r);
@@ -691,7 +684,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 3. Ajuste o tamanho da imagem e do overlay
         // O CSS (padding-top: 80%) cuida da proporção.
-        // O JS só precisa que o container exista.
     }
 
     /**
@@ -721,41 +713,35 @@ document.addEventListener('DOMContentLoaded', () => {
         // Remove marcadores antigos
         document.querySelectorAll('.kid-marker').forEach(marker => marker.remove());
         
-        // Encontra o hexágono de destino no overlay
         const targetFogDiv = DOM.game.fogOverlay.querySelector(`.hex-fog[data-key="${key}"]`);
         
         if (targetFogDiv) {
             const marker = document.createElement('div');
             marker.className = 'kid-marker';
-            // Usa a posição do hexágono FogDiv
             marker.style.left = targetFogDiv.style.left;
             marker.style.top = targetFogDiv.style.top;
-            
             marker.style.transform = 'translate(-50%, -100%)'; 
             marker.textContent = '🤖';
-            
-            // Adiciona o marcador dentro do mapContainer
             DOM.game.mapContainer.appendChild(marker);
         }
     }
 
-
+    /**
+     * **CORREÇÃO V4.1**: Lógica dos botões restaurada
+     */
     function renderGameStatusPanel() {
         const kid = gameState.expedition.kid; 
         const stats = gameState.expedition.stats; 
         const hpPercent = (gameState.expedition.currentHP / stats.hp) * 100;
 
-        // Atualiza Bloco 1: Identidade
         DOM.game.kidImage.innerHTML = `<img src="${kid.placeholderImg}" alt="${kid.name}" onerror="this.src='images/kid-placeholder.png'">`;
         DOM.game.kidTribe.textContent = kid.tribe.name; 
         DOM.game.kidId.textContent = kid.id;
         
-        // Atualiza Bloco 2: HP e Stats
         DOM.game.hpBarFill.style.width = `${hpPercent}%`; 
         DOM.game.hpBarText.textContent = `${gameState.expedition.currentHP} / ${stats.hp}`;
         DOM.game.statsDisplay.innerHTML = STATS_LIST.map(stat => `<p><strong>${stat}:</strong> ${stats[stat] || 0}</p>`).join('');
         
-        // Atualiza Bloco 3: Recursos
         DOM.game.resourceList.innerHTML = ''; 
         let found = 0;
         for (const resId in gameState.expedition.resourcesFound) {
@@ -767,23 +753,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (found === 0) { DOM.game.resourceList.innerHTML = '<li>No resources found yet.</li>'; }
         
-        // Atualiza Bloco 4: Painel de Ações (AP/MP, Botões)
         DOM.game.turnCounter.textContent = gameState.expedition.currentDay;
         DOM.game.apDisplay.textContent = gameState.expedition.currentAP; 
         DOM.game.maxApDisplay.textContent = gameState.expedition.maxAP;
         DOM.game.mpDisplay.textContent = gameState.expedition.currentMP; 
         DOM.game.maxMpDisplay.textContent = gameState.expedition.maxMP;
         
-        // Lógica dos Botões (CORRIGIDA)
         const inCombat = gameState.combat.isActive;
+        
+        // Lógica de Ações
         DOM.game.collectBtn.disabled = (gameState.expedition.currentAP < 1) || inCombat;
         DOM.game.investigateBtn.disabled = (gameState.expedition.currentAP < 1) || inCombat;
         DOM.game.searchEnemyBtn.disabled = (gameState.expedition.currentAP < 2) || inCombat;
         
-        // Correção para Problema 1 e 2:
-        // Ambos os botões agora só são desabilitados se 'inCombat' for verdadeiro.
+        // Lógica de Turno/Expedição (SEMPRE ATIVOS, exceto em combate)
         DOM.game.endTurnBtn.disabled = inCombat; 
-        DOM.game.exitExpeditionBtn.disabled = inCombat; // <-- ESTA LINHA ESTAVA FALTANDO
+        DOM.game.exitExpeditionBtn.disabled = inCombat;
     }
 
     function revealAdjacentHexes({ q, r }) {
@@ -819,7 +804,8 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.expedition.currentAP--;
         const luck = gameState.expedition.stats.luck / 100;
         let amount = Math.ceil((Math.floor(Math.random() * 3) + 1) * (1 + luck));
-        const biome = STATIC_MAP_DATA.get(`${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`).biome;
+        const biomeKey = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
+        const biome = STATIC_MAP_DATA.get(biomeKey).biome;
         const resourceId = BIOMES[biome].resource;
         
         if (!gameState.expedition.resourcesFound[resourceId]) {
@@ -1004,10 +990,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ==================================================================== */
-    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
+    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS (CORRIGIDO)
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v4.0 Initialized (Image Map).");
+        console.log("CyberKidz Expedition v4.1 Initialized (Image Map, Listeners Fixed).");
 
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
