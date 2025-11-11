@@ -1,6 +1,6 @@
 // ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT LÓGICO
-// VERSÃO CORRIGIDA (Botões da Tela 1 funcionam)
+// VERSÃO 3.0: UI da Tela de Jogo Atualizada e Correção do Mapa Hex
 // ====================================================================
 
 // ====================================================================
@@ -8,34 +8,34 @@
 // ====================================================================
 
 const MAX_DAYS = 10;
-const HEX_MAP_RADIUS = 3; 
+const HEX_MAP_RADIUS = 3; // Raio 3 = 37 células.
 
-// --- 1.1: Atributos Base das Tribos ---
+// --- 1.1: Atributos Base das Tribos (Atualizado com todos os stats) ---
 const TRIBES = {
     VOLCANICS: {
         name: "Volcanics",
         bonus: "Burning Ridge",
-        baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 12, attackSpeed: 1, hpRegen: 1, ap: 3, hp: 100 }
+        baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 12, attackSpeed: 1, hpRegen: 1, ap: 3, hp: 110, dropChance: 0 }
     },
     UNDERGROUNDERS: {
         name: "Undergrounders",
         bonus: "Abandoned Mines",
-        baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 4, hp: 120 }
+        baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 4, hp: 120, dropChance: 0 }
     },
     NOCTURNALS: {
         name: "Nocturnals",
         bonus: "Ancient Ruins",
-        baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 4, hp: 100 }
+        baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 4, hp: 100, dropChance: 0 }
     },
     RADIOACTIVES: {
         name: "Radioactives",
         bonus: "Lake Rancid",
-        baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 5, hp: 80 }
+        baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 5, hp: 80, dropChance: 0 }
     },
     REPTILIANS: {
         name: "Reptilians",
         bonus: "Covenant Swamp",
-        baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 3, hp: 100 }
+        baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 3, hp: 100, dropChance: 0 }
     }
 };
 
@@ -55,8 +55,9 @@ const ENEMY = {
     MUTANT: { name: "Wasteland Mutant", strength: 8, hp: 15, reward: 5 }
 };
 
-// --- 1.4: Materiais, Componentes e Equipamentos (O Banco de Dados de Crafting) ---
+// --- 1.4: Banco de Dados de Crafting ---
 const MATERIALS = {
+    // (IDs devem ser seguros para JS, sem espaços)
     scrap: { name: "Scrap", type: "Base" }, water: { name: "Clean Water", type: "Base" }, food: { name: "Food", type: "Base" },
     metal: { name: "Metal", type: "Volcanic" }, magma: { name: "Magma", type: "Volcanic" }, pumice: { name: "Volcanic Pumice Stone", type: "Volcanic" }, obsidian: { name: "Obsidian Tears", type: "Volcanic" },
     crystal: { name: "Energized Crystals", type: "Undergrounder" }, pure_water: { name: "Pure Water", type: "Undergrounder" }, clay: { name: "Special Clay", type: "Undergrounder" }, glass: { name: "Glass", type: "Undergrounder" },
@@ -99,6 +100,7 @@ let gameState = {
     isCombat: false,
     player: {
         activeKid: null,
+        tezerium: 1000, // Saldo inicial simulado
         inventory: {
             materials: { scrap: 100, water: 100, food: 100, metal: 5, magma: 2, pumice: 1, crystal: 5, clay: 2, glass: 1, polymer: 0, nanochips: 0, implants: 0, quantum_core: 0, healing_plants: 0, fungi: 0, reptile_blood: 0, animal_skin: 0, strange_fluid: 0, parasitic_fungus: 0, venom_glands: 0, luminescent_algae: 0 },
             components: { volcanic_core: 0, defense_plate: 0, precision_lens: 0, speed_injector: 0, heal_totem: 0, lucky_clover: 0 },
@@ -119,13 +121,13 @@ let gameState = {
     gameMap: new Map()
 };
 
-// **CORREÇÃO 1: MOCK_WALLET (Carteira Simulada) definida**
+// Carteira Simulada (MOCK_WALLET)
 const MOCK_WALLET = [
     { 
         id: '#313', 
         name: 'Blue Mutant', 
         tribe: TRIBES.RADIOACTIVES, 
-        img: 'https://i.imgur.com/L8J3tS2.png' // Imagem do seu upload
+        img: 'https://i.imgur.com/L8J3tS2.png' // Imagem real do upload
     },
     { 
         id: '#222', 
@@ -140,23 +142,11 @@ const MOCK_WALLET = [
         img: 'https://via.placeholder.com/150/FF0000/FFFFFF?text=CKC+111'
     }
 ];
-
-const DEMO_KID = MOCK_WALLET[0]; // O Demo Kid é o primeiro da lista
-
-
-// ====================================================================
-// SEÇÃO 3: REFERÊNCIAS DO DOM
-// ====================================================================
-
-// Tela 1 (Carregamento imediato)
-const loggedOutScreen = document.getElementById('logged-out-screen');
-const connectWalletBtn = document.getElementById('connect-wallet-btn');
-const demoGameBtn = document.getElementById('demo-game-btn');
-const connectionStatus = document.getElementById('connection-status');
+const DEMO_KID = MOCK_WALLET[0]; // Demo Kid é o primeiro da lista
 
 
 // ====================================================================
-// SEÇÃO 4: GERENCIAMENTO DE TELA
+// SEÇÃO 3: GERENCIAMENTO DE TELA
 // ====================================================================
 
 function showScreen(screenId) {
@@ -167,13 +157,11 @@ function showScreen(screenId) {
     const screen = document.getElementById(screenId);
     if (screen) {
         screen.style.display = 'block';
-    } else {
-        console.error(`Screen ID "${screenId}" not found.`);
     }
 }
 
 // ====================================================================
-// SEÇÃO 5: LÓGICA DO DASHBOARD (HUB)
+// SEÇÃO 4: LÓGICA DO DASHBOARD (HUB)
 // ====================================================================
 
 function setupDashboardTabs() {
@@ -190,23 +178,19 @@ function setupDashboardTabs() {
     });
 }
 
-// **CORREÇÃO 2: Layout do Dashboard e nome da variável (mockNfts)**
 function renderDashboard() {
     const nftListContainer = document.getElementById('nft-list-container');
     nftListContainer.innerHTML = '<h4>Your Kidz (Simulated)</h4>';
     
-    // Mostra o placeholder e esconde os detalhes
     document.getElementById('kid-details-placeholder').style.display = 'block';
     document.getElementById('kid-details-content').style.display = 'none';
     document.getElementById('start-expedition-btn').disabled = true;
 
-    // **CORREÇÃO AQUI: Usa MOCK_WALLET e a nova estrutura HTML**
     MOCK_WALLET.forEach(nft => {
         const nftDiv = document.createElement('div');
         nftDiv.className = 'nft-list-item';
-        nftDiv.dataset.nftId = nft.id; // Para encontrar o item
+        nftDiv.dataset.nftId = nft.id; 
         
-        // Estrutura: Image, Tribe, ID
         nftDiv.innerHTML = `
             <img src="${nft.img}" alt="${nft.name}">
             <div class="nft-list-item-info">
@@ -222,11 +206,9 @@ function renderDashboard() {
     renderCraftingRecipes();
 }
 
-// **CORREÇÃO 3: Função selectActiveKid para preencher os detalhes**
 function selectActiveKid(nft) {
     gameState.player.activeKid = nft;
 
-    // 1. Atualizar a lista (UI)
     document.querySelectorAll('.nft-list-item').forEach(item => {
         item.classList.remove('selected');
         if (item.dataset.nftId === nft.id) {
@@ -234,20 +216,16 @@ function selectActiveKid(nft) {
         }
     });
 
-    // 2. Esconder placeholder, mostrar conteúdo
     document.getElementById('kid-details-placeholder').style.display = 'none';
     document.getElementById('kid-details-content').style.display = 'block';
 
-    // 3. Preencher detalhes
     document.getElementById('dash-kid-name').textContent = nft.name;
     document.getElementById('dash-kid-id').textContent = nft.id;
     document.getElementById('dash-kid-tribe').textContent = nft.tribe.name;
     document.getElementById('dash-kid-image').innerHTML = `<img src="${nft.img}" alt="${nft.name}">`;
 
-    // 4. Habilitar botão de expedição
     document.getElementById('start-expedition-btn').disabled = false;
     
-    // 5. Renderizar equipamento e stats
     renderEquippedItems();
     calculateFinalStats();
 }
@@ -272,10 +250,13 @@ function renderEquippedItems() {
 }
 
 function renderInventory() {
+    const inventoryList = document.getElementById('inventory-list-materials');
+    inventoryList.innerHTML = ''; // Limpa a lista
     for (const materialId in gameState.player.inventory.materials) {
-        const span = document.getElementById(`inv-${materialId}`);
-        if (span) {
-            span.textContent = gameState.player.inventory.materials[materialId];
+        const material = MATERIALS[materialId];
+        const amount = gameState.player.inventory.materials[materialId];
+        if (material) {
+            inventoryList.innerHTML += `<li>${material.name}: <span id="inv-${materialId}">${amount}</span></li>`;
         }
     }
 }
@@ -308,12 +289,12 @@ function renderCraftingRecipes() {
 }
 
 function craftEmptyItem(itemId) {
-    console.log(`(Simulado) Crafting: ${RECIPES_CRAFT_EMPTY[itemId].name}`);
+    // (Lógica de verificação e craft)
     alert(`(Simulado) Crafting: ${RECIPES_CRAFT_EMPTY[itemId].name}`);
 }
 
 function refineComponent(compId) {
-    console.log(`(Simulado) Refining: ${RECIPES_REFINE[compId].name}`);
+    // (Lógica de verificação e refino)
     alert(`(Simulado) Refining: ${RECIPES_REFINE[compId].name}`);
 }
 
@@ -321,8 +302,13 @@ function calculateFinalStats() {
     if (!gameState.player.activeKid) return;
 
     let baseStats = gameState.player.activeKid.tribe.baseStats;
-    let finalStats = { ...baseStats, dropChance: 0 }; // 'hp' já está nos baseStats
+    let finalStats = { ...baseStats }; // Copia os stats base
+    
+    // Adiciona stats que não vêm da tribo, se não existirem
+    if (!finalStats.dropChance) finalStats.dropChance = 0;
+    if (!finalStats.hp) finalStats.hp = 100;
 
+    // Itera sobre os 7 slots de equipamento
     for (const slot of EQUIPMENT_SLOTS) {
         const itemId = gameState.player.equipped[slot];
         if (!itemId) continue;
@@ -385,14 +371,15 @@ function renderHexMap() {
     mapElement.innerHTML = ''; 
     const { q: playerQ, r: playerR } = gameState.expedition.playerPos;
 
-    // Garante que o mapElement tenha dimensões
-    if (mapElement.clientWidth === 0) {
-        console.error("Map element has no width, re-rendering might fail.");
+    // CORREÇÃO: Garante que o mapElement tem dimensões
+    const mapRect = mapElement.getBoundingClientRect();
+    if (mapRect.width === 0) {
+        console.error("Map Panel not visible. Cannot render hex map.");
         return;
     }
-    const centerX = mapElement.clientWidth / 2;
-    const centerY = mapElement.clientHeight / 2;
-    if (centerY === 0) console.warn("Map element height is 0.");
+    
+    const centerX = mapRect.width / 2;
+    const centerY = mapRect.height / 2;
 
     gameState.gameMap.forEach(cell => {
         const { q, r, biome, hasEnemy } = cell;
@@ -401,7 +388,6 @@ function renderHexMap() {
         const cellDiv = document.createElement('div');
         cellDiv.className = 'hex-cell';
         
-        // Ajuste para centralizar o grid (0,0)
         let leftPos = centerX + pixel.x - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size')) / 2);
         let topPos = centerY + pixel.y - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height')) / 2);
 
@@ -430,7 +416,7 @@ function renderHexMap() {
 
 function logMessage(message, color = 'var(--color-accent-blue)') {
     const logElement = document.getElementById('game-log');
-    if (!logElement) return; // Proteção se a tela não estiver visível
+    if (!logElement) return;
     const p = document.createElement('p');
     p.classList.add('log-entry');
     p.style.color = color;
@@ -448,12 +434,21 @@ function toggleActionButtons(enable) {
     document.getElementById('end-turn-btn').disabled = !enable;
 }
 
+function startDemoGame() {
+    logMessage("Starting DEMO MODE...", 'yellow');
+    selectActiveKid(DEMO_KID); 
+    startGameplay(); 
+}
+
 function startGameplay() {
     if (!gameState.player.activeKid) {
         alert("ERROR: No active kid selected!");
         showScreen('dashboard-screen');
         return;
     }
+    
+    // CORREÇÃO: Mover showScreen para ANTES da renderização
+    showScreen('game-screen');
     
     calculateFinalStats(); 
     
@@ -466,39 +461,68 @@ function startGameplay() {
     gameState.expedition.resourcesFound = { scrap: 0, water: 0, food: 0 };
 
     initializeGame();
-    showScreen('game-screen');
     
-    // **FORÇAR RENDERIZAÇÃO DO MAPA HEX**
-    // O mapa hexagonal precisa que seu contêiner (#map-panel) esteja visível
-    // para calcular o centro. Forçamos uma re-renderização após a tela ficar visível.
-    setTimeout(renderHexMap, 0);
+    // CORREÇÃO: Renderizar o mapa DEPOIS que a tela está visível
+    renderHexMap();
 }
 
 function initializeGame() {
     gameState.currentDay = 1;
     generateHexMap();
-    // renderHexMap(); // Movido para startGameplay
     updateGameStatusPanel();
     toggleActionButtons(true);
     
     logMessage(`Day ${gameState.currentDay} started! You have ${gameState.expedition.currentAP} AP and ${gameState.expedition.currentMP} MP.`, 'lime');
 }
 
+// ATUALIZADO: Preenche todos os novos campos da UI
 function updateGameStatusPanel() {
     const kid = gameState.player.activeKid;
     const stats = gameState.expedition.stats;
 
+    // Seção 1: Kid Info
     document.getElementById('kid-tribe').textContent = kid.tribe.name;
+    document.getElementById('kid-id').textContent = kid.id;
     document.getElementById('kid-image-container').innerHTML = `<img src="${kid.img}" alt="Your CyberKid">`;
+    
+    // Seção 2: Attributes
+    // Barra de HP
+    const hpPercent = (gameState.expedition.currentHP / stats.hp) * 100;
+    document.getElementById('hp-bar-fill').style.width = `${hpPercent}%`;
+    document.getElementById('hp-bar-text').textContent = `${gameState.expedition.currentHP} / ${stats.hp}`;
+    
+    // Grid de Stats
     document.getElementById('kid-strength').textContent = stats.damage;
-    document.getElementById('kid-hp').textContent = `${gameState.expedition.currentHP}/${stats.hp}`;
     document.getElementById('kid-defense').textContent = stats.defense;
+    document.getElementById('kid-crit-chance').textContent = `${stats.critChance}%`;
+    document.getElementById('kid-crit-dmg').textContent = `${stats.critDamage}%`;
+    document.getElementById('kid-atk-speed').textContent = stats.attackSpeed;
+    document.getElementById('kid-hp-regen').textContent = stats.hpRegen;
+    document.getElementById('kid-block').textContent = `${stats.blockChance}%`;
     document.getElementById('kid-drop-chance').textContent = `${stats.dropChance}%`;
+
+    // Seção 3: Resources Found
+    const resourceList = document.getElementById('resource-list');
+    resourceList.innerHTML = ''; // Limpa
+    let found = 0;
+    for (const res in gameState.expedition.resourcesFound) {
+        const amount = gameState.expedition.resourcesFound[res];
+        if (amount > 0) {
+            resourceList.innerHTML += `<li>${MATERIALS[res].name}: <span>${amount}</span></li>`;
+            found++;
+        }
+    }
+    if (found === 0) {
+        resourceList.innerHTML = '<li>No resources found yet.</li>';
+    }
+
+    // Painel de Ações (AP/MP)
     document.getElementById('kid-ap').textContent = gameState.expedition.currentAP;
+    document.getElementById('kid-max-ap').textContent = gameState.expedition.maxAP;
     document.getElementById('kid-mp').textContent = gameState.expedition.currentMP;
-    document.getElementById('res-scrap').textContent = gameState.expedition.resourcesFound.scrap;
-    document.getElementById('res-water').textContent = gameState.expedition.resourcesFound.water;
-    document.getElementById('res-food').textContent = gameState.expedition.resourcesFound.food;
+    document.getElementById('kid-max-mp').textContent = gameState.expedition.maxMP;
+    
+    // Outros
     document.getElementById('turn-counter').textContent = `${gameState.currentDay}`;
 
     // Lógica de habilitação de botões
@@ -631,12 +655,16 @@ function endDay() {
     gameState.expedition.currentAP = gameState.expedition.stats.ap;
     gameState.expedition.currentMP = gameState.expedition.stats.speed;
     
-    // (Lógica de Ganhos IDLE - FUTURO)
+    // Regenera HP
+    gameState.expedition.currentHP += gameState.expedition.stats.hpRegen;
+    if (gameState.expedition.currentHP > gameState.expedition.stats.hp) {
+        gameState.expedition.currentHP = gameState.expedition.stats.hp;
+    }
     
     generateHexMap(); 
     renderHexMap();
     updateGameStatusPanel();
-    logMessage(`--- DAY ${gameState.currentDay} START --- AP and MP fully restored.`, 'yellow');
+    logMessage(`--- DAY ${gameState.currentDay} START --- AP/MP restored. HP regenerated.`, 'yellow');
 }
 
 function gameOver(success) {
@@ -666,20 +694,16 @@ function gameOver(success) {
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Configurar Listeners das Telas
-    connectWalletBtn.addEventListener('click', () => {
+    document.getElementById('connect-wallet-btn').addEventListener('click', () => {
         console.log("Connect Wallet button clicked");
-        connectionStatus.textContent = 'Connected (Simulated)';
-        connectionStatus.style.color = 'lime';
+        document.getElementById('connection-status').textContent = 'Connected (Simulated)';
+        document.getElementById('connection-status').style.color = 'lime';
         showScreen('dashboard-screen');
         renderDashboard(); // Renderiza o Dashboard
     });
 
-    demoGameBtn.addEventListener('click', () => {
-        console.log("Demo Game button clicked");
-        startDemoGame(); // Inicia o modo demo
-    });
+    document.getElementById('demo-game-btn').addEventListener('click', startDemoGame);
     
-    // Adiciona listener ao botão 'Start Expedition' do Dashboard
     document.getElementById('start-expedition-btn').addEventListener('click', startGameplay);
 
     // 2. Configurar Listeners do Jogo (TELA 3)
@@ -691,7 +715,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Configurar Abas do Dashboard
     setupDashboardTabs();
+    
+    // 4. Atualizar Saldo de Tezerium (Simulado)
+    document.getElementById('tezerium-balance').textContent = gameState.player.tezerium;
 
-    // 4. Iniciar na Tela 1
+    // 5. Iniciar na Tela 1
     showScreen('logged-out-screen');
 });
