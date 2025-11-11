@@ -1,14 +1,24 @@
+/* ====================================================================
+// CYBERKIDZ CLUB: WASTELAND EXPEDITION - CSS
+// VERSÃO 2.0 (Refatoração Pós-Consultoria)
+// ==================================================================== */
+
+/* ==================================================================== */
+/* SEÇÃO 1: ROOT E GLOBAIS
+/* ==================================================================== */
 :root {
-    --color-bg-dark: #1a1a2e; /* Fundo Principal Escuro */
-    --color-panel-dark: #2c2c47; /* Cor dos Painéis */
-    --color-accent-blue: #00e0ff; /* Azul Ciber */
-    --color-accent-red: #ff3a5c; /* Vermelho/Mutação */
+    --color-bg-dark: #1a1a2e;
+    --color-panel-dark: #2c2c47;
+    --color-accent-blue: #00e0ff; /* Ciber */
+    --color-accent-red: #ff3a5c; /* Mutação/Perigo */
     --color-text-light: #e0e0e0;
     --color-text-dark: #1a1a2e;
+    --color-text-dim: #aaa;
     --color-hp-bar: #00ff6a; /* Verde para HP */
-    
-    /* Variáveis do Mapa Hexagonal */
-    --hex-size: 50px; /* Largura do hexágono */
+    --color-mp-bar: #3a8cff; /* Azul para MP */
+
+    /* Variáveis do Mapa Hexagonal (Portadas do V1) */
+    --hex-size: 50px; 
     --hex-height: calc(var(--hex-size) * 1.1547); 
 }
 
@@ -23,457 +33,88 @@ body {
     background-color: var(--color-bg-dark);
     color: var(--color-text-light);
     padding: 20px;
-    overflow-x: hidden;
+    overflow-x: hidden; /* Previne scroll horizontal */
 }
 
-/* ==================================================================== */
-/* HEADER UNIVERSAL E NOVO DISPLAY DE TOKEN */
-/* ==================================================================== */
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 2px solid var(--color-accent-blue);
-    padding-bottom: 10px;
-}
-
-h1 {
+h2, h3, h4 {
     color: var(--color-accent-blue);
-    font-size: 1.5em;
-    text-shadow: 0 0 5px rgba(0, 224, 255, 0.5);
+    margin-bottom: 10px;
 }
-
-#wallet-status {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-#connection-status {
-    color: var(--color-accent-red);
-    font-weight: bold;
-}
-
-#tezerium-display {
-    background-color: var(--color-panel-dark);
-    border: 1px solid var(--color-accent-blue);
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-weight: bold;
-    color: var(--color-accent-blue);
-}
-#tezerium-display span {
-    color: white;
+p {
+    color: var(--color-text-dim);
+    line-height: 1.6;
+    margin-bottom: 15px;
 }
 
 /* ==================================================================== */
-/* COMPONENTES GLOBAIS (Botões, Painéis) */
+/* SEÇÃO 2: COMPONENTES UNIVERSAIS
 /* ==================================================================== */
+
+/* --- Painel Base --- */
 .panel {
     background-color: var(--color-panel-dark);
     border: 1px solid var(--color-accent-blue);
-    padding: 15px;
+    padding: 20px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 224, 255, 0.2);
 }
 
+/* --- Botões de Ação --- */
 .action-btn {
     background-color: var(--color-accent-red);
     color: var(--color-text-light);
     border: none;
-    padding: 10px 15px;
-    margin-top: 5px;
+    padding: 12px 15px;
     cursor: pointer;
     text-transform: uppercase;
     font-weight: bold;
     transition: background-color 0.2s, box-shadow 0.2s;
     width: 100%;
-    border-radius: 5px; /* Arredondado */
-    font-size: 0.9em;
+    border-radius: 5px;
+    font-size: 1em;
+    display: flex; /* Para alinhar ícones e texto */
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
 }
-
 .action-btn:hover:not(:disabled) {
     background-color: #ff607d;
     box-shadow: 0 0 10px var(--color-accent-red);
 }
-
 .action-btn:disabled {
     background-color: #555;
     cursor: not-allowed;
     opacity: 0.7;
 }
 
+/* Modificadores de Botão */
 .action-btn.demo-btn {
     background-color: var(--color-accent-blue);
     color: var(--color-text-dark);
 }
-
-#end-turn-btn {
-    background-color: var(--color-accent-blue);
-    color: var(--color-text-dark);
-}
-#end-turn-btn:hover:not(:disabled) {
+.action-btn.demo-btn:hover:not(:disabled) {
     background-color: #5effff;
     box-shadow: 0 0 10px var(--color-accent-blue);
 }
-
-.action-btn span {
-    margin-right: 8px;
-    font-size: 1.1em;
-}
-
-
-/* ==================================================================== */
-/* ESTRUTURA DE TELAS */
-/* ==================================================================== */
-.screen {
-    width: 100%;
-    padding: 0;
-}
-
-/* --- TELA 1: LOGGED OUT --- */
-#logged-out-screen .landing-container {
-    text-align: center;
-    max-width: 600px;
-    margin: 50px auto;
-    padding: 40px;
-}
-#logged-out-screen h2 {
-    color: var(--color-accent-red);
-    margin-bottom: 20px;
-}
-#logged-out-screen .action-btn {
-    max-width: 300px;
-    margin: 10px auto 0 auto;
-}
-
-/* --- TELA 2: DASHBOARD --- */
-#dashboard-screen .dashboard-header {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.dashboard-container {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr 1.2fr;
-    gap: 20px;
-}
-
-#nft-selection-panel { min-width: 280px; }
-#equipment-panel { min-width: 400px; }
-#crafting-panel { min-width: 320px; }
-
-/* Lista de NFTs (Painel Esquerdo) */
-#nft-list-container {
-    max-height: 500px;
-    overflow-y: auto;
-}
-.nft-list-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border: 1px solid #444;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-.nft-list-item:hover {
-    background-color: #3c3c57;
-}
-.nft-list-item.selected {
-    background-color: var(--color-bg-dark);
-    border-color: var(--color-accent-blue);
-    box-shadow: 0 0 5px var(--color-accent-blue);
-}
-.nft-list-item img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 5px;
-    margin-right: 15px;
-    flex-shrink: 0;
-}
-.nft-list-item-info {
-    display: flex;
-    flex-direction: column;
-}
-.nft-list-item-info p {
-    margin: 0;
-    font-size: 0.9em;
-}
-.nft-list-item-info p strong {
-    color: var(--color-accent-red);
-    font-size: 1.1em;
-}
-
-/* Painel de Detalhes (Meio) */
-#kid-details-placeholder {
-    text-align: center;
-    padding: 50px 20px;
-    color: #888;
-    font-size: 1.2em;
-}
-#kid-details-content h3 {
-    display: flex;
-    align-items: center;
-}
-#edit-name-icon {
-    font-size: 0.8em;
-    margin-left: 10px;
-    cursor: pointer;
-    color: var(--color-accent-blue);
-}
-#edit-name-icon:hover { color: white; }
-.kid-details-header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 15px;
-    margin-bottom: 15px;
-}
-#dash-kid-image {
-    width: 150px;
-    height: 150px;
-    border: 2px solid var(--color-accent-blue);
-    border-radius: 5px;
-    flex-shrink: 0;
-}
-#dash-kid-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-.kid-details-info p {
-    font-size: 1.1em;
-    margin: 5px 0;
-}
-
-/* NOVO: Grid de Equipamento */
-.equipment-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-bottom: 20px;
-}
-.equip-slot-wrapper {
-    position: relative; /* Para o botão X */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-.equip-slot {
-    width: 100%;
-    aspect-ratio: 1 / 1; /* Força a ser quadrado */
-    border: 2px dashed #888;
-    border-radius: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: rgba(0,0,0,0.2);
-    font-size: 2.5em; /* Tamanho do '+' */
-    color: #888;
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-    overflow: hidden; /* Para conter a imagem/nome do item */
-}
-.equip-slot:hover {
-    border-color: var(--color-accent-blue);
-    color: var(--color-accent-blue);
-}
-.equip-slot-label {
-    font-size: 0.9em;
-    color: #aaa;
-    margin-top: 5px;
-    text-transform: capitalize;
-}
-.equip-slot.equipped {
-    border-style: solid;
-    border-color: var(--color-accent-blue);
-    font-size: 0.9em;
-    padding: 5px;
-    text-align: center;
-    color: white;
-}
-.equip-remove-btn {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: var(--color-accent-red);
-    color: white;
-    border: 2px solid var(--color-bg-dark);
-    cursor: pointer;
-    font-weight: bold;
-    display: none; /* Escondido por padrão */
-    z-index: 2;
-}
-.equip-slot.equipped + .equip-remove-btn {
-    display: block; /* Mostra o X se o slot estiver equipado */
-}
-.equip-slot img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-
-/* Abas de Crafting */
-.tabs {
-    display: flex;
-    border-bottom: 1px solid var(--color-accent-blue);
-    margin-bottom: 10px;
-}
-.tab-btn {
-    background: none;
-    border: none;
-    color: #888;
-    padding: 10px 15px;
-    cursor: pointer;
-    font-size: 1em; /* Tamanho da fonte das abas */
-}
-.tab-btn.active {
-    color: var(--color-accent-blue);
-    border-bottom: 2px solid var(--color-accent-blue);
-}
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.crafting-recipe {
-    padding: 10px;
-    border: 1px solid #444;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap; 
-}
 .action-btn.small-btn {
     width: auto;
-    padding: 5px 10px;
-}
-
-/* Layout 3 Colunas (Materials) */
-#inventory-grid-materials {
-    display: grid;
-    grid-template-columns: auto 1fr auto; /* Ícone, Nome, Qtd */
-    gap: 8px 10px; 
-    align-items: center;
-    padding-top: 10px;
-}
-.inventory-item-icon {
-    width: 24px;
-    height: 24px;
-    filter: drop-shadow(0 0 2px #000);
-}
-.inventory-item-name {
-    text-align: right; 
-    color: #aaa;
-    font-size: 0.9em;
-    padding-right: 10px;
-}
-.inventory-item-qty {
-    text-align: left; 
-    font-weight: bold;
-    font-size: 1.1em;
-    color: white;
-}
-
-/* Ícones (Refine) */
-.recipe-cost {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 5px;
+    padding: 8px 12px;
     font-size: 0.9em;
 }
-.recipe-icon {
-    width: 16px;
-    height: 16px;
-    vertical-align: middle;
-    margin-right: 2px;
-}
 
-/* UI de Embed */
-.embed-ui {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin: 20px 0;
-}
-.embed-slot {
-    width: 100px;
-    height: 100px;
-    border: 2px dashed #888;
-    border-radius: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    color: #888;
-    cursor: pointer;
-}
-.embed-slot:hover {
-    border-color: var(--color-accent-blue);
-}
-.plus-icon {
-    font-size: 2em;
-    font-weight: bold;
-    color: var(--color-accent-red);
-}
-
-
-/* --- TELA 3: JOGO --- */
-#game-screen .game-container {
+/* --- Stats Grids (Usado na Tela 3 e 4) --- */
+.stats-grid {
     display: grid;
-    grid-template-columns: 1fr 2fr 1fr;
-    gap: 20px;
-    max-width: 1600px;
-    margin: 0 auto;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 15px;
+    font-size: 0.9em;
+}
+.stats-grid p {
+    margin: 0;
+    color: var(--color-text-light);
 }
 
-/* Seções do Painel de Status */
-.info-section {
-    border: 1px solid #444;
-    border-radius: 5px;
-    padding: 10px;
-    margin-bottom: 15px;
-}
-.info-section h4 {
-    color: var(--color-accent-red);
-    margin-top: 0;
-    margin-bottom: 10px;
-}
-
-/* Seção 1: Identidade do Kid */
-.kid-identity {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-#kid-image-container {
-    width: 100px;
-    height: 100px;
-    border: 2px solid var(--color-accent-red);
-    border-radius: 5px;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-#kid-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.kid-identity-details p {
-    font-size: 1.1em;
-    margin: 5px 0;
-}
-
-/* Seção 2: Barra de HP e Stats */
+/* --- Barras de HP (Usado na Tela 4 e Modal) --- */
 .hp-bar-container {
     width: 100%;
     height: 30px;
@@ -500,21 +141,443 @@ h1 {
     font-size: 0.9em;
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5px 10px;
+/* --- Abas (Tabs) (Usado na Tela 3) --- */
+.tabs {
+    display: flex;
+    border-bottom: 1px solid var(--color-accent-blue);
+    margin-bottom: 15px;
+    flex-wrap: wrap; /* Para mobile */
+}
+.tab-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-dim);
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.tab-btn.active {
+    color: var(--color-accent-blue);
+    border-bottom: 2px solid var(--color-accent-blue);
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+
+/* ==================================================================== */
+/* SEÇÃO 3: LAYOUT UNIVERSAL (HEADER, FOOTER, SCREENS)
+/* ==================================================================== */
+
+/* --- Header Universal --- */
+#main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--color-accent-blue);
+    padding-bottom: 10px;
+}
+#tezerium-display {
+    background-color: var(--color-panel-dark);
+    border: 1px solid var(--color-accent-blue);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    color: var(--color-accent-blue);
+}
+#tezerium-display span {
+    color: white;
+}
+#wallet-status #connection-status {
+    color: var(--color-accent-blue);
+    font-weight: bold;
+}
+
+/* --- Footer Universal --- */
+#main-footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-panel-dark);
+    color: #888;
     font-size: 0.9em;
 }
 
-/* Seção 3: Recursos */
-#resource-list {
+/* --- Gerenciamento de Tela --- */
+.screen {
+    width: 100%;
+    min-height: 70vh; /* Empurra o footer para baixo */
+}
+
+/* ==================================================================== */
+/* SEÇÃO 4: TELA 1 (LOGGED OUT)
+/* ==================================================================== */
+#logged-out-screen .landing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 40px;
+}
+#game-logo {
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 30px;
+}
+#logged-out-screen h2 {
+    color: var(--color-accent-red);
+}
+.landing-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 350px;
+}
+
+/* ==================================================================== */
+/* SEÇÃO 5: TELA 2 (HUB - SELEÇÃO)
+/* ==================================================================== */
+.hub-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+.filter-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+}
+.filter-toolbar input,
+.filter-toolbar select {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--color-accent-blue);
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-light);
+    font-family: 'Roboto Mono', monospace;
+    flex-grow: 1;
+}
+
+/* --- Grid de NFTs --- */
+.nft-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+.nft-card {
+    padding: 0; /* O painel tem padding, mas o card não */
+    overflow: hidden; /* Para a imagem */
+    border-width: 2px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.nft-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 15px var(--color-accent-blue);
+}
+.nft-card img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    display: block;
+    background-color: var(--color-bg-dark); /* Fundo para placeholders */
+}
+.nft-card h4 {
+    padding: 15px 15px 0 15px;
+    margin: 0;
+    color: var(--color-accent-red);
+}
+.nft-card p {
+    padding: 0 15px;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+.nft-card .action-btn {
+    margin: 15px;
+    width: calc(100% - 30px); /* Ajusta ao padding */
+}
+
+/* ==================================================================== */
+/* SEÇÃO 6: TELA 3 (HUB - PREPARAÇÃO)
+/* ==================================================================== */
+
+/* --- Layout de 2 Colunas --- */
+.preparation-header {
+    margin-bottom: 15px;
+}
+.preparation-container {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr; /* 2 colunas */
+    gap: 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* --- Coluna Esquerda: Character Sheet --- */
+#character-sheet-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Bloco de Info do Kid */
+.kid-info-box {
+    display: flex;
+    gap: 20px;
+    border-bottom: 1px solid var(--color-accent-blue);
+    padding-bottom: 20px;
+}
+#prep-kid-image {
+    width: 150px;
+    height: 150px;
+    border: 2px solid var(--color-accent-blue);
+    border-radius: 5px;
+    flex-shrink: 0;
+}
+#prep-kid-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+#prep-kid-name-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#edit-name-btn {
+    font-size: 0.8em;
+    cursor: pointer;
+    color: var(--color-accent-blue);
+}
+#edit-name-btn:hover { color: white; }
+.kid-info-details p {
+    margin: 5px 0;
+    font-size: 1.1em;
+}
+
+/* --- Manequim de Equipamento --- */
+/* Documentação: Usamos CSS Grid Areas para posicionar os slots 
+   visualmente, como um "corpo". */
+.equipment-mannequin {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 15px;
+    grid-template-areas:
+        " .     helmet     . "
+        "weapon  armor  accessory"
+        "gloves implant   boots";
+    padding: 10px;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+/* Posicionando os slots */
+#mannequin-helmet   { grid-area: helmet; }
+#mannequin-weapon   { grid-area: weapon; }
+#mannequin-accessory{ grid-area: accessory; }
+#mannequin-armor    { grid-area: armor; }
+#mannequin-gloves   { grid-area: gloves; }
+#mannequin-implant  { grid-area: implant; }
+#mannequin-boots    { grid-area: boots; }
+
+/* Estilo do Slot Individual */
+.equip-slot-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.equip-slot {
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Força a ser quadrado */
+    border: 2px dashed #888;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0,0,0,0.2);
+    font-size: 2.5em;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+}
+.equip-slot:hover {
+    border-color: var(--color-accent-blue);
+    color: var(--color-accent-blue);
+}
+.equip-slot-label {
+    font-size: 0.9em;
+    color: var(--color-text-dim);
+    margin-top: 5px;
+    text-transform: capitalize;
+}
+.equip-slot.equipped {
+    border-style: solid;
+    border-color: var(--color-accent-blue);
+    font-size: 0.9em;
+    padding: 5px;
+    text-align: center;
+    color: white;
+}
+.equip-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+/* Botão de Remover */
+.equip-remove-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--color-accent-red);
+    color: white;
+    border: 2px solid var(--color-bg-dark);
+    cursor: pointer;
+    font-weight: bold;
+    display: none; /* Escondido por padrão */
+    z-index: 2;
+    padding: 0; /* Reset */
+}
+.equip-slot.equipped + .equip-remove-btn {
+    /* Mostra o X se o slot estiver equipado */
+    display: block; 
+}
+
+/* Botão de Iniciar Expedição (Fica no fim da coluna) */
+#start-expedition-btn {
+    margin-top: auto; /* Empurra o botão para o fundo */
+    padding: 15px;
+    font-size: 1.2em;
+}
+
+/* --- Coluna Direita: Workshop --- */
+/* O estilo das abas e painel já é global */
+
+/* ==================================================================== */
+/* SEÇÃO 7: TELA 4 (GAME SCREEN)
+/* ==================================================================== */
+.game-container {
+    display: grid;
+    /* Coluna do Mapa é 2.5x mais larga */
+    grid-template-columns: 1fr 2.5fr 1fr;
+    gap: 20px;
+    max-width: 1800px;
+    margin: 0 auto;
+    height: 80vh; /* Ocupa altura da tela */
+}
+
+/* --- Coluna Esquerda: Status Panel --- */
+#status-panel {
+    display: flex;
+    flex-direction: column;
+}
+.info-section {
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+.kid-identity {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+#game-kid-image {
+    width: 100px;
+    height: 100px;
+    border: 2px solid var(--color-accent-red);
+    border-radius: 5px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+#game-kid-image img { width: 100%; height: 100%; object-fit: cover; }
+.kid-identity-details p { font-size: 1.1em; margin: 5px 0; }
+#game-resource-list {
     list-style: none;
     padding-left: 0;
     font-size: 0.9em;
 }
+#exit-expedition-btn {
+    margin-top: auto; /* Empurra para o fundo */
+}
 
-/* Painel de Ações: AP/MP Display */
+/* --- Coluna Central: Map Panel --- */
+#map-panel {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+#map-panel h3 {
+    margin: 5px 10px;
+    flex-shrink: 0;
+}
+.hex-map-container {
+    position: relative; 
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Essencial para o Pan/Zoom */
+    background-color: #000;
+    flex-grow: 1; /* Ocupa todo o espaço restante */
+    border-radius: 5px;
+}
+#game-map-content {
+    /* O JS irá mover este container para o Pan */
+    position: absolute; 
+    /* O JS irá definir o 'transform: scale()' para o Zoom */
+}
+
+/* Estilo dos Hexágonos (Portado do V1) */
+.hex-cell {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    width: var(--hex-size);
+    height: var(--hex-height);
+    background-color: #333; /* Cor 'Fog of War' */
+    position: absolute; 
+    cursor: pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em; 
+    color: white;
+}
+.hex-cell:hover {
+    transform: scale(1.1);
+    filter: brightness(1.3);
+    z-index: 5;
+}
+.hex-kid {
+    background-color: var(--color-accent-blue) !important;
+    border: 2px solid white;
+    box-shadow: 0 0 10px var(--color-accent-blue);
+    z-index: 2; 
+    transform: scale(1.1);
+}
+/* Cores dos Biomas (para o JS) */
+.hex-cell.volcanics { background-color: #B22222; } /* Vermelho */
+.hex-cell.nocturnals { background-color: #00008B; } /* Azul */
+.hex-cell.undergrounders { background-color: #8B4513; } /* Marrom */
+.hex-cell.radioactives { background-color: #ADFF2F; } /* Verde Claro */
+.hex-cell.reptilians { background-color: #006400; } /* Verde Escuro */
+.hex-cell.wasteland { background-color: #FFD700; } /* Amarelo */
+
+/* --- Coluna Direita: Actions & Log --- */
+#action-panel {
+    display: flex;
+    flex-direction: column;
+}
 .ap-mp-display {
     display: flex;
     justify-content: space-around;
@@ -524,74 +587,43 @@ h1 {
     padding: 10px;
     margin-bottom: 15px;
 }
-.ap-mp-display div {
-    font-size: 1.2em;
-    font-weight: bold;
+.ap-mp-display div { font-size: 1.2em; font-weight: bold; }
+#ap-display { color: var(--color-accent-blue); }
+#mp-display { color: var(--color-mp-bar); } /* Nova cor para MP */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
 }
-#ap-display {
-    color: var(--color-accent-blue);
+.game-options {
+    margin-bottom: 15px;
 }
-#mp-display {
-    color: var(--color-hp-bar);
-}
-
 #game-log {
-    height: 200px;
+    height: 250px; /* Altura padrão */
     overflow-y: scroll;
     background-color: #111;
     border: 1px solid #444;
     padding: 10px;
-    margin-top: 15px;
+    border-radius: 5px;
+    flex-grow: 1; /* Ocupa espaço restante */
 }
 .log-entry {
     margin-bottom: 5px;
     font-size: 0.9em;
     color: #00e0ff;
+    border-bottom: 1px solid #222;
+    padding-bottom: 3px;
 }
+/* Cores do Log */
+.log-entry.day { color: yellow; font-weight: bold; }
+.log-entry.action { color: white; }
+.log-entry.reward { color: var(--color-hp-bar); }
+.log-entry.combat { color: var(--color-accent-red); }
+.log-entry.error { color: var(--color-accent-red); font-weight: bold; }
 
 /* ==================================================================== */
-/* MAPA HEXAGONAL */
-/* ==================================================================== */
-.hex-map-container {
-    position: relative; 
-    width: 100%;
-    height: 100%;
-    min-height: 500px; 
-    overflow: hidden; 
-    background-color: #000;
-}
-
-.hex-cell {
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    width: var(--hex-size);
-    height: var(--hex-height);
-    background-color: #333;
-    position: absolute; 
-    cursor: pointer;
-    transition: transform 0.2s ease, filter 0.2s ease;
-    
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5em; 
-}
-
-.hex-cell:hover {
-    transform: scale(1.1);
-    filter: brightness(1.3);
-    z-index: 5;
-}
-
-.hex-kid {
-    background-color: var(--color-accent-blue) !important;
-    border: 2px solid white;
-    box-shadow: 0 0 10px var(--color-accent-blue);
-    z-index: 2; 
-    transform: scale(1.1);
-}
-
-/* ==================================================================== */
-/* NOVO: MODAL DE EQUIPAMENTO */
+/* SEÇÃO 8: MODAIS UNIVERSAIS
 /* ==================================================================== */
 .modal-overlay {
     position: fixed;
@@ -599,13 +631,13 @@ h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.85); /* Mais escuro */
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 100;
+    padding: 20px;
 }
-
 .modal-content {
     background-color: var(--color-panel-dark);
     border: 2px solid var(--color-accent-blue);
@@ -618,7 +650,6 @@ h1 {
     position: relative;
     box-shadow: 0 0 20px var(--color-accent-blue);
 }
-
 .modal-close-btn {
     position: absolute;
     top: 10px;
@@ -630,11 +661,14 @@ h1 {
     font-weight: bold;
     cursor: pointer;
 }
-
-#modal-equip-list {
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
     margin-top: 20px;
 }
 
+/* --- Modal: Seleção de Equipamento --- */
 .equip-list-item {
     background-color: var(--color-bg-dark);
     border: 1px solid #444;
@@ -644,60 +678,151 @@ h1 {
     cursor: pointer;
     transition: background-color 0.2s;
 }
-.equip-list-item:hover {
-    background-color: #3c3c57;
+.equip-list-item:hover { background-color: #3c3c57; }
+.equip-list-item h4 { color: var(--color-accent-blue); margin-top: 0; }
+.equip-list-item p { margin: 3px 0; color: #ccc; }
+.item-stats { color: var(--color-hp-bar); font-weight: bold; }
+
+/* --- Modal: Editar Nome --- */
+#edit-name-modal input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--color-accent-blue);
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-light);
+    font-size: 1.1em;
 }
-.equip-list-item h4 {
-    color: var(--color-accent-blue);
-    margin-top: 0;
+
+/* --- Modal: Feedback de Ação --- */
+.feedback-modal {
+    max-width: 400px;
+    text-align: center;
+}
+
+/* ==================================================================== */
+/* SEÇÃO 9: MODAL DE COMBATE (ESPECÍFICO)
+/* ==================================================================== */
+.combat-modal {
+    max-width: 800px;
+}
+.combat-arena {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 20px 0;
+}
+.combatant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 40%;
+}
+.combatant img {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
     margin-bottom: 10px;
 }
-.equip-list-item p {
-    margin: 3px 0;
+.combatant h4 {
+    font-size: 1.2em;
+    color: var(--color-accent-red);
+}
+/* Animação de "Hit" */
+.combatant.hit {
+    animation: hit-shake 0.3s ease;
+}
+@keyframes hit-shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-10px) rotate(-2deg); }
+    50% { transform: translateX(10px) rotate(2deg); }
+    100% { transform: translateX(0); }
+}
+
+#combat-log {
+    height: 100px;
+    overflow-y: scroll;
+    background-color: #111;
+    border: 1px solid #444;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 15px;
     font-size: 0.9em;
-    color: #ccc;
 }
-.equip-list-item .item-stats {
-    color: var(--color-hp-bar); /* Verde para stats positivos */
-    font-weight: bold;
+#combat-actions {
+    justify-content: center;
 }
-.equip-list-item .item-components {
-    font-size: 0.8em;
-    color: #aaa;
-    margin-top: 10px;
-    font-style: italic;
+
+/* Fases de Vitória/Derrota */
+#combat-phase-victory,
+#combat-phase-defeat {
+    text-align: center;
+}
+#victory-reward-list {
+    list-style: none;
+    padding: 0;
+    color: var(--color-hp-bar);
+    font-size: 1.1em;
+    margin: 10px 0;
 }
 
 /* ==================================================================== */
-/* RESPONSIVIDADE */
+/* SEÇÃO 10: RESPONSIVIDADE
 /* ==================================================================== */
+
+/* Tablet (e abaixo) - Empilha os layouts principais */
 @media (max-width: 1200px) {
-    .dashboard-container {
+    /* Empilha Tela 3 (Hub Preparação) */
+    .preparation-container {
         grid-template-columns: 1fr;
     }
-    #game-screen .game-container {
+
+    /* Empilha Tela 4 (Game Screen) */
+    .game-container {
         grid-template-columns: 1fr;
+        height: auto; /* Altura automática */
+    }
+    #map-panel {
+        min-height: 500px; /* Garante altura mínima para o mapa */
     }
 }
 
+/* Mobile (e abaixo) */
 @media (max-width: 600px) {
     body {
         padding: 10px;
     }
-    h1 {
-        font-size: 1.2em;
+    /* Empilha o Header */
+    #main-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
     }
-    #tezerium-display {
-        font-size: 0.8em;
-        padding: 4px 8px;
+    #main-header > div {
+        text-align: center;
     }
-    .tabs {
-        font-size: 0.9em;
+
+    /* Reduz paddings */
+    .panel {
+        padding: 15px;
     }
-    .tab-btn {
-        padding: 10px 5px; /* Menor padding nas abas */
+
+    /* Grid de NFTs vira 1 coluna */
+    .nft-grid {
+        grid-template-columns: 1fr;
     }
-    .dashboard-container {
-        grid-template-columns: 1fr; /* Força coluna única em mobile */
+
+    /* Manequim fica mais apertado */
+    .equipment-mannequin {
+        gap: 10px;
+    }
+    .equip-slot {
+        font-size: 1.5em; /* '+' menor */
+    }
+    .equip-remove-btn {
+        width: 20px;
+        height: 20px;
+        top: -5px;
+        right: -5px;
     }
 }
