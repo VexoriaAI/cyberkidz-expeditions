@@ -229,7 +229,11 @@
     </div>
 
     <div id="action-feedback-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content feedback-modal"><h3 id="feedback-title">Investigating...</h3><p id="feedback-description">You found 5x Scrap!</p></div>
+        <div class="modal-content feedback-modal">
+            <button id="feedback-close-btn" class="modal-close-btn">X</button>
+            <h3 id="feedback-title">Investigating...</h3>
+            <p id="feedback-description">You found 5x Scrap!</p>
+        </div>
     </div>
 
     <div id="combat-modal" class="modal-overlay" style="display: none;">
@@ -237,23 +241,9 @@
             <div id="combat-phase-battle">
                 <h2>COMBAT INITIATED!</h2>
                 <div class="combat-arena">
-                    <div class="combatant" id="combat-player">
-                        <img src="images/kid-combat-sprite.png" alt="Player Kid">
-                        <h4>Your Kid</h4>
-                        <div class="hp-bar-container">
-                            <div id="combat-player-hp-fill" class="hp-bar-fill"></div>
-                            <span id="combat-player-hp-text" class="hp-bar-text">100 / 100</span>
-                        </div>
-                    </div>
+                    <div class="combatant" id="combat-player"><img src="images/kid-combat-sprite.png" alt="Player Kid"><h4>Your Kid</h4><div class="hp-bar-container"><div id="combat-player-hp-fill" class="hp-bar-fill"></div><span id="combat-player-hp-text" class="hp-bar-text">100 / 100</span></div></div>
                     <span class="combat-vs">VS</span>
-                    <div class="combatant" id="combat-enemy">
-                        <img src="images/drone-sprite.png" alt="Enemy">
-                        <h4 id="combat-enemy-name">CKC Drone</h4>
-                        <div class="hp-bar-container">
-                            <div id="combat-enemy-hp-fill" class="hp-bar-fill"></div>
-                            <span id="combat-enemy-hp-text" class="hp-bar-text">15 / 15</span>
-                        </div>
-                    </div>
+                    <div class="combatant" id="combat-enemy"><img src="images/drone-sprite.png" alt="Enemy"><h4 id="combat-enemy-name">CKC Drone</h4><div class="hp-bar-container"><div id="combat-enemy-hp-fill" class="hp-bar-fill"></div><span id="combat-enemy-hp-text" class="hp-bar-text">15 / 15</span></div></div>
                 </div>
                 <div id="combat-log"><p>...</p></div>
                 <div id="combat-actions" class="modal-actions">
@@ -263,35 +253,43 @@
                 </div>
             </div>
             <div id="combat-phase-victory" style="display: none;">
-                <h2>VICTORY!</h2>
-                <p>You defeated the <span id="victory-enemy-name">Drone</span>.</p>
-                <h4>Rewards:</h4>
-                <ul id="victory-reward-list"></ul>
-                <button id="combat-close-victory-btn" class="action-btn">Close</button>
+                <h2>VICTORY!</h2><p>You defeated the <span id="victory-enemy-name">Drone</span>.</p><h4>Rewards:</h4><ul id="victory-reward-list"></ul><button id="combat-close-victory-btn" class="action-btn">Close</button>
             </div>
             <div id="combat-phase-defeat" style="display: none;">
-                <h2>EXPEDITION FAILED</h2>
-                <p>Your Kid has been decommissioned.</p>
-                <p>All resources found on this expedition are lost.</p>
-                <button id="combat-return-hub-btn" class="action-btn">Return to Hub</button>
+                <h2>EXPEDITION FAILED</h2><p>Your Kid has been decommissioned.</p><p>All resources found on this expedition are lost.</p><button id="combat-return-hub-btn" class="action-btn">Return to Hub</button>
             </div>
         </div>
     </div>
 
     <div id="embed-confirm-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
-            <h2>Confirm Embed</h2>
-            <p>Are you sure you want to embed the component?</p>
-            <div class="embed-comparison">
-                <div id="embed-before"><h4>Before</h4></div>
-                <div id="embed-after"><h4>After</h4></div>
-            </div>
-            <div class="modal-actions">
-                <button id="embed-cancel-btn" class="action-btn small-btn">Cancel</button>
-                <button id="embed-confirm-btn" class="action-btn small-btn demo-btn">Confirm & Embed</button>
-            </div>
+            <h2>Confirm Embed</h2><p>Are you sure you want to embed the component?</p>
+            <div class="embed-comparison"><div id="embed-before"><h4>Before</h4></div><div id="embed-after"><h4>After</h4></div></div>
+            <div class="modal-actions"><button id="embed-cancel-btn" class="action-btn small-btn">Cancel</button><button id="embed-confirm-btn" class="action-btn small-btn demo-btn">Confirm & Embed</button></div>
         </div>
     </div>
+    
+    <div id="end-day-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content feedback-modal"> <button id="end-day-close-btn" class="modal-close-btn">X</button>
+            <h2 id="end-day-title">DAY 2 START</h2>
+        </div>
+    </div>
+
+    <div id="end-expedition-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button id="end-expedition-close-btn" class="modal-close-btn">X</button>
+            <h2 id="end-expedition-title">Expedition Successful</h2>
+            
+            <h4>Resources Found:</h4>
+            <div id="expedition-summary-list" class="expedition-summary">
+                </div>
+            
+            <p id="expedition-duration">Duration: 00:00</p>
+            
+            <button id="end-expedition-return-btn" class="action-btn">Return to Hub</button>
+        </div>
+    </div>
+
 
     <footer id="main-footer">
         <p>All rights reserved to CyberKidz Club. Created by Tropic Forge Studios.</p>
