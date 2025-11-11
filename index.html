@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberKidz Expedition</title>
+    <title>CyberKidz: Wasteland Expedition</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -37,18 +37,19 @@
 
     <section id="hub-selection-screen" class="screen" style="display: none;">
         <div class="hub-container">
-            <h2>SELECT YOUR CHARACTER</h2>
-            <p>Choose your Mutant Kid to manage their equipment and start an expedition.</p>
+            <h2>SELECT YOUR MUTANT KID</h2>
+            <p>Choose your mutant kid to manage their equipment and start an expedition.</p>
             
             <div class="filter-toolbar panel">
                 <input type="text" id="filter-search" placeholder="Search by Name or ID...">
                 <select id="filter-tribe">
                     <option value="all">All Tribes</option>
                     <option value="Volcanics">Volcanics</option>
-                    <option value="Undergrounders">Undergrounders</option>
-                    <option value="Nocturnals">Nocturnals</option>
-                    <option value="Radioactives">Radioactives</option>
-                    <option value="Reptilians">Reptilians</option>
+                    </select>
+                <select id="filter-items-per-page">
+                    <option value="10">10 per page</option>
+                    <option value="20">20 per page</option>
+                    <option value="50">50 per page</option>
                 </select>
                 <button id="filter-reset-btn" class="action-btn small-btn">Reset</button>
             </div>
@@ -56,6 +57,12 @@
             <div id="nft-selection-grid" class="nft-grid">
                 </div>
             <p id="nft-grid-placeholder" style="display: none;">No Mutant Kidz found in your wallet.</p>
+
+            <div id="pagination-controls" class="pagination-controls panel">
+                <button id="pagination-prev" class="action-btn small-btn" disabled>Previous</button>
+                <span id="pagination-info">Page 1 of 1</span>
+                <button id="pagination-next" class="action-btn small-btn" disabled>Next</button>
+            </div>
         </div>
     </section>
 
@@ -67,14 +74,13 @@
         <div class="preparation-container">
             
             <div id="character-sheet-panel" class="panel">
-                
                 <div class="kid-info-box">
                     <div id="prep-kid-image">
                         <img src="images/kid-placeholder.png" alt="Selected Kid">
                     </div>
                     <div class="kid-info-details">
                         <h3 id="prep-kid-name-display">
-                            Character Name 
+                            Kid Name 
                             <span id="edit-name-btn" title="Edit Name">✏️</span>
                         </h3>
                         <p><strong>Tribe:</strong> <span id="prep-kid-tribe">?</span></p>
@@ -85,41 +91,13 @@
 
                 <h4>EQUIPMENT</h4>
                 <div class="equipment-mannequin">
-                    <div class="equip-slot-wrapper" id="mannequin-helmet">
-                        <div class="equip-slot" data-slot="helmet"><span>+</span></div>
-                        <div class="equip-slot-label">Helmet</div>
-                        <button class="equip-remove-btn" data-slot="helmet">X</button>
-                    </div>
-                    <div class="equip-slot-wrapper" id="mannequin-weapon">
-                        <div class="equip-slot" data-slot="weapon"><span>+</span></div>
-                        <div class="equip-slot-label">Weapon</div>
-                        <button class="equip-remove-btn" data-slot="weapon">X</button>
-                    </div>
-                    <div class="equip-slot-wrapper" id="mannequin-accessory">
-                        <div class="equip-slot" data-slot="accessory"><span>+</span></div>
-                        <div class="equip-slot-label">Accessory</div>
-                        <button class="equip-remove-btn" data-slot="accessory">X</button>
-                    </div>
-                    <div class="equip-slot-wrapper" id="mannequin-armor">
-                        <div class="equip-slot" data-slot="armor"><span>+</span></div>
-                        <div class="equip-slot-label">Armor</div>
-                        <button class="equip-remove-btn" data-slot="armor">X</button>
-                    </div>
-                    <div class="equip-slot-wrapper" id="mannequin-gloves">
-                        <div class="equip-slot" data-slot="gloves"><span>+</span></div>
-                        <div class="equip-slot-label">Gloves</div>
-                        <button class="equip-remove-btn" data-slot="gloves">X</button>
-                    </div>
-                    <div class="equip-slot-wrapper" id="mannequin-implant">
-                        <div class="equip-slot" data-slot="implant"><span>+</span></div>
-                        <div class="equip-slot-label">Implant</div>
-                        <button class="equip-remove-btn" data-slot="implant">X</button>
-                    </div>
-                    <div class="equip-slot-wrapper" id="mannequin-boots">
-                        <div class="equip-slot" data-slot="boots"><span>+</span></div>
-                        <div class="equip-slot-label">Boots</div>
-                        <button class="equip-remove-btn" data-slot="boots">X</button>
-                    </div>
+                    <div class="equip-slot-wrapper" id="mannequin-helmet"><div class="equip-slot" data-slot="helmet"><span>+</span></div><div class="equip-slot-label">Helmet</div><button class="equip-remove-btn" data-slot="helmet">X</button></div>
+                    <div class="equip-slot-wrapper" id="mannequin-weapon"><div class="equip-slot" data-slot="weapon"><span>+</span></div><div class="equip-slot-label">Weapon</div><button class="equip-remove-btn" data-slot="weapon">X</button></div>
+                    <div class="equip-slot-wrapper" id="mannequin-accessory"><div class="equip-slot" data-slot="accessory"><span>+</span></div><div class="equip-slot-label">Accessory</div><button class="equip-remove-btn" data-slot="accessory">X</button></div>
+                    <div class="equip-slot-wrapper" id="mannequin-armor"><div class="equip-slot" data-slot="armor"><span>+</span></div><div class="equip-slot-label">Armor</div><button class="equip-remove-btn" data-slot="armor">X</button></div>
+                    <div class="equip-slot-wrapper" id="mannequin-gloves"><div class="equip-slot" data-slot="gloves"><span>+</span></div><div class="equip-slot-label">Gloves</div><button class="equip-remove-btn" data-slot="gloves">X</button></div>
+                    <div class="equip-slot-wrapper" id="mannequin-implant"><div class="equip-slot" data-slot="implant"><span>+</span></div><div class="equip-slot-label">Implant</div><button class="equip-remove-btn" data-slot="implant">X</button></div>
+                    <div class="equip-slot-wrapper" id="mannequin-boots"><div class="equip-slot" data-slot="boots"><span>+</span></div><div class="equip-slot-label">Boots</div><button class="equip-remove-btn" data-slot="boots">X</button></div>
                 </div>
                 
                 <h4>TOTAL ATTRIBUTES</h4>
@@ -130,171 +108,153 @@
             </div>
 
             <div id="workshop-panel" class="panel">
-                <h3>WORKSHOP</h3>
                 
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="equipments">Equipments</button>
-                    <button class="tab-btn" data-tab="components">Components</button>
-                    <button class="tab-btn" data-tab="materials">Materials</button>
-                    <button class="tab-btn" data-tab="refine">Refine</button>
-                    <button class="tab-btn" data-tab="craft">Craft</button>
-                    <button class="tab-btn" data-tab="embed">Embed</button>
+                <div class="tabs main-tabs">
+                    <button class="tab-btn active" data-main-tab="inventory">INVENTORY</button>
+                    <button class="tab-btn" data-main-tab="workshop">WORKSHOP</button>
                 </div>
 
-                <div id="tab-equipments" class="tab-content active">
+                <div id="main-tab-inventory" class="main-tab-content active">
+                    
+                    <div class="tabs sub-tabs">
+                        <button class="tab-btn active" data-sub-tab="inv-equipments">Equipments</button>
+                        <button class="tab-btn" data-sub-tab="inv-components">Components</button>
+                        <button class="tab-btn" data-sub-tab="inv-materials">Materials</button>
                     </div>
-                <div id="tab-components" class="tab-content">
+
+                    <div id="sub-tab-inv-equipments" class="sub-tab-content active">
+                        <p>Equipment list goes here (Image, Title, Attributes, Category, Level)...</p>
                     </div>
-                <div id="tab-materials" class="tab-content">
+                    
+                    <div id="sub-tab-inv-components" class="sub-tab-content">
+                        <p>Component list goes here (Image, Info)...</p>
                     </div>
-                <div id="tab-refine" class="tab-content">
+
+                    <div id="sub-tab-inv-materials" class="sub-tab-content">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materials-table-body">
+                                </tbody>
+                        </table>
                     </div>
-                <div id="tab-craft" class="tab-content">
+                </div>
+
+                <div id="main-tab-workshop" class="main-tab-content">
+                    
+                    <div class="tabs sub-tabs">
+                        <button class="tab-btn active" data-sub-tab="ws-refine">Refine</button>
+                        <button class="tab-btn" data-sub-tab="ws-craft">Craft</button>
+                        <button class="tab-btn" data-sub-tab="ws-embed">Embed</button>
                     </div>
-                <div id="tab-embed" class="tab-content">
+
+                    <div id="sub-tab-ws-refine" class="sub-tab-content active">
+                        <h4>Refine Materials into Components</h4>
+                        <div class="refine-ui">
+                            <div class="refine-grid">
+                                <div class="refine-slot"></div><div class="refine-slot"></div><div class="refine-slot"></div>
+                                <div class="refine-slot"></div><div class="refine-slot"></div><div class="refine-slot"></div>
+                                <div class="refine-slot"></div><div class="refine-slot"></div><div class="refine-slot"></div>
+                            </div>
+                            <span class="refine-arrow">→</span>
+                            <div class="refine-result">
+                                <div class="refine-slot"></div>
+                            </div>
+                        </div>
+                        <button id="refine-btn" class="action-btn" disabled>Refine</button>
                     </div>
-            </div>
-        </div>
-    </section>
+
+                    <div id="sub-tab-ws-craft" class="sub-tab-content">
+                        <h4>Craft or Upgrade Equipment</h4>
+                        <div class="craft-container">
+                            <div id="craft-recipe-list" class="craft-recipe-list panel">
+                                <p>Recipe List...</p>
+                            </div>
+                            <div id="craft-recipe-details" class="craft-recipe-details panel">
+                                <p>Select a recipe to see details.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sub-tab-ws-embed" class="sub-tab-content">
+                        <h4>Embed Component into Equipment</h4>
+                        <div class="embed-ui">
+                            <div id="embed-slot-gear" class="embed-slot panel">
+                                <span>Select Empty Equipment</span>
+                                </div>
+                            <span class="embed-plus">+</span>
+                            <div id="embed-slot-component" class="embed-slot panel">
+                                <span>Select Component</span>
+                                </div>
+                        </div>
+                        <button id="embed-btn" class="action-btn" disabled>Embed Component</button>
+                    </div>
+
+                </div> </div> </div> </section>
 
     <section id="game-screen" class="screen" style="display: none;">
         <div class="game-container">
-            
             <section id="status-panel" class="panel">
                 <h4>🤖 ACTIVE KID</h4>
-                <div class="info-section kid-identity">
-                    <div id="game-kid-image">
-                        <img src="images/kid-placeholder.png" alt="Kid in game">
-                    </div>
-                    <div class="kid-identity-details">
-                        <p><strong>Tribe:</strong> <span id="game-kid-tribe">?</span></p>
-                        <p><strong>ID:</strong> <span id="game-kid-id">#000</span></p>
-                    </div>
-                </div>
-                <div class="info-section">
-                    <h4>Attributes</h4>
-                    <div class="hp-bar-container">
-                        <div id="game-hp-bar-fill" class="hp-bar-fill"></div>
-                        <span id="game-hp-bar-text" class="hp-bar-text">100 / 100</span>
-                    </div>
-                    <div id="game-stats-display" class="stats-grid">
-                        </div>
-                </div>
-                <div class="info-section">
-                    <h4>Resources Found (This Trip)</h4>
-                    <ul id="game-resource-list">
-                        <li>No resources found yet.</li>
-                    </ul>
-                </div>
+                <div class="info-section kid-identity"><div id="game-kid-image"><img src="images/kid-placeholder.png" alt="Kid in game"></div><div class="kid-identity-details"><p><strong>Tribe:</strong> <span id="game-kid-tribe">?</span></p><p><strong>ID:</strong> <span id="game-kid-id">#000</span></p></div></div>
+                <div class="info-section"><h4>Attributes</h4><div class="hp-bar-container"><div id="game-hp-bar-fill" class="hp-bar-fill"></div><span id="game-hp-bar-text" class="hp-bar-text">100 / 100</span></div><div id="game-stats-display" class="stats-grid"></div></div>
+                <div class="info-section"><h4>Resources Found (This Trip)</h4><ul id="game-resource-list"><li>No resources found yet.</li></ul></div>
                 <button id="exit-expedition-btn" class="action-btn">End Expedition</button>
             </section>
-
             <section id="map-panel" class="panel">
                 <h3>🗺️ WASTELAND: DAY <span id="turn-counter">1</span>/10</h3> 
-                <div id="game-map-container" class="hex-map-container">
-                    <div id="game-map-content">
-                        </div>
-                </div>
+                <div id="game-map-container" class="hex-map-container"><div id="game-map-content"></div></div>
             </section>
-
             <section id="action-panel" class="panel">
                 <h4>⚙️ ACTIONS & LOG</h4>
-                <div class="ap-mp-display">
-                    <div id="ap-display">AP: <span id="game-kid-ap">0</span>/<span id="game-kid-max-ap">0</span></div>
-                    <div id="mp-display">MP: <span id="game-kid-mp">0</span>/<span id="game-kid-max-mp">0</span></div>
-                </div>
-                <div class="action-buttons">
-                    <button id="collect-btn" class="action-btn" disabled><span>⛏️</span> Collect Resource (1 AP)</button>
-                    <button id="investigate-btn" class="action-btn" disabled><span>👁️</span> Investigate (1 AP)</button>
-                    <button id="search-enemy-btn" class="action-btn" disabled><span>🔊</span> Search Enemy (2 AP)</button>
-                    <button id="end-turn-btn" class="action-btn" disabled><span>⏩</span> End Day / Recharge</button>
-                </div>
-                <div class="game-options">
-                    <input type="checkbox" id="skip-animations-check">
-                    <label for="skip-animations-check">Skip Action Animations</label>
-                </div>
-                <div id="game-log">
-                    <p class="log-entry">[Console]: Ready to start the Expedition!</p>
-                </div>
+                <div class="ap-mp-display"><div id="ap-display">AP: <span id="game-kid-ap">0</span>/<span id="game-kid-max-ap">0</span></div><div id="mp-display">MP: <span id="game-kid-mp">0</span>/<span id="game-kid-max-mp">0</span></div></div>
+                <div class="action-buttons"><button id="collect-btn" class="action-btn" disabled><span>⛏️</span> Collect Resource (1 AP)</button><button id="investigate-btn" class="action-btn" disabled><span>👁️</span> Investigate (1 AP)</button><button id="search-enemy-btn" class="action-btn" disabled><span>🔊</span> Search Enemy (2 AP)</button><button id="end-turn-btn" class="action-btn" disabled><span>⏩</span> End Day / Recharge</button></div>
+                <div class="game-options"><input type="checkbox" id="skip-animations-check"><label for="skip-animations-check">Skip Action Animations</label></div>
+                <div id="game-log"><p class="log-entry">[Console]: Ready to start the Expedition!</p></div>
             </section>
         </div>
     </section>
 
     <div id="equipment-select-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <h2 id="modal-equip-title">Select Equipment</h2>
-            <button id="modal-equip-close" class="modal-close-btn">X</button>
-            <div id="modal-equip-list">
-                </div>
-        </div>
+        <div class="modal-content"><h2 id="modal-equip-title">Select Equipment</h2><button id="modal-equip-close" class="modal-close-btn">X</button><div id="modal-equip-list"></div></div>
     </div>
 
     <div id="edit-name-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <h2>Edit Kid Name</h2>
-            <input type="text" id="edit-name-input" placeholder="Enter new name...">
-            <div class="modal-actions">
-                <button id="edit-name-cancel" class="action-btn small-btn">Cancel</button>
-                <button id="edit-name-save" class="action-btn small-btn demo-btn">Save</button>
-            </div>
-        </div>
+        <div class="modal-content"><h2>Edit Kid Name</h2><input type="text" id="edit-name-input" placeholder="Enter new name..."><div class="modal-actions"><button id="edit-name-cancel" class="action-btn small-btn">Cancel</button><button id="edit-name-save" class="action-btn small-btn demo-btn">Save</button></div></div>
     </div>
 
     <div id="action-feedback-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content feedback-modal">
-            <h3 id="feedback-title">Investigating...</h3>
-            <p id="feedback-description">You found 5x Scrap!</p>
-            </div>
+        <div class="modal-content feedback-modal"><h3 id="feedback-title">Investigating...</h3><p id="feedback-description">You found 5x Scrap!</p></div>
     </div>
 
     <div id="combat-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content combat-modal">
-            <div id="combat-phase-battle">
-                <h2>COMBAT INITIATED!</h2>
-                <div class="combat-arena">
-                    <div class="combatant" id="combat-player">
-                        <img src="images/kid-combat-sprite.png" alt="Player Kid">
-                        <h4>Your Kid</h4>
-                        <div class="hp-bar-container">
-                            <div id="combat-player-hp-fill" class="hp-bar-fill"></div>
-                            <span id="combat-player-hp-text" class="hp-bar-text">100 / 100</span>
-                        </div>
-                    </div>
-                    <div class="combatant" id="combat-enemy">
-                        <img src="images/drone-sprite.png" alt="Enemy">
-                        <h4 id="combat-enemy-name">CKC Drone</h4>
-                        <div class="hp-bar-container">
-                            <div id="combat-enemy-hp-fill" class="hp-bar-fill"></div>
-                            <span id="combat-enemy-hp-text" class="hp-bar-text">15 / 15</span>
-                        </div>
-                    </div>
-                </div>
-                <div id="combat-log">
-                    <p>Drone is preparing to attack!</p>
-                </div>
-                <div id="combat-actions" class="modal-actions">
-                    <button id="combat-attack-btn" class="action-btn">Attack</button>
-                    <button id="combat-flee-btn" class="action-btn">Flee</button>
-                </div>
-            </div>
+        <div class="modal-content combat-modal"><div id="combat-phase-battle"><h2>COMBAT INITIATED!</h2><div class="combat-arena"><div class="combatant" id="combat-player"><img src="images/kid-combat-sprite.png" alt="Player Kid"><h4>Your Kid</h4><div class="hp-bar-container"><div id="combat-player-hp-fill" class="hp-bar-fill"></div><span id="combat-player-hp-text" class="hp-bar-text">100 / 100</span></div></div><div class="combatant" id="combat-enemy"><img src="images/drone-sprite.png" alt="Enemy"><h4 id="combat-enemy-name">CKC Drone</h4><div class="hp-bar-container"><div id="combat-enemy-hp-fill" class="hp-bar-fill"></div><span id="combat-enemy-hp-text" class="hp-bar-text">15 / 15</span></div></div></div><div id="combat-log"><p>Drone is preparing to attack!</p></div><div id="combat-actions" class="modal-actions"><button id="combat-attack-btn" class="action-btn">Attack</button><button id="combat-flee-btn" class="action-btn">Flee</button></div></div><div id="combat-phase-victory" style="display: none;"><h2>VICTORY!</h2><p>You defeated the <span id="victory-enemy-name">Drone</span>.</p><h4>Rewards:</h4><ul id="victory-reward-list"></ul><button id="combat-close-victory-btn" class="action-btn">Close</button></div><div id="combat-phase-defeat" style="display: none;"><h2>EXPEDITION FAILED</h2><p>Your Kid has been decommissioned.</p><p>All resources found on this expedition are lost.</p><button id="combat-return-hub-btn" class="action-btn">Return to Hub</button></div></div>
+    </div>
 
-            <div id="combat-phase-victory" style="display: none;">
-                <h2>VICTORY!</h2>
-                <p>You defeated the <span id="victory-enemy-name">Drone</span>.</p>
-                <h4>Rewards:</h4>
-                <ul id="victory-reward-list">
-                    </ul>
-                <button id="combat-close-victory-btn" class="action-btn">Close</button>
+    <div id="embed-confirm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Confirm Embed</h2>
+            <p>Are you sure you want to embed the component?</p>
+            <div class="embed-comparison">
+                <div id="embed-before">
+                    <h4>Before</h4>
+                    </div>
+                <div id="embed-after">
+                    <h4>After</h4>
+                    </div>
             </div>
-
-            <div id="combat-phase-defeat" style="display: none;">
-                <h2>EXPEDITION FAILED</h2>
-                <p>Your Kid has been decommissioned.</p>
-                <p>All resources found on this expedition are lost.</p>
-                <button id="combat-return-hub-btn" class="action-btn">Return to Hub</button>
+            <div class="modal-actions">
+                <button id="embed-cancel-btn" class="action-btn small-btn">Cancel</button>
+                <button id="embed-confirm-btn" class="action-btn small-btn demo-btn">Confirm & Embed</button>
             </div>
         </div>
     </div>
+
 
     <footer id="main-footer">
         <p>All rights reserved to CyberKidz Club. Created by Tropic Forge Studios.</p>
