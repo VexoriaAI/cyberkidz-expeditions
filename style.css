@@ -18,8 +18,8 @@
     --color-mp-bar: #3a8cff; /* Azul para MP */
 
     /* Variáveis do Mapa Hexagonal */
-    --hex-size: 50px; 
-    --hex-height: calc(var(--hex-size) * 1.1547); 
+    --hex-size: 50px; /* Largura do hexágono (w) */
+    --hex-height: calc(var(--hex-size) * 1.732);
 }
 
 * {
