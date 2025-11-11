@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - CSS
-// VERSÃO 4.0 (Image Map / Correção de Visualização)
+// VERSÃO 4.1 (Correção de Image Map e Botões)
 // ==================================================================== */
 
 /* ==================================================================== */
@@ -18,8 +18,9 @@
     --color-mp-bar: #3a8cff; /* Azul para MP */
 
     /* Variáveis do Mapa Hexagonal (Baseado no JS: HEX_SIZE_VISUAL = 50px) */
-    --hex-visual-size: 50px;
+    --hex-visual-size: 50px; /* Raio (metade da largura) */
     --hex-visual-width: calc(var(--hex-visual-size) * 2); /* 100px */
+    /* Altura = size * sqrt(3) */
     --hex-visual-height: calc(var(--hex-visual-size) * 1.732); /* ~86.6px */
 }
 
@@ -278,12 +279,13 @@ p {
 #map-panel { display: flex; flex-direction: column; padding: 10px; }
 #map-panel h3 { margin: 5px 10px; flex-shrink: 0; }
 
+/* Contêiner do Mapa */
 #game-map-container {
     position: relative; 
     width: 100%;
-    /* Altura definida pela proporção da imagem (ajuste conforme necessário) */
-    /* Ex: Se a imagem tiver 500x400, e a largura for 100%, a altura deve ser 80% */
-    padding-top: 80%; /* 80% (relação 5:4) -> 400/500 */
+    /* Truque de proporção (padding-top): 80% = 4:5 (400px altura / 500px largura) */
+    /* Ajuste este valor para corresponder à proporção da sua imagem */
+    padding-top: 80%; 
     overflow: hidden; 
     background-color: #000;
     flex-grow: 1; 
@@ -300,35 +302,33 @@ p {
     height: 100%; /* Ocupa 100% do container */
 }
 
-/* Garante que a imagem do mapa se ajuste */
+/* CORREÇÃO: Força a imagem a preencher o contêiner, mesmo que distorça */
 #map-image {
-    object-fit: fill; /* Força a imagem a preencher 100% do container */
+    object-fit: fill; 
 }
 
 /* Estilo para cada hexágono de neblina (Div de overlay) */
 .hex-fog {
     position: absolute;
+    /* Tamanho baseado nas variáveis Root (100px x 86.6px) */
     width: var(--hex-visual-width); 
     height: var(--hex-visual-height);
     
+    /* Forma de Hexágono Pointy Top */
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    transform: translate(-50%, -50%); 
+    transform: translate(-50%, -50%); /* Centraliza o div no ponto (x,y) do JS */
     
-    background-color: rgba(0, 0, 0, 0.9); 
-    pointer-events: none; 
+    background-color: rgba(0, 0, 0, 0.9); /* Cor da Neblina */
+    pointer-events: none; /* Não bloqueia o clique na imagem abaixo */
     
-    /* MUDANÇA: Começa LIGADO (opacidade 1) */
+    /* CORREÇÃO: Começa LIGADO (opacidade 1) */
     opacity: 1; 
     transition: opacity 0.5s ease;
 }
 
+/* CORREÇÃO: Nova classe para REMOVER a neblina */
 .hex-fog.revealed {
     opacity: 0;
-}
-
-/* Estado da Neblina Ativa */
-.hex-fog.fog-active {
-    opacity: 1;
 }
 
 /* Marcador do Jogador */
@@ -341,7 +341,6 @@ p {
     pointer-events: none;
     z-index: 10;
 }
-
 
 /* --- Coluna Direita: Actions & Log --- */
 #action-panel { display: flex; flex-direction: column; }
@@ -403,7 +402,6 @@ p {
 .combat-modal { max-width: 800px; }
 .combat-arena { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
 
-/* "VS" entre os combatentes */
 .combat-vs {
     font-size: 2.5em;
     font-weight: bold;
@@ -415,30 +413,27 @@ p {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 35%; /* Reduzido */
+    width: 35%; 
 }
-/* Imagem reduzida em 50% */
 .combatant img {
     width: 100%;
-    max-width: 100px; /* Reduzido de 200px */
+    max-width: 100px; 
     height: auto;
     margin-bottom: 10px;
 }
 .combatant h4 { font-size: 1.1em; color: var(--color-accent-red); }
 .combatant .hp-bar-container {
     width: 100%;
-    max-width: 150px; /* Ajustado */
+    max-width: 150px; 
 }
 .combatant.hit { animation: hit-shake 0.3s ease; }
 @keyframes hit-shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px) rotate(-2deg); } 50% { transform: translateX(10px) rotate(2deg); } 100% { transform: translateX(0); } }
 
 #combat-log { height: 100px; overflow-y: scroll; background-color: #111; border: 1px solid #444; padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 0.9em; }
 
-/* Ajuste para 3 botões */
 #combat-actions {
     justify-content: space-around;
 }
-/* Botão Auto Attack Ativo */
 #combat-auto-btn.auto-active {
     background-color: #ff9d00;
     color: var(--color-text-dark);
@@ -483,7 +478,6 @@ p {
 
     /* Ajuste do Mapa para Mobile (Image Map) */
     #game-map-container {
-        /* Reduz a proporção (pode precisar de ajuste fino) */
         padding-top: 100%; /* 1:1 ratio */
     }
 }
