@@ -373,9 +373,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Funções Auxiliares do Mapa Hexagonal ---
     function axialToPixel(q, r) {
-        const size = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size')) / 2;
-        const x = size * (3/2 * q);
-        const y = size * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r);
+        // Pegamos a largura completa (var(--hex-size) ) e a altura (var(--hex-height))
+        const hexWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-size'));
+        const hexHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hex-height'));
+    
+        // A compensação é baseada na largura (3/4 da largura total por coluna)
+        const x = hexWidth * (3/4 * q); 
+        
+        // A compensação vertical depende de Q (para o offset) e de R (para a linha)
+        // q/2 faz a compensação de offset (metade da altura) a cada nova coluna
+        const y = hexHeight * (r + q / 2); 
+        
         return { x, y };
     }
     function axialDistance(q1, r1, q2, r2) {
