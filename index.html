@@ -44,8 +44,7 @@
                 <input type="text" id="filter-search" placeholder="Search by Name or ID...">
                 <select id="filter-tribe">
                     <option value="all">All Tribes</option>
-                    <option value="Volcanics">Volcanics</option>
-                    </select>
+                </select>
                 <select id="filter-items-per-page">
                     <option value="10">10 per page</option>
                     <option value="20">20 per page</option>
@@ -108,14 +107,12 @@
             </div>
 
             <div id="workshop-panel" class="panel">
-                
                 <div class="tabs main-tabs">
                     <button class="tab-btn active" data-main-tab="inventory">INVENTORY</button>
                     <button class="tab-btn" data-main-tab="workshop">WORKSHOP</button>
                 </div>
 
                 <div id="main-tab-inventory" class="main-tab-content active">
-                    
                     <div class="tabs sub-tabs">
                         <button class="tab-btn active" data-sub-tab="inv-equipments">Equipments</button>
                         <button class="tab-btn" data-sub-tab="inv-components">Components</button>
@@ -123,21 +120,15 @@
                     </div>
 
                     <div id="sub-tab-inv-equipments" class="sub-tab-content active">
-                        <p>Equipment list goes here (Image, Title, Attributes, Category, Level)...</p>
+                        <p>Equipment list goes here...</p>
                     </div>
-                    
                     <div id="sub-tab-inv-components" class="sub-tab-content">
-                        <p>Component list goes here (Image, Info)...</p>
+                        <p>Component list goes here...</p>
                     </div>
-
                     <div id="sub-tab-inv-materials" class="sub-tab-content">
                         <table class="inventory-table">
                             <thead>
-                                <tr>
-                                    <th>Image</th>
-                                    <th>Name</th>
-                                    <th>Quantity</th>
-                                </tr>
+                                <tr><th>Image</th><th>Name</th><th>Quantity</th></tr>
                             </thead>
                             <tbody id="materials-table-body">
                                 </tbody>
@@ -146,7 +137,6 @@
                 </div>
 
                 <div id="main-tab-workshop" class="main-tab-content">
-                    
                     <div class="tabs sub-tabs">
                         <button class="tab-btn active" data-sub-tab="ws-refine">Refine</button>
                         <button class="tab-btn" data-sub-tab="ws-craft">Craft</button>
@@ -186,16 +176,18 @@
                         <div class="embed-ui">
                             <div id="embed-slot-gear" class="embed-slot panel">
                                 <span>Select Empty Equipment</span>
-                                </div>
+                            </div>
                             <span class="embed-plus">+</span>
                             <div id="embed-slot-component" class="embed-slot panel">
                                 <span>Select Component</span>
-                                </div>
+                            </div>
                         </div>
                         <button id="embed-btn" class="action-btn" disabled>Embed Component</button>
                     </div>
-
-                </div> </div> </div> </section>
+                </div>
+            </div> 
+        </div> 
+    </section>
 
     <section id="game-screen" class="screen" style="display: none;">
         <div class="game-container">
@@ -206,19 +198,18 @@
                 <div class="info-section"><h4>Resources Found (This Trip)</h4><ul id="game-resource-list"><li>No resources found yet.</li></ul></div>
                 <button id="exit-expedition-btn" class="action-btn">End Expedition</button>
             </section>
+            
             <section id="map-panel" class="panel">
                 <h3>🗺️ WASTELAND: DAY <span id="turn-counter">1</span>/10</h3> 
                 <div id="game-map-container" class="hex-map-container">
                     <img id="map-image" src="images/wasteland_map_full.png" alt="Wasteland Hex Map" usemap="#wasteland-map-areas">
-                    
                     <map name="wasteland-map-areas" id="map-areas">
                         </map>
-                    
                     <div id="fog-of-war-overlay" class="fog-overlay">
                         </div>
-            
                 </div>
             </section>
+
             <section id="action-panel" class="panel">
                 <h4>⚙️ ACTIONS & LOG</h4>
                 <div class="ap-mp-display"><div id="ap-display">AP: <span id="game-kid-ap">0</span>/<span id="game-kid-max-ap">0</span></div><div id="mp-display">MP: <span id="game-kid-mp">0</span>/<span id="game-kid-max-mp">0</span></div></div>
@@ -242,11 +233,7 @@
     </div>
 
     <div id="combat-modal" class="modal-overlay" style="display: none;">
-        </div>
-
-<div id="combat-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content combat-modal">
-            
             <div id="combat-phase-battle">
                 <h2>COMBAT INITIATED!</h2>
                 <div class="combat-arena">
@@ -258,9 +245,7 @@
                             <span id="combat-player-hp-text" class="hp-bar-text">100 / 100</span>
                         </div>
                     </div>
-
                     <span class="combat-vs">VS</span>
-
                     <div class="combatant" id="combat-enemy">
                         <img src="images/drone-sprite.png" alt="Enemy">
                         <h4 id="combat-enemy-name">CKC Drone</h4>
@@ -270,25 +255,20 @@
                         </div>
                     </div>
                 </div>
-                <div id="combat-log">
-                    <p>Drone is preparing to attack!</p>
-                </div>
+                <div id="combat-log"><p>...</p></div>
                 <div id="combat-actions" class="modal-actions">
                     <button id="combat-attack-btn" class="action-btn">Attack</button>
                     <button id="combat-auto-btn" class="action-btn demo-btn">Auto Attack</button>
                     <button id="combat-flee-btn" class="action-btn">Flee</button>
                 </div>
             </div>
-
             <div id="combat-phase-victory" style="display: none;">
                 <h2>VICTORY!</h2>
                 <p>You defeated the <span id="victory-enemy-name">Drone</span>.</p>
                 <h4>Rewards:</h4>
-                <ul id="victory-reward-list">
-                    </ul>
+                <ul id="victory-reward-list"></ul>
                 <button id="combat-close-victory-btn" class="action-btn">Close</button>
             </div>
-
             <div id="combat-phase-defeat" style="display: none;">
                 <h2>EXPEDITION FAILED</h2>
                 <p>Your Kid has been decommissioned.</p>
@@ -298,6 +278,20 @@
         </div>
     </div>
 
+    <div id="embed-confirm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Confirm Embed</h2>
+            <p>Are you sure you want to embed the component?</p>
+            <div class="embed-comparison">
+                <div id="embed-before"><h4>Before</h4></div>
+                <div id="embed-after"><h4>After</h4></div>
+            </div>
+            <div class="modal-actions">
+                <button id="embed-cancel-btn" class="action-btn small-btn">Cancel</button>
+                <button id="embed-confirm-btn" class="action-btn small-btn demo-btn">Confirm & Embed</button>
+            </div>
+        </div>
+    </div>
 
     <footer id="main-footer">
         <p>All rights reserved to CyberKidz Club. Created by Tropic Forge Studios.</p>
