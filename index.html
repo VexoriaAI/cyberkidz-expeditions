@@ -15,7 +15,6 @@
     <header>
         <h1>CYBERKIDZ CLUB: EXPEDITION</h1>
         <div id="wallet-status">
-            <!-- NOVO: Display de Tezerium -->
             <div id="tezerium-display">
                 <span>💎</span> Tezerium: <span id="tezerium-balance">1000</span>
             </div>
@@ -28,7 +27,6 @@
     <!-- ==================================================================== -->
     <section id="logged-out-screen" class="screen">
         <div class="landing-container panel">
-            <!--  -->
             <h2>WELCOME TO THE WASTELAND</h2>
             <p>Connect your wallet to load your Kidz or play the Demo.</p>
             <button id="connect-wallet-btn" class="action-btn">Connect Wallet</button>
@@ -59,25 +57,19 @@
             <!-- Coluna Central: Detalhes do Kid e Equipamento -->
             <div id="equipment-panel" class="panel">
                 
-                <!-- Placeholder: Mostrado antes do clique -->
                 <div id="kid-details-placeholder">
                     <p>← Select a Kid from the list to view details and equip items.</p>
                 </div>
                 
-                <!-- Conteúdo Principal: Mostrado após o clique -->
                 <div id="kid-details-content" style="display: none;">
                     
-                    <!-- Nome Editável -->
                     <h3>
                         <span id="dash-kid-name">Kid Name</span>
                         <span id="edit-name-icon" title="Edit Name"> ✏️</span>
                     </h3>
                     
-                    <!-- Detalhes Visuais (Imagem, ID, Tribo) -->
                     <div class="kid-details-header">
-                        <div id="dash-kid-image">
-                            <!-- JS insere a <img> aqui -->
-                        </div>
+                        <div id="dash-kid-image"></div>
                         <div class="kid-details-info">
                             <p><strong>ID:</strong> <span id="dash-kid-id">#000</span></p>
                             <p><strong>Tribe:</strong> <span id="dash-kid-tribe">?</span></p>
@@ -86,7 +78,6 @@
                     
                     <hr>
                     
-                    <!-- Slots de Equipamento (7) -->
                     <h4>Equipment</h4>
                     <div class="equipment-grid">
                         <div class="equip-slot" id="equip-slot-helmet"><span>Helmet</span></div>
@@ -98,17 +89,16 @@
                         <div class="equip-slot" id="equip-slot-boots"><span>Boots</span></div>
                     </div>
                     
-                    <!-- Stats Finais -->
                     <div class="stats-display">
                         <h4>Total Attributes</h4>
                         <p>Damage: <span id="dash-stat-dmg">0</span></p>
                         <p>Defense: <span id="dash-stat-def">0</span></p>
                         <p>Crit Chance: <span id="dash-stat-crit">0%</span></p>
-                        <p>Drop Chance: <span id="dash-stat-drop">0%</span></p>
+                        <!-- ATUALIZADO AQUI -->
+                        <p>Luck: <span id="dash-stat-luck">0%</span></p>
                         <!-- (Restante dos 8 atributos) -->
                     </div>
                     
-                    <!-- Botão de Iniciar -->
                     <button id="start-expedition-btn" class="action-btn" style="margin-top: 20px;" disabled>Start Expedition</button>
                 </div>
             </div>
@@ -149,31 +139,24 @@
     <section id="game-screen" class="screen" style="display: none;">
         <main class="game-container">
             
-            <!-- Painel Esquerdo: Status do Kid (REESTRUTURADO) -->
             <section id="status-panel" class="panel">
                 <h3>🤖 ACTIVE KID</h3>
                 <div id="kid-info">
                     
-                    <!-- Seção 1: Kid Info -->
                     <div class="info-section kid-identity">
-                        <div id="kid-image-container">
-                            <!-- JS insere <img> -->
-                        </div>
+                        <div id="kid-image-container"></div>
                         <div class="kid-identity-details">
                             <p><strong>Tribe:</strong> <span id="kid-tribe">?</span></p>
                             <p><strong>ID:</strong> <span id="kid-id">#000</span></p>
                         </div>
                     </div>
 
-                    <!-- Seção 2: Attributes -->
                     <div class="info-section">
                         <h4>Attributes</h4>
-                        <!-- Nova Barra de HP -->
                         <div class="hp-bar-container">
                             <div id="hp-bar-fill" class="hp-bar-fill"></div>
                             <span id="hp-bar-text" class="hp-bar-text">100 / 100</span>
                         </div>
-                        <!-- Grid de Stats -->
                         <div class="stats-grid">
                             <p><strong>Strength:</strong> <span id="kid-strength">0</span></p>
                             <p><strong>Defense:</strong> <span id="kid-defense">0</span></p>
@@ -182,24 +165,20 @@
                             <p><strong>Atk Speed:</strong> <span id="kid-atk-speed">0</span></p>
                             <p><strong>HP Regen:</strong> <span id="kid-hp-regen">0</span></p>
                             <p><strong>Block:</strong> <span id="kid-block">0%</span></p>
-                            <p><strong>Drop Chance:</strong> <span id="kid-drop-chance">0%</span></p>
+                            <!-- ATUALIZADO AQUI -->
+                            <p><strong>Luck:</strong> <span id="kid-luck">0%</span></p>
                         </div>
                     </div>
 
-                    <!-- Seção 3: Resources Found -->
                     <div class="info-section">
                         <h4>Resources Found (This Trip)</h4>
-                        <ul id="resource-list">
-                            <!-- JS vai listar apenas os recursos encontrados -->
-                        </ul>
+                        <ul id="resource-list"></ul>
                     </div>
                     
-                    <!-- Botão de Sair -->
                     <button id="exit-expedition-btn" class="action-btn">End Expedition</button>
                 </div>
             </section>
 
-            <!-- Painel Central: Mapa de Jogo (Hexagonal) -->
             <section id="map-panel" class="panel">
                 <h3>🗺️ WASTELAND: DAY <span id="turn-counter">0</span>/10</h3> 
                 <div id="game-map" class="hex-map-container">
@@ -207,11 +186,9 @@
                 </div>
             </section>
 
-            <!-- Painel Direito: Console de Ações e Log (REESTRUTURADO) -->
             <section id="action-panel" class="panel">
                 <h3>⚙️ ACTIONS & LOG</h3>
                 
-                <!-- AP e MP Movidos para cá -->
                 <div class="ap-mp-display">
                     <div id="ap-display">AP: <span id="kid-ap">0</span>/<span id="kid-max-ap">0</span></div>
                     <div id="mp-display">MP: <span id="kid-mp">0</span>/<span id="kid-max-mp">0</span></div>
