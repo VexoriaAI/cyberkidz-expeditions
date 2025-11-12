@@ -1,23 +1,17 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.9 (Correção do Bug de Inicialização/Carregamento do DB)
+// VERSÃO 5.0 (Correção do Bug de Carregamento de Banco de Dados)
 // ==================================================================== */
 
-// ** CORREÇÃO V4.9: **
-// Movemos as definições de DB (que dependem de outros arquivos)
-// PARA DENTRO do listener 'DOMContentLoaded'.
-// Isso garante que os arquivos (ex: database/equipment.js) 
-// sejam carregados ANTES de tentarmos usá-los.
-
 /* ==================================================================== */
-/* SEÇÃO 1: BANCO DE DADOS E CONSTANTES (Definições Globais)
+/* SEÇÃO 1: DEFINIÇÕES GLOBAIS (Seguras para carregar)
 /* ==================================================================== */
 
+// Estas constantes não dependem de nenhum outro arquivo
 const MAX_DAYS = 10;
 const MAX_PLACEHOLDER_IMAGES_PER_TRIBE = 5;
 const HEX_SIZE_VISUAL = 50; 
 
-// --- 1.1: Atributos Base das Tribos (Seguro definir aqui) ---
 const TRIBES = {
     VOLCANICS: { name: "Volcanics", biome: "volcanics", baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 15, attackSpeed: 1, hpRegen: 1, ap: 5, hp: 110, luck: 1 } },
     UNDERGROUNDERS: { name: "Undergrounders", biome: "undergrounders", baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 6, hp: 120, luck: 2 } },
@@ -26,7 +20,6 @@ const TRIBES = {
     REPTILIANS: { name: "Reptilians", biome: "reptilians", baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 5, hp: 100, luck: 2 } }
 };
 
-// --- 1.2: Biomas (Seguro definir aqui) ---
 const BIOMES = {
     volcanics: { name: "Burning Ridge", resource: "mat_metal" }, 
     reptilians: { name: "Covenant Swamp", resource: "mat_food" },
@@ -36,10 +29,6 @@ const BIOMES = {
     wasteland: { name: "Wasteland", resource: "mat_scrap" }
 };
 
-// --- 1.3: Inimigos, Spawns, Drops, Equipamentos, Componentes ---
-// Carregados via <script> tags no index.html
-
-// --- 1.4: Banco de Dados de Materiais (Seguro definir aqui) ---
 const MATERIALS_DB = {
     'mat_metal': { name: "Metal", icon: "images/icons/materials/mat_metal.png" },
     'mat_magma': { name: "Magma", icon: "images/icons/materials/mat_magma.png" },
@@ -65,12 +54,10 @@ const MATERIALS_DB = {
     'mat_animal_skin': { name: "Animal Skin", icon: "images/icons/materials/mat_animal_skin.png" },
     'mat_reptilian_blood': { name: "Reptilian Blood", icon: "images/icons/materials/mat_reptilian_blood.png" }
 };
-
-// --- 1.5: Listas de Constantes (Seguro definir aqui) ---
+    
 const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
 const STATS_LIST = ['hp', 'ap', 'speed', 'damage', 'defense', 'critChance', 'critDamage', 'attackSpeed', 'hpRegen', 'blockChance', 'luck'];
 
-// --- 1.6: Definição do Mapa Estático ---
 const STATIC_MAP_DATA = new Map([
     ["-3,0", { biome: "volcanics" }], ["-3,1", { biome: "volcanics" }], ["-3,2", { biome: "volcanics" }],
     ["-2,-1", { biome: "volcanics" }], ["-2,0", { biome: "volcanics" }], ["-2,1", { biome: "volcanics" }],
@@ -89,7 +76,6 @@ const STATIC_MAP_DATA = new Map([
     ["3,-1", { biome: "reptilians" }], ["3,0", { biome: "reptilians" }],
 ]);
 
-// --- 1.7: Carteira Simulada ---
 const MOCK_WALLET = [
     { id: '#313', name: 'Blue Mutant', tribe: TRIBES.RADIOACTIVES, expeditions: 5, equipped: { helmet: 'h1', weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
     { id: '#222', name: 'Demo Nocturnal', tribe: TRIBES.NOCTURNALS, expeditions: 2, equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null } },
@@ -111,30 +97,32 @@ const MOCK_WALLET = [
 const DEMO_KID_ID = '#313';
 
 
-// ** CORREÇÃO V4.9: Variáveis dependentes movidas para dentro do listener **
-let COMPONENTS_DB_SAFE, EQUIPMENT_DB_SAFE, ITEM_DB, RECIPES_CRAFT;
-
-
+// ** CORREÇÃO V4.9: O JOGO COMEÇA AQUI **
+// O script espera o DOM (HTML) e todos os outros scripts (bancos de dados)
+// serem carregados antes de executar qualquer lógica.
 document.addEventListener('DOMContentLoaded', () => {
 
     /* ==================================================================== */
     /* SEÇÃO 1.9: PÓS-CARREGAMENTO DE BANCO DE DADOS
     /* ==================================================================== */
     
-    // ** CORREÇÃO V4.9: **
-    // Agora que o DOM (e os <script> tags) carregaram,
-    // podemos construir com segurança os bancos de dados
-    
-    COMPONENTS_DB_SAFE = (typeof COMPONENTS_DB !== 'undefined' ? COMPONENTS_DB : {});
-    EQUIPMENT_DB_SAFE = (typeof EQUIPMENT_DB !== 'undefined' ? EQUIPMENT_DB : {});
+    // Assegura que as variáveis carregadas existam
+    const COMPONENTS_DB_SAFE = (typeof COMPONENTS_DB !== 'undefined' ? COMPONENTS_DB : {});
+    const EQUIPMENT_DB_SAFE = (typeof EQUIPMENT_DB !== 'undefined' ? EQUIPMENT_DB : {});
+    const SYNERGY_MAP_SAFE = (typeof SYNERGY_MAP !== 'undefined' ? SYNERGY_MAP : {});
+    const ENEMIES_BY_BIOME_SAFE = (typeof ENEMIES_BY_BIOME !== 'undefined' ? ENEMIES_BY_BIOME : {});
+    const SPAWN_LOGIC_SAFE = (typeof SPAWN_LOGIC !== 'undefined' ? SPAWN_LOGIC : {});
+    const DROP_TABLES_SAFE = (typeof DROP_TABLES !== 'undefined' ? DROP_TABLES : {});
 
-    ITEM_DB = { 
+
+    // Combina todos os bancos de dados em um mestre (para UI)
+    const ITEM_DB = { 
         ...MATERIALS_DB, 
         ...COMPONENTS_DB_SAFE, 
         ...EQUIPMENT_DB_SAFE 
     };
 
-    RECIPES_CRAFT = {
+    const RECIPES_CRAFT = {
         "eq_rust_helmet": { name: "Rustic Helmet", cost: { "mat_scrap": 8, "mat_metal": 2 }, ...(EQUIPMENT_DB_SAFE["eq_rust_helmet"] || {}) },
         "eq_rust_weapon": { name: "Rustic Blade", cost: { "mat_scrap": 10, "mat_metal": 1 }, ...(EQUIPMENT_DB_SAFE["eq_rust_weapon"] || {}) }
     };
@@ -680,8 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funções de Ação do Hub (Modais) ---
     
     function openItemSelectionModal(context, defaultFilter = 'all') {
-        // Assegura que os DBs estão carregados
-        if (typeof EQUIPMENT_DB === 'undefined' || typeof COMPONENTS_DB === 'undefined' || typeof SYNERGY_MAP === 'undefined') {
+        if (typeof EQUIPMENT_DB_SAFE === 'undefined' || typeof COMPONENTS_DB_SAFE === 'undefined' || typeof SYNERGY_MAP === 'undefined') {
             console.error("ERRO: Bancos de dados (equipment.js, components.js, ou crafting_rules.js) não carregados!");
             return;
         }
@@ -1067,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const biome = STATIC_MAP_DATA.get(biomeKey).biome;
         const luck = gameState.expedition.stats.luck / 100;
         
-        const collectTable = DROP_TABLES[biome]?.collect;
+        const collectTable = DROP_TABLES_SAFE[biome]?.collect;
         if (!collectTable) {
             logMessage("This land is barren. Nothing to collect.", 'error');
             renderGameStatusPanel();
@@ -1110,7 +1097,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const biomeKey = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
         const biome = STATIC_MAP_DATA.get(biomeKey).biome;
-        const investigateTable = DROP_TABLES[biome]?.investigate;
+        const investigateTable = DROP_TABLES_SAFE[biome]?.investigate;
         
         if (!investigateTable) {
              logMessage("Investigation revealed nothing.");
@@ -1166,12 +1153,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getRandomEnemy(actionType) {
-        if (typeof SPAWN_LOGIC === 'undefined' || typeof ENEMIES_BY_BIOME === 'undefined') {
+        if (typeof SPAWN_LOGIC_SAFE === 'undefined' || typeof ENEMIES_BY_BIOME_SAFE === 'undefined') {
             console.error("ERRO: Bancos de dados (spawn_logic.js ou enemies.js) não carregados!");
             return null;
         }
         
-        const logic = SPAWN_LOGIC[actionType];
+        const logic = SPAWN_LOGIC_SAFE[actionType];
         if (!logic) return null;
 
         const roll = Math.random() * 100; 
@@ -1187,11 +1174,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const biomeKey = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
                 const biome = STATIC_MAP_DATA.get(biomeKey).biome;
                 
-                if (ENEMIES_BY_BIOME[biome] && ENEMIES_BY_BIOME[biome][tier.type]) {
-                    return JSON.parse(JSON.stringify(ENEMIES_BY_BIOME[biome][tier.type]));
+                if (ENEMIES_BY_BIOME_SAFE[biome] && ENEMIES_BY_BIOME_SAFE[biome][tier.type]) {
+                    return JSON.parse(JSON.stringify(ENEMIES_BY_BIOME_SAFE[biome][tier.type]));
                 } else {
                     console.warn(`Inimigo ${tier.type} não encontrado para bioma ${biome}. Usando fallback.`);
-                    return JSON.parse(JSON.stringify(ENEMIES_BY_BIOME["wasteland"]["common"]));
+                    return JSON.parse(JSON.stringify(ENEMIES_BY_BIOME_SAFE["wasteland"]["common"]));
                 }
             }
         }
