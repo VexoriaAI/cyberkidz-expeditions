@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.3 (Integração com Banco de Dados de Inimigos e Spawn)
+// VERSÃO 4.4 (Correção do Botão "Manage & Equip")
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,14 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- 1.3: Inimigos ---
-    // REMOVIDO: const ENEMIES = {...} agora é carregado de database/enemies.js
+    // Carregado de database/enemies.js
     
     // --- 1.4: Banco de Dados de Crafting ---
-    // (Precisaremos expandir isso para incluir os drops de boss, ex: 'volcanic_core')
     const MATERIALS = { scrap: { name: "Scrap", icon: "images/icon_scrap.png" }, water: { name: "Clean Water", icon: "images/icon_water.png" }, food: { name: "Food", icon: "images/icon_food.png" }, metal: { name: "Metal", icon: "images/icon_metal.png" } };
     const COMPONENTS = { volcanic_core: { name: "Volcanic Core", stats: { damage: 5 }, icon: "images/icon_component.png" }, defense_plate: { name: "Defense Plate", stats: { defense: 5 }, icon: "images/icon_component.png" } };
     
-    // Adicionando componentes dos drops (placeholders) ao DB
     COMPONENTS['volcanics_core'] = { name: "Volcanics Core", stats: { damage: 1 }, icon: "images/icon_component.png" };
     COMPONENTS['undergrounders_core'] = { name: "Undergrounders Core", stats: { defense: 1 }, icon: "images/icon_component.png" };
     COMPONENTS['nocturnals_core'] = { name: "Nocturnals Core", stats: { speed: 1 }, icon: "images/icon_component.png" };
@@ -344,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ==================================================================== */
-    /* SEÇÃO 6: LÓGICA DA TELA 2 (HUB SELECTION)
+    /* SEÇÃO 6: LÓGICA DA TELA 2 (HUB SELECTION) - CORRIGIDO
     /* ==================================================================== */
 
     function renderHubSelectionScreen() {
@@ -381,6 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.className = 'nft-card panel';
                 card.dataset.nftId = kid.id;
                 
+                // ** CORREÇÃO V4.4: Corrigido 'classs' para 'class' **
                 card.innerHTML = `
                     <img src="${kid.placeholderImg}" alt="${kid.name}" onerror="this.src='images/kid-placeholder.png'">
                     <h4>${kid.name}</h4>
@@ -389,6 +388,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="action-btn select-kid-btn" data-kid-id="${kid.id}">Manage & Equip</button>
                 `;
                 
+                // ** CORREÇÃO V4.4: Removido o listener de clique daqui **
+                // (Ele agora está no initialize() via Delegação)
+
                 DOM.hubSelection.nftGrid.appendChild(card);
             });
         }
@@ -421,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.hub.tabs.activeInvSubTab = 'inv-equipments';
         
         renderHubPreparationScreen();
-        showScreen('hub-selection-screen');
+        showScreen('hub-preparation-screen');
     }
 
     /* ==================================================================== */
@@ -1008,7 +1010,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isSuccess) {
             // Adiciona recursos ao inventário principal
             for (const resId in gameState.expedition.resourcesFound) {
-                // Decide se é material ou componente
                 if (MATERIALS[resId]) {
                     if (!gameState.player.inventory.materials[resId]) {
                         gameState.player.inventory.materials[resId] = 0;
@@ -1037,7 +1038,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ==================================================================== */
-    /* SEÇÃO 9: LÓGICA DA TELA 5 (COMBAT MODAL) - ATUALIZADO
+    /* SEÇÃO 9: LÓGICA DA TELA 5 (COMBAT MODAL)
     /* ==================================================================== */
 
     function combatLog(message) {
@@ -1054,12 +1055,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    /**
-     * ATUALIZADO: Usa enemy.stats
-     */
     function startCombat(enemy) {
         gameState.combat.isActive = true; 
-        gameState.combat.enemy = { ...enemy, currentHp: enemy.stats.hp }; // Clona e define HP atual
+        gameState.combat.enemy = { ...enemy, currentHp: enemy.stats.hp }; 
         const playerStats = gameState.expedition.stats;
         
         DOM.modals.combatEnemyName.textContent = enemy.name; 
@@ -1095,23 +1093,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * ATUALIZADO: Usa enemy.stats.hp
-     */
     function updateCombatUI() {
         const playerHPPercent = (gameState.expedition.currentHP / gameState.expedition.stats.hp) * 100;
         DOM.modals.combatPlayerHpFill.style.width = `${playerHPPercent}%`; 
         DOM.modals.combatPlayerHpText.textContent = `${gameState.expedition.currentHP} / ${gameState.expedition.stats.hp}`;
         
         const enemy = gameState.combat.enemy; 
-        const enemyHPPercent = (enemy.currentHp / enemy.stats.hp) * 100; // Usa stats.hp
+        const enemyHPPercent = (enemy.currentHp / enemy.stats.hp) * 100; 
         DOM.modals.combatEnemyHpFill.style.width = `${enemyHPPercent}%`; 
-        DOM.modals.combatEnemyHpText.textContent = `${enemy.currentHp} / ${enemy.stats.hp}`; // Usa stats.hp
+        DOM.modals.combatEnemyHpText.textContent = `${enemy.currentHp} / ${enemy.stats.hp}`; 
     }
     
-    /**
-     * ATUALIZADO: Usa enemy.stats.defense
-     */
     function handleCombatAttack() {
         if (!gameState.combat.playerTurn) return; 
         DOM.modals.combatAttackBtn.disabled = true; 
@@ -1121,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const playerStats = gameState.expedition.stats; 
         const enemy = gameState.combat.enemy;
         
-        let damage = Math.max(1, playerStats.damage - (enemy.stats.defense || 0)); // Usa stats.defense
+        let damage = Math.max(1, playerStats.damage - (enemy.stats.defense || 0)); 
         enemy.currentHp -= damage;
         combatLog(`You attack ${enemy.name} for ${damage} damage.`);
         
@@ -1135,16 +1127,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(runEnemyTurn, 1000);
     }
     
-    /**
-     * ATUALIZADO: Usa enemy.stats.strength
-     */
     function runEnemyTurn() {
         if (gameState.combat.playerTurn) return;
         
         const playerStats = gameState.expedition.stats; 
         const enemy = gameState.combat.enemy;
         
-        let damage = Math.max(1, enemy.stats.strength - (playerStats.defense || 0)); // Usa stats.strength
+        let damage = Math.max(1, enemy.stats.strength - (playerStats.defense || 0)); 
         gameState.expedition.currentHP -= damage;
         combatLog(`${enemy.name} attacks you for ${damage} damage.`);
         
@@ -1186,9 +1175,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    /**
-     * ATUALIZADO: Usa a nova lógica de recompensas (chance e quantidade)
-     */
     function endCombat(isVictory) {
         DOM.modals.combatPhaseBattle.style.display = 'none';
         
@@ -1197,13 +1183,11 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.modals.victoryEnemyName.textContent = enemy.name; 
             DOM.modals.victoryRewardList.innerHTML = '';
             
-            // NOVO: Loop de Recompensas
             for (const resId in enemy.rewards) {
                 const reward = enemy.rewards[resId];
-                const roll = Math.random() * 100; // Roll para chance
+                const roll = Math.random() * 100; 
                 
                 if (roll <= reward.chance) {
-                    // Sucesso! Calcular quantidade
                     const [min, max] = reward.quantity;
                     const amount = Math.floor(Math.random() * (max - min + 1)) + min;
                     
@@ -1212,7 +1196,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     gameState.expedition.resourcesFound[resId] += amount;
                     
-                    // Encontrar o nome do material (do DB de Materiais ou Componentes)
                     const itemDB = MATERIALS[resId] || COMPONENTS[resId];
                     const itemName = itemDB ? itemDB.name : resId;
                     
@@ -1260,9 +1243,8 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.hubSelection.paginationPrev.addEventListener('click', () => handlePageChange('prev')); 
         DOM.hubSelection.paginationNext.addEventListener('click', () => handlePageChange('next'));
 
-        // Listener de Delegação para o Grid de NFTs
+        // ** CORREÇÃO V4.4: Adicionado o listener de delegação ao Grid **
         DOM.hubSelection.nftGrid.addEventListener('click', (e) => {
-            // Verifica se o clique foi em um botão com a classe 'select-kid-btn'
             if (e.target && e.target.classList.contains('select-kid-btn')) {
                 const kidId = e.target.dataset.kidId;
                 handleKidSelect(kidId);
