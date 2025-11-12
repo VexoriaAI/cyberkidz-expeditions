@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p>Tribe: ${kid.tribe.name}</p>
                     <button class="action-btn select-kid-btn" data-kid-id="${kid.id}">Manage & Equip</button>
                 `;
-                card.querySelector('.select-kid-btn').addEventListener('click', () => handleKidSelect(kid.id));
+                
                 DOM.hubSelection.nftGrid.appendChild(card);
             });
         }
@@ -1259,6 +1259,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         DOM.hubSelection.paginationPrev.addEventListener('click', () => handlePageChange('prev')); 
         DOM.hubSelection.paginationNext.addEventListener('click', () => handlePageChange('next'));
+
+        // Listener de Delegação para o Grid de NFTs
+        DOM.hubSelection.nftGrid.addEventListener('click', (e) => {
+            // Verifica se o clique foi em um botão com a classe 'select-kid-btn'
+            if (e.target && e.target.classList.contains('select-kid-btn')) {
+                const kidId = e.target.dataset.kidId;
+                handleKidSelect(kidId);
+            }
+        });
 
         // --- Tela 3 (Abas e Manequim) ---
         DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen')); 
