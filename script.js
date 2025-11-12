@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.6 (Bancos de Dados Modulares de Itens)
+// VERSÃO 4.6 (Correção de Bug de Inicialização 'equipCloseBtn')
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -62,17 +62,20 @@ document.addEventListener('DOMContentLoaded', () => {
         'mat_reptilian_blood': { name: "Reptilian Blood", icon: "images/icons/materials/mat_reptilian_blood.png" }
     };
     
-    // Combina todos os bancos de dados em um mestre (para UI)
     // Assegura que as variáveis carregadas existam
+    const COMPONENTS_DB_SAFE = (typeof COMPONENTS_DB !== 'undefined' ? COMPONENTS_DB : {});
+    const EQUIPMENT_DB_SAFE = (typeof EQUIPMENT_DB !== 'undefined' ? EQUIPMENT_DB : {});
+
+    // Combina todos os bancos de dados em um mestre (para UI)
     const ITEM_DB = { 
         ...MATERIALS_DB, 
-        ...(typeof COMPONENTS_DB !== 'undefined' ? COMPONENTS_DB : {}), 
-        ...(typeof EQUIPMENT_DB !== 'undefined' ? EQUIPMENT_DB : {}) 
+        ...COMPONENTS_DB_SAFE, 
+        ...EQUIPMENT_DB_SAFE 
     };
 
     const RECIPES_CRAFT = {
-        "eq_rust_helmet": { name: "Rustic Helmet", cost: { "mat_scrap": 8, "mat_metal": 2 }, ...EQUIPMENT_DB["eq_rust_helmet"] },
-        "eq_rust_weapon": { name: "Rustic Blade", cost: { "mat_scrap": 10, "mat_metal": 1 }, ...EQUIPMENT_DB["eq_rust_weapon"] }
+        "eq_rust_helmet": { name: "Rustic Helmet", cost: { "mat_scrap": 8, "mat_metal": 2 }, ...EQUIPMENT_DB_SAFE["eq_rust_helmet"] },
+        "eq_rust_weapon": { name: "Rustic Blade", cost: { "mat_scrap": 10, "mat_metal": 1 }, ...EQUIPMENT_DB_SAFE["eq_rust_weapon"] }
     };
     
     const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
@@ -281,14 +284,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemInstance = gameState.player.inventory.equipment.find(e => e.instance_id === instanceId);
             if (!itemInstance) continue;
 
-            // 1. Stats base do item (do inventário, que pode ter sido modificado)
             for (const stat in itemInstance.stats) {
                 if (finalStats.hasOwnProperty(stat)) {
                     finalStats[stat] += itemInstance.stats[stat];
                 }
             }
             
-            // 2. Stats dos componentes embutidos
             itemInstance.embed_slots.forEach(slot => {
                 if(slot.component) {
                     const component = COMPONENTS_DB[slot.component];
@@ -587,8 +588,8 @@ document.addEventListener('DOMContentLoaded', () => {
         content.innerHTML = '<h4>Your Components</h4>';
         for (const compId in gameState.player.inventory.components) {
             const qty = gameState.player.inventory.components[compId];
-            if (qty > 0 && COMPONENTS_DB[compId]) {
-                content.innerHTML += `<p>${COMPONENTS_DB[compId].name}: ${qty}</p>`;
+            if (qty > 0 && COMPONENTS_DB_SAFE[compId]) {
+                content.innerHTML += `<p>${COMPONENTS_DB_SAFE[compId].name}: ${qty}</p>`;
             }
         }
     }
@@ -663,7 +664,6 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.hub.itemModalContext = context;
         DOM.modals.itemSelect.style.display = 'flex';
         
-        // Define o título
         if (context.startsWith('equip_')) {
             DOM.modals.itemSelectTitle.textContent = `Select ${context.split('_')[1]}`;
         } else if (context === 'embed_gear') {
@@ -672,7 +672,6 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.modals.itemSelectTitle.textContent = "Select Component";
         }
 
-        // Mostra/Esconde filtros
         const showEquipmentFilters = (context.startsWith('equip_') || context === 'embed_gear');
         const showComponentFilters = (context === 'embed_component');
         
@@ -697,7 +696,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let itemsToShow = [];
 
-        // 1. Define a lista de itens com base no CONTEXTO
         if (itemModalContext.startsWith('equip_')) {
             const slot = itemModalContext.split('_')[1];
             itemsToShow = gameState.player.inventory.equipment.filter(item => item.slot === slot);
@@ -708,11 +706,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (itemModalContext === 'embed_component') {
             const gear = embed.slotGear;
             if (gear) {
-                const baseItem = EQUIPMENT_DB[gear.item_id];
+                const baseItem = EQUIPMENT_DB_SAFE[gear.item_id];
                 const allowedTypes = SYNERGY_MAP[baseItem.synergy] || ["universal"];
                 
                 Object.keys(gameState.player.inventory.components).forEach(compId => {
-                    const component = COMPONENTS_DB[compId];
+                    const component = COMPONENTS_DB_SAFE[compId];
                     const qty = gameState.player.inventory.components[compId];
                     if (qty > 0 && component && allowedTypes.includes(component.type)) {
                         itemsToShow.push(component); 
@@ -721,16 +719,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // 2. Aplica o filtro da barra de ícones (se não for "all")
         if (filter !== 'all') {
             itemsToShow = itemsToShow.filter(item => {
-                if (filter === 'component') return !!COMPONENTS_DB[item.id];
-                const itemData = EQUIPMENT_DB[item.item_id] || {};
+                if (filter === 'component') return !!COMPONENTS_DB_SAFE[item.id];
+                const itemData = EQUIPMENT_DB_SAFE[item.item_id] || {};
                 return itemData.slot === filter;
             });
         }
         
-        // 3. Renderiza os Cards
         if (itemsToShow.length === 0) {
             DOM.modals.itemSelectPlaceholder.style.display = 'block';
             return;
@@ -739,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.modals.itemSelectPlaceholder.style.display = 'none';
         itemsToShow.forEach(item => {
             const isEquipment = !!item.instance_id;
-            const itemData = isEquipment ? item : COMPONENTS_DB[item.id]; 
+            const itemData = isEquipment ? item : COMPONENTS_DB_SAFE[item.id]; 
             const itemId = isEquipment ? item.instance_id : item.id;
             
             const statsHtml = Object.entries(itemData.stats || {}).map(([stat, value]) => `<p>${stat}: +${value}</p>`).join('');
@@ -749,7 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 slotsHtml = '<ul>';
                 item.embed_slots.forEach((slot, index) => {
                     if (index < item.slots_unlocked) {
-                        slotsHtml += `<li>Slot ${index + 1}: [${slot.component ? COMPONENTS_DB[slot.component].name : 'EMPTY'}]</li>`;
+                        slotsHtml += `<li>Slot ${index + 1}: [${slot.component ? COMPONENTS_DB_SAFE[slot.component].name : 'EMPTY'}]</li>`;
                     } else {
                         slotsHtml += `<li>Slot ${index + 1}: [LOCKED]</li>`;
                     }
@@ -835,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function openEmbedConfirmModal() { 
         const gear = gameState.hub.embed.slotGear;
         const componentId = gameState.hub.embed.slotComponent;
-        const component = COMPONENTS_DB[componentId];
+        const component = COMPONENTS_DB_SAFE[componentId];
         
         let beforeHtml = '<h4>Before</h4>';
         Object.entries(gear.stats).forEach(([stat, val]) => beforeHtml += `<p>${stat}: +${val}</p>`);
@@ -1303,7 +1299,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         gameState.player.inventory.materials[resId] = 0;
                     }
                     gameState.player.inventory.materials[resId] += gameState.expedition.resourcesFound[resId];
-                } else if (COMPONENTS_DB[resId]) {
+                } else if (COMPONENTS_DB_SAFE[resId]) {
                     if (!gameState.player.inventory.components[resId]) {
                         gameState.player.inventory.components[resId] = 0;
                     }
@@ -1513,7 +1509,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v4.5 Initialized (Embed Logic Stub).");
+        console.log("CyberKidz Expedition v4.6 Initialized (Modular Item DBs).");
 
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
@@ -1542,13 +1538,12 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen')); 
         DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
         
-        // Listener do Manequim (chama o novo modal)
         DOM.hubPreparation.mannequin.addEventListener('click', (e) => {
             if (e.target.closest('.equip-slot')) {
                 const slotDiv = e.target.closest('.equip-slot');
                 if (!slotDiv.classList.contains('equipped')) {
                     const slotName = slotDiv.dataset.slot;
-                    openItemSelectionModal(`equip_${slotName}`, slotName); // Ex: openItemSelectionModal('equip_helmet', 'helmet')
+                    openItemSelectionModal(`equip_${slotName}`, slotName);
                 }
             } else if (e.target.closest('.equip-remove-btn')) { 
                 const removeBtn = e.target.closest('.equip-remove-btn'); 
@@ -1556,7 +1551,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Listener das Abas do Workshop
         DOM.hubPreparation.workshopPanel.addEventListener('click', (e) => {
             const mainTabBtn = e.target.closest('.tab-btn[data-main-tab]'); const subTabBtn = e.target.closest('.tab-btn[data-sub-tab]');
             if (mainTabBtn) { gameState.hub.tabs.activeMainTab = mainTabBtn.dataset.mainTab; renderWorkshopTabs(); } 
@@ -1568,7 +1562,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Listeners da Aba Embed
         DOM.hubPreparation.embedUi.addEventListener('click', (e) => {
             if (e.target.closest('.embed-remove-btn')) {
                 const slotType = e.target.closest('.embed-remove-btn').dataset.slotType; 
@@ -1607,7 +1600,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         DOM.modals.itemSelectGrid.addEventListener('click', (e) => {
-            // Delegação de evento para o botão "Select" dentro do card
             const selectBtn = e.target.closest('.select-item-btn');
             if(selectBtn) {
                 const itemId = selectBtn.dataset.itemId;
