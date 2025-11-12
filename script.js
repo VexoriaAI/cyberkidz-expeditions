@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.4 (Integração com Banco de Dados de Drops)
+// VERSÃO 4.5 (Correção de Bug de Inicialização 'const')
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,8 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Carregado de database/enemies.js e database/spawn_logic.js
     
     // --- 1.4: Banco de Dados de Crafting (ATUALIZADO) ---
-    // Esta é a lista mestre de todos os itens (Materiais e Componentes)
-    // Baseado na sua planilha (Excel)
     const MATERIALS = {
         // Volcanics
         'mat_metal': { name: "Metal", icon: "images/icons/materials/mat_metal.png" },
@@ -69,14 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
         'mat_reptilian_blood': { name: "Reptilian Blood", icon: "images/icons/materials/mat_reptilian_blood.png" }
     };
 
-    // Componentes (dos drops de boss e inventário inicial)
+    // ** CORREÇÃO V4.5: Todos os componentes definidos em um único 'const' **
     const COMPONENTS = { 
         'volcanic_core': { name: "Volcanic Core", stats: { damage: 5 }, icon: "images/icon_component.png" }, 
         'defense_plate': { name: "Defense Plate", stats: { defense: 5 }, icon: "images/icon_component.png" },
         'volcanics_core': { name: "Volcanics Core", stats: { damage: 1 }, icon: "images/icon_component.png" },
         'undergrounders_core': { name: "Undergrounders Core", stats: { defense: 1 }, icon: "images/icon_component.png" },
         'nocturnals_core': { name: "Nocturnals Core", stats: { speed: 1 }, icon: "images/icon_component.png" },
-        'radioactives_core': { name:Am: "Radioactives Core", stats: { hpRegen: 1 }, icon: "images/icon_component.png" },
+        'radioactives_core': { name: "Radioactives Core", stats: { hpRegen: 1 }, icon: "images/icon_component.png" },
         'reptilians_core': { name: "Reptilians Core", stats: { hp: 10 }, icon: "images/icon_component.png" },
         'wasteland_core': { name: "Wasteland Core", stats: { luck: 1 }, icon: "images/icon_component.png" }
     };
@@ -140,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
         player: {
             tezerium: 1000,
             inventory: {
-                // Inventário inicial de materiais
                 materials: { 
                     "mat_scrap": 100, "mat_water": 100, "mat_food": 100, "mat_metal": 5, 
                     "mat_magma": 0, "mat_volcanic_pumice_stone": 0, "mat_obsidian_tears": 0,
@@ -665,7 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ==================================================================== */
-    /* SEÇÃO 8: LÓGICA DA TELA 4 (GAME SCREEN)
+    /* SEÇÃO 8: LÓGICA DA TELA 4 (GAME SCREEN) - INTEGRADO COM DBs
     /* ==================================================================== */
 
     function startGameplay() {
@@ -846,13 +843,17 @@ document.addEventListener('DOMContentLoaded', () => {
      * ATUALIZADO: Usa o database/drops.js
      */
     function handleCollect() {
+        if (typeof DROP_TABLES === 'undefined') {
+            console.error("ERRO: database/drops.js não carregado!");
+            return;
+        }
+
         gameState.expedition.currentAP--;
         
         const biomeKey = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
         const biome = STATIC_MAP_DATA.get(biomeKey).biome;
         const luck = gameState.expedition.stats.luck / 100;
         
-        // Pega a tabela de coleta do bioma
         const collectTable = DROP_TABLES[biome]?.collect;
         if (!collectTable) {
             logMessage("This land is barren. Nothing to collect.", 'error');
@@ -860,7 +861,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Processa cada item na tabela de coleta (normalmente apenas um)
         collectTable.forEach(drop => {
             const [min, max] = drop.quantity;
             let amount = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -884,6 +884,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * ATUALIZADO: Usa database/spawn_logic.js e database/drops.js
      */
     function handleInvestigate() {
+        if (typeof DROP_TABLES === 'undefined') {
+            console.error("ERRO: database/drops.js não carregado!");
+            return;
+        }
+
         gameState.expedition.currentAP--;
         const luck = gameState.expedition.stats.luck;
         
@@ -954,7 +959,6 @@ document.addEventListener('DOMContentLoaded', () => {
              showActionFeedback("Enemy Found!", `A ${enemy.name} appeared!`);
              startCombat(enemy);
         } else {
-             // (Não deve acontecer com a lógica atual, mas é um fallback)
              logMessage("You searched, but found nothing.");
              showActionFeedback("Nothing Found", `The area seems clear.`);
         }
@@ -1122,6 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isSuccess) {
             // Adiciona recursos ao inventário principal
             for (const resId in gameState.expedition.resourcesFound) {
+                // Atualiza o inventário correto (materiais ou componentes)
                 if (MATERIALS[resId]) {
                     if (!gameState.player.inventory.materials[resId]) {
                         gameState.player.inventory.materials[resId] = 0;
@@ -1337,7 +1342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v4.4 Initialized (DB Integration).");
+        console.log("CyberKidz Expedition v4.5 Initialized (DB Integration).");
 
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
@@ -1355,7 +1360,6 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.hubSelection.paginationPrev.addEventListener('click', () => handlePageChange('prev')); 
         DOM.hubSelection.paginationNext.addEventListener('click', () => handlePageChange('next'));
 
-        // Listener de Delegação para o Grid de NFTs
         DOM.hubSelection.nftGrid.addEventListener('click', (e) => {
             if (e.target && e.target.classList.contains('select-kid-btn')) {
                 const kidId = e.target.dataset.kidId;
