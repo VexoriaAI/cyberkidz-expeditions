@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.5 (Correção de Bug de Inicialização 'const')
+// VERSÃO 4.5 (Novo Modal Universal de Itens e Lógica de Embed)
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const MAX_DAYS = 10;
     const MAX_PLACEHOLDER_IMAGES_PER_TRIBE = 5;
-    const HEX_SIZE_VISUAL = 50; // Raio visual para cálculo do polígono
+    const HEX_SIZE_VISUAL = 50; 
 
     // --- 1.1: Atributos Base das Tribos ---
     const TRIBES = {
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1.2: Biomas ---
     const BIOMES = {
-        volcanics: { name: "Burning Ridge", resource: "mat_metal" }, // Atualizado para ID do item
+        volcanics: { name: "Burning Ridge", resource: "mat_metal" }, 
         reptilians: { name: "Covenant Swamp", resource: "mat_food" },
         radioactives: { name: "Lake Rancid", resource: "mat_strange_fluid" },
         nocturnals: { name: "Ancient Ruins", resource: "mat_scrap" },
@@ -36,56 +36,82 @@ document.addEventListener('DOMContentLoaded', () => {
     // Carregado de database/enemies.js e database/spawn_logic.js
     
     // --- 1.4: Banco de Dados de Crafting (ATUALIZADO) ---
-    const MATERIALS = {
-        // Volcanics
+    // (Baseado na sua planilha de Excel/Materiais)
+    const MATERIALS_DB = {
         'mat_metal': { name: "Metal", icon: "images/icons/materials/mat_metal.png" },
         'mat_magma': { name: "Magma", icon: "images/icons/materials/mat_magma.png" },
         'mat_volcanic_pumice_stone': { name: "Volcanic Pumice Stone", icon: "images/icons/materials/mat_volcanic_pumice_stone.png" },
         'mat_obsidian_tears': { name: "Obsidian Tears", icon: "images/icons/materials/mat_obsidian_tears.png" },
-        // Undergrounders
         'mat_water': { name: "Water", icon: "images/icons/materials/mat_water.png" },
         'mat_energized_crystals': { name: "Energized Crystals", icon: "images/icons/materials/mat_energized_crystals.png" },
         'mat_thermal_water': { name: "Thermal Water", icon: "images/icons/materials/mat_thermal_water.png" },
         'mat_special_clay': { name: "Special Clay", icon: "images/icons/materials/mat_special_clay.png" },
         'mat_glass': { name: "Glass", icon: "images/icons/materials/mat_glass.png" },
-        // Nocturnals
         'mat_scrap': { name: "Scrap", icon: "images/icons/materials/mat_scrap.png" },
         'mat_polymer': { name: "Polymer", icon: "images/icons/materials/mat_polymer.png" },
         'mat_nanochips': { name: "Nanochips", icon: "images/icons/materials/mat_nanochips.png" },
         'mat_cybernetic_implants': { name: "Cybernetic Implants", icon: "images/icons/materials/mat_cybernetic_implants.png" },
         'mat_quantum_energy_core': { name: "Quantum Energy Core", icon: "images/icons/materials/mat_quantum_energy_core.png" },
-        // Radioactives
         'mat_strange_fluid': { name: "Strange Fluid", icon: "images/icons/materials/mat_strange_fluid.png" },
         'mat_parasitic_fungus': { name: "Parasitic Fungus", icon: "images/icons/materials/mat_parasitic_fungus.png" },
         'mat_venom_glands': { name: "Venom Glands", icon: "images/icons/materials/mat_venom_glands.png" },
         'mat_luminescent_algae': { name: "Luminescent Algae", icon: "images/icons/materials/mat_luminescent_algae.png" },
-        // Reptilians
         'mat_food': { name: "Food", icon: "images/icons/materials/mat_food.png" },
         'mat_healing_plants': { name: "Healing Plants", icon: "images/icons/materials/mat_healing_plants.png" },
         'mat_hallucinogenic_fungi': { name: "Hallucinogenic Fungi", icon: "images/icons/materials/mat_hallucinogenic_fungi.png" },
         'mat_animal_skin': { name: "Animal Skin", icon: "images/icons/materials/mat_animal_skin.png" },
         'mat_reptilian_blood': { name: "Reptilian Blood", icon: "images/icons/materials/mat_reptilian_blood.png" }
     };
+    
+    // NOVO: Banco de Dados de Componentes (com 'type' de sinergia)
+    const COMPONENTS_DB = { 
+        'comp_def_1': { id: 'comp_def_1', name: "Defense Plate", type: "defense", stats: { defense: 5 }, icon: "images/icons/components/comp_def_1.png" },
+        'comp_hp_1': { id: 'comp_hp_1', name: "HP Matrix", type: "defense", stats: { hp: 20 }, icon: "images/icons/components/comp_hp_1.png" },
+        'comp_dmg_1': { id: 'comp_dmg_1', name: "Volcanic Core", type: "damage", stats: { damage: 5 }, icon: "images/icons/components/comp_dmg_1.png" },
+        'comp_crit_1': { id: 'comp_crit_1', name: "Precision Lens", type: "damage", stats: { critChance: 3 }, icon: "images/icons/components/comp_crit_1.png" },
+        'comp_spd_1': { id: 'comp_spd_1', name: "Speed Injector", type: "speed", stats: { speed: 3 }, icon: "images/icons/components/comp_spd_1.png" },
+        'comp_regen_1': { id: 'comp_regen_1', name: "Regen Matrix", type: "heal", stats: { hpRegen: 2 }, icon: "images/icons/components/comp_regen_1.png" },
+        'comp_luck_1': { id: 'comp_luck_1', name: "Lucky Clover", type: "universal", stats: { luck: 3 }, icon: "images/icons/components/comp_luck_1.png" },
+        'comp_ap_1': { id: 'comp_ap_1', name: "AP Battery", type: "universal", stats: { ap: 1 }, icon: "images/icons/components/comp_ap_1.png" },
+        'volcanics_core': { id: 'volcanics_core', name: "Volcanics Core", type: "damage", stats: { damage: 1 }, icon: "images/icons/components/volcanics_core.png" },
+        'undergrounders_core': { id: 'undergrounders_core', name: "Undergrounders Core", type: "defense", stats: { defense: 1 }, icon: "images/icons/components/undergrounders_core.png" },
+        'nocturnals_core': { id: 'nocturnals_core', name: "Nocturnals Core", type: "speed", stats: { speed: 1 }, icon: "images/icons/components/nocturnals_core.png" },
+        'radioactives_core': { id: 'radioactives_core', name: "Radioactives Core", type: "heal", stats: { hpRegen: 1 }, icon: "images/icons/components/radioactives_core.png" },
+        'reptilians_core': { id: 'reptilians_core', name: "Reptilians Core", type: "defense", stats: { hp: 10 }, icon: "images/icons/components/reptilians_core.png" },
+        'wasteland_core': { id: 'wasteland_core', name: "Wasteland Core", type: "universal", stats: { luck: 1 }, icon: "images/icons/components/wasteland_core.png" }
+    };
 
-    // ** CORREÇÃO V4.5: Todos os componentes definidos em um único 'const' **
-    const COMPONENTS = { 
-        'volcanic_core': { name: "Volcanic Core", stats: { damage: 5 }, icon: "images/icon_component.png" }, 
-        'defense_plate': { name: "Defense Plate", stats: { defense: 5 }, icon: "images/icon_component.png" },
-        'volcanics_core': { name: "Volcanics Core", stats: { damage: 1 }, icon: "images/icon_component.png" },
-        'undergrounders_core': { name: "Undergrounders Core", stats: { defense: 1 }, icon: "images/icon_component.png" },
-        'nocturnals_core': { name: "Nocturnals Core", stats: { speed: 1 }, icon: "images/icon_component.png" },
-        'radioactives_core': { name: "Radioactives Core", stats: { hpRegen: 1 }, icon: "images/icon_component.png" },
-        'reptilians_core': { name: "Reptilians Core", stats: { hp: 10 }, icon: "images/icon_component.png" },
-        'wasteland_core': { name: "Wasteland Core", stats: { luck: 1 }, icon: "images/icon_component.png" }
+    // NOVO: Banco de Dados de Equipamentos Base
+    const EQUIPMENT_DB = {
+        "eq_rust_helmet": { id: "eq_rust_helmet", name: "Rustic Helmet", slot: "helmet", synergy: "defense", base_stats: { hp: 10, defense: 2 }, slots_total: 3, slots_unlocked: 1, icon: 'images/icons/equipment/eq_rust_helmet.png' },
+        "eq_rust_armor": { id: "eq_rust_armor", name: "Rustic Armor", slot: "armor", synergy: "defense", base_stats: { hp: 20, defense: 3 }, slots_total: 3, slots_unlocked: 1, icon: 'images/icons/equipment/eq_rust_armor.png' },
+        "eq_rust_weapon": { id: "eq_rust_weapon", name: "Rustic Blade", slot: "weapon", synergy: "damage", base_stats: { damage: 3 }, slots_total: 3, slots_unlocked: 1, icon: 'images/icons/equipment/eq_rust_weapon.png' },
+        "eq_rust_boots": { id: "eq_rust_boots", name: "Rustic Boots", slot: "boots", synergy: "speed", base_stats: { hp: 5, defense: 1, speed: 2 }, slots_total: 3, slots_unlocked: 1, icon: 'images/icons/equipment/eq_rust_boots.png' },
+        "eq_rust_gloves": { id: "eq_rust_gloves", name: "Rustic Gloves", slot: "gloves", synergy: "damage", base_stats: { speed: 1, damage: 1, critChance: 1 }, slots_total: 3, slots_unlocked: 1, icon: 'images/icons/equipment/eq_rust_gloves.png' },
+        "eq_rust_implant": { id: "eq_rust_implant", name: "Rustic Implant", slot: "implant", synergy: "universal", base_stats: { hp: 5, ap: 1 }, slots_total: 3, slots_unlocked: 1, icon: 'images/icons/equipment/eq_rust_implant.png' },
+        "eq_rust_accessory": { id: "eq_rust_accessory", name: "Rustic Accessory", slot: "accessory", synergy: "universal", base_stats: { luck: 2 }, slots_total: 3, slots_unlocked: 1, icon: 'images/icons/equipment/eq_rust_accessory.png' }
     };
     
-    // Combina ambos os bancos de dados em um mestre (para UI)
-    const ITEM_DB = { ...MATERIALS, ...COMPONENTS };
+    // Combina todos os bancos de dados em um mestre (para UI)
+    const ITEM_DB = { ...MATERIALS_DB, ...COMPONENTS_DB, ...EQUIPMENT_DB };
+
+    // NOVO: Regras de Sinergia
+    const SYNERGY_MAP = {
+        "helmet": ["defense", "heal", "universal"],
+        "weapon": ["damage", "crit", "speed", "universal"],
+        "armor": ["defense", "heal", "universal"],
+        "gloves": ["damage", "speed", "crit", "universal"],
+        "boots": ["defense", "speed", "universal"],
+        "implant": ["damage", "crit", "speed", "heal", "defense", "universal"],
+        "accessory": ["damage", "crit", "speed", "heal", "defense", "universal"]
+    };
 
     const RECIPES_CRAFT = {
-        empty_helmet: { name: "Rustic Helmet (Empty)", cost: { mat_scrap: 8 }, type: "equipment", level: 1, stats: {}, slot: "helmet", icon: "images/icon_helmet.png" },
-        empty_weapon: { name: "Rustic Blade (Empty)", cost: { mat_scrap: 10 }, type: "equipment", level: 1, stats: {}, slot: "weapon", icon: "images/icon_weapon.png" }
+        // Atualizado para usar novos IDs
+        "eq_rust_helmet": { name: "Rustic Helmet", cost: { "mat_scrap": 8, "mat_metal": 2 }, ...EQUIPMENT_DB["eq_rust_helmet"] },
+        "eq_rust_weapon": { name: "Rustic Blade", cost: { "mat_scrap": 10, "mat_metal": 1 }, ...EQUIPMENT_DB["eq_rust_weapon"] }
     };
+    
     const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
     const STATS_LIST = ['hp', 'ap', 'speed', 'damage', 'defense', 'critChance', 'critDamage', 'attackSpeed', 'hpRegen', 'blockChance', 'luck'];
 
@@ -139,18 +165,17 @@ document.addEventListener('DOMContentLoaded', () => {
             tezerium: 1000,
             inventory: {
                 materials: { 
-                    "mat_scrap": 100, "mat_water": 100, "mat_food": 100, "mat_metal": 5, 
-                    "mat_magma": 0, "mat_volcanic_pumice_stone": 0, "mat_obsidian_tears": 0,
-                    "mat_energized_crystals": 0, "mat_thermal_water": 0, "mat_special_clay": 0, "mat_glass": 0,
-                    "mat_polymer": 0, "mat_nanochips": 0, "mat_cybernetic_implants": 0, "mat_quantum_energy_core": 0,
-                    "mat_strange_fluid": 0, "mat_parasitic_fungus": 0, "mat_venom_glands": 0, "mat_luminescent_algae": 0,
-                    "mat_healing_plants": 0, "mat_hallucinogenic_fungi": 0, "mat_animal_skin": 0, "mat_reptilian_blood": 0
+                    "mat_scrap": 100, "mat_water": 100, "mat_food": 100, "mat_metal": 5, "mat_magma": 0, "mat_volcanic_pumice_stone": 0, "mat_obsidian_tears": 0,
+                    "mat_energized_crystals": 0, "mat_thermal_water": 0, "mat_special_clay": 0, "mat_glass": 0, "mat_polymer": 0, "mat_nanochips": 0, "mat_cybernetic_implants": 0, "mat_quantum_energy_core": 0,
+                    "mat_strange_fluid": 0, "mat_parasitic_fungus": 0, "mat_venom_glands": 0, "mat_luminescent_algae": 0, "mat_healing_plants": 0, "mat_hallucinogenic_fungi": 0, "mat_animal_skin": 0, "mat_reptilian_blood": 0
                 },
-                components: { "volcanic_core": 1, "defense_plate": 1 },
+                components: { "comp_def_1": 1, "comp_dmg_1": 1, "comp_luck_1": 2 }, // IDs atualizados
+                // O inventário de equipamento agora armazena INSTÂNCIAS de itens
                 equipment: [
-                    { id: 'h1', name: 'Plate Helmet', level: 1, slot: 'helmet', stats: { defense: 5, blockChance: 3 }, icon: 'images/icon_helmet.png' },
-                    { id: 'h2', name: 'Rustic Helmet', level: 1, slot: 'helmet', stats: { defense: 2 }, icon: 'images/icon_helmet.png' },
-                    { id: 'w1', name: 'Volcanic Blade', level: 1, slot: 'weapon', stats: { damage: 5, critDamage: 5 }, icon: 'images/icon_weapon.png' }
+                    // h1 e w1 são instâncias únicas
+                    { instance_id: 'h1', item_id: 'eq_rust_helmet', name: 'Capacete Rústico', level: 1, slot: 'helmet', stats: { defense: 5, blockChance: 3 }, icon: 'images/icons/equipment/eq_rust_helmet.png', embed_slots: [{component: 'comp_def_1'}, {component: null}, {component: null}], slots_unlocked: 1 },
+                    { instance_id: 'w1', item_id: 'eq_rust_weapon', name: 'Lâmina Rústica', level: 1, slot: 'weapon', stats: { damage: 5, critDamage: 5 }, icon: 'images/icons/equipment/eq_rust_weapon.png', embed_slots: [{component: 'comp_dmg_1'}, {component: null}, {component: null}], slots_unlocked: 1 },
+                    { instance_id: 'h2', item_id: 'eq_rust_helmet', name: 'Capacete Vazio', level: 1, slot: 'helmet', stats: { hp: 10, defense: 2 }, icon: 'images/icons/equipment/eq_rust_helmet.png', embed_slots: [{component: null}, {component: null}, {component: null}], slots_unlocked: 1 }
                 ]
             },
             kidz: []
@@ -161,7 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentPage: 1, itemsPerPage: 10, totalPages: 1, filteredKidz: []
             },
             tabs: { activeMainTab: 'inventory', activeInvSubTab: 'inv-equipments', activeWsSubTab: 'ws-refine' },
-            embed: { slotGear: null, slotComponent: null }
+            embed: { slotGear: null, slotComponent: null }, // Armazena a INSTÂNCIA (h1) ou ID do componente (comp_def_1)
+            itemModalContext: null // NOVO: Rastreia *por que* o modal foi aberto
         },
         expedition: {
             kid: null, stats: {}, currentDay: 1, playerPos: { q: 0, r: 0 },
@@ -179,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ==================================================================== */
-    /* SEÇÃO 3: CACHE DE ELEMENTOS DO DOM
+    /* SEÇÃO 3: CACHE DE ELEMENTOS DO DOM (Atualizado)
     /* ==================================================================== */
 
     const DOM = {
@@ -207,7 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
             workshopPanel: document.getElementById('workshop-panel'), mainTabs: document.querySelector('.main-tabs'), mainTabInventory: document.getElementById('main-tab-inventory'),
             mainTabWorkshop: document.getElementById('main-tab-workshop'), materialsTableBody: document.getElementById('materials-table-body'),
             craftRecipeList: document.getElementById('craft-recipe-list'), craftRecipeDetails: document.getElementById('craft-recipe-details'),
-            embedSlotGear: document.getElementById('embed-slot-gear'), embedSlotComponent: document.getElementById('embed-slot-component'), embedBtn: document.getElementById('embed-btn')
+            embedUi: document.querySelector('.embed-ui'), // Pai dos slots de embed
+            embedSlotGear: document.getElementById('embed-slot-gear'), 
+            embedSlotComponent: document.getElementById('embed-slot-component'), 
+            embedBtn: document.getElementById('embed-btn')
         },
         game: {
             kidImage: document.getElementById('game-kid-image'), kidTribe: document.getElementById('game-kid-tribe'), kidId: document.getElementById('game-kid-id'),
@@ -221,8 +250,15 @@ document.addEventListener('DOMContentLoaded', () => {
             log: document.getElementById('game-log')
         },
         modals: {
-            equipSelect: document.getElementById('equipment-select-modal'), equipTitle: document.getElementById('modal-equip-title'), equipList: document.getElementById('modal-equip-list'),
-            equipCloseBtn: document.getElementById('modal-equip-close'), editName: document.getElementById('edit-name-modal'), editNameInput: document.getElementById('edit-name-input'),
+            // Modal Universal de Itens
+            itemSelect: document.getElementById('item-select-modal'),
+            itemSelectTitle: document.getElementById('modal-item-title'),
+            itemSelectFilterBar: document.getElementById('modal-filter-bar'),
+            itemSelectGrid: document.getElementById('modal-item-grid'),
+            itemSelectPlaceholder: document.getElementById('modal-item-placeholder'),
+            itemSelectCloseBtn: document.getElementById('modal-item-close'),
+            
+            editName: document.getElementById('edit-name-modal'), editNameInput: document.getElementById('edit-name-input'),
             editNameCancel: document.getElementById('edit-name-cancel'), editNameSave: document.getElementById('edit-name-save'), 
             feedback: document.getElementById('action-feedback-modal'),
             feedbackTitle: document.getElementById('feedback-title'), feedbackDesc: document.getElementById('feedback-description'),
@@ -236,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
             victoryEnemyName: document.getElementById('victory-enemy-name'), combatCloseVictoryBtn: document.getElementById('combat-close-victory-btn'), combatReturnHubBtn: document.getElementById('combat-return-hub-btn'),
             embedConfirm: document.getElementById('embed-confirm-modal'), embedBefore: document.getElementById('embed-before'), embedAfter: document.getElementById('embed-after'),
             embedCancelBtn: document.getElementById('embed-cancel-btn'), embedConfirmBtn: document.getElementById('embed-confirm-btn'),
+            embedWarningText: document.querySelector('.warning-text'), // Referência ao aviso
             endDay: document.getElementById('end-day-modal'), 
             endDayTitle: document.getElementById('end-day-title'), 
             endDayCloseBtn: document.getElementById('end-day-close-btn'), 
@@ -274,18 +311,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * ATUALIZADO: Calcula stats finais com base no inventário de equipamento (instâncias)
+     */
     function calculateFinalStats(kid) {
         const finalStats = { ...kid.tribe.baseStats };
+        
+        // Adiciona stats de equipamento
         for (const slot of EQUIPMENT_SLOTS) {
-            const itemId = kid.equipped[slot];
-            if (!itemId) continue;
-            const item = gameState.player.inventory.equipment.find(e => e.id === itemId);
-            if (!item || !item.stats) continue;
-            for (const stat in item.stats) {
+            const instanceId = kid.equipped[slot];
+            if (!instanceId) continue;
+            
+            const itemInstance = gameState.player.inventory.equipment.find(e => e.instance_id === instanceId);
+            if (!itemInstance) continue;
+
+            // 1. Stats base do item
+            for (const stat in itemInstance.stats) {
                 if (finalStats.hasOwnProperty(stat)) {
-                    finalStats[stat] += item.stats[stat];
+                    finalStats[stat] += itemInstance.stats[stat];
                 }
             }
+            
+            // 2. Stats dos componentes embutidos
+            itemInstance.embed_slots.forEach(slot => {
+                if(slot.component) {
+                    const component = COMPONENTS_DB[slot.component];
+                    if (component && component.stats) {
+                        for (const stat in component.stats) {
+                             if (finalStats.hasOwnProperty(stat)) {
+                                finalStats[stat] += component.stats[stat];
+                            }
+                        }
+                    }
+                }
+            });
         }
         return finalStats;
     }
@@ -491,17 +550,22 @@ document.addEventListener('DOMContentLoaded', () => {
         renderWorkshopTabs();
     }
 
+    /**
+     * ATUALIZADO: Renderiza o manequim com base nas INSTÂNCIAS de equipamento
+     */
     function renderManequim(kid) {
         EQUIPMENT_SLOTS.forEach(slot => {
             const slotDiv = DOM.hubPreparation.mannequin.querySelector(`.equip-slot[data-slot="${slot}"]`);
             const removeBtn = DOM.hubPreparation.mannequin.querySelector(`.equip-remove-btn[data-slot="${slot}"]`);
-            const itemId = kid.equipped[slot];
+            const instanceId = kid.equipped[slot]; // Agora é 'h1', 'w1', etc.
 
-            if (itemId) {
-                const item = gameState.player.inventory.equipment.find(e => e.id === itemId);
-                slotDiv.innerHTML = `<img src="${item.icon}" alt="${item.name}" title="${item.name}" onerror="this.style.display='none'">`;
-                slotDiv.classList.add('equipped');
-                removeBtn.style.display = 'block';
+            if (instanceId) {
+                const item = gameState.player.inventory.equipment.find(e => e.instance_id === instanceId);
+                if (item) {
+                    slotDiv.innerHTML = `<img src="${item.icon}" alt="${item.name}" title="${item.name}" onerror="this.style.display='none'">`;
+                    slotDiv.classList.add('equipped');
+                    removeBtn.style.display = 'block';
+                }
             } else {
                 slotDiv.innerHTML = '<span>+</span>';
                 slotDiv.classList.remove('equipped');
@@ -514,9 +578,11 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.hubPreparation.statsDisplay.innerHTML = ''; 
         STATS_LIST.forEach(stat => {
             const value = stats[stat] || 0;
-            const p = document.createElement('p');
-            p.innerHTML = `<strong>${stat}:</strong> ${value}`;
-            DOM.hubPreparation.statsDisplay.appendChild(p);
+            if (value > 0) { // Só mostra stats que não são zero
+                const p = document.createElement('p');
+                p.innerHTML = `<strong>${stat}:</strong> ${value}`;
+                DOM.hubPreparation.statsDisplay.appendChild(p);
+            }
         });
     }
 
@@ -554,23 +620,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- Funções de Renderização das Sub-Abas ---
+    // --- Funções de Renderização das Sub-Abas (Atualizadas) ---
     
     function renderInvEquipments() {
         const content = document.getElementById('sub-tab-inv-equipments');
-        content.innerHTML = '<h4>Your Equipment</h4><p>Full list of equipment with image, title, stats, category, and level...</p>';
+        content.innerHTML = '<h4>Your Equipment (Inventory)</h4>';
+        // ATUALIZADO: Mostra instâncias de equipamento
+        gameState.player.inventory.equipment.forEach(item => {
+             content.innerHTML += `<p>${item.name} (Lvl ${item.level}) [${item.instance_id}]</p>`;
+        });
     }
     function renderInvComponents() {
         const content = document.getElementById('sub-tab-inv-components');
-        content.innerHTML = '<h4>Your Components</h4><p>List of components with image and info...</p>';
+        content.innerHTML = '<h4>Your Components</h4>';
+        // ATUALIZADO: Mostra componentes do inventário
+        for (const compId in gameState.player.inventory.components) {
+            const qty = gameState.player.inventory.components[compId];
+            if (qty > 0 && COMPONENTS_DB[compId]) {
+                content.innerHTML += `<p>${COMPONENTS_DB[compId].name}: ${qty}</p>`;
+            }
+        }
     }
     function renderInvMaterials() {
         const tbody = DOM.hubPreparation.materialsTableBody;
         tbody.innerHTML = ''; 
         for (const matId in gameState.player.inventory.materials) {
-            const material = ITEM_DB[matId]; // Usa o DB Mestre
+            const material = ITEM_DB[matId]; 
             const quantity = gameState.player.inventory.materials[matId];
-            if (material) {
+            if (quantity > 0 && material) {
                 tbody.innerHTML += `
                     <tr>
                         <td><img src="${material.icon}" alt="${material.name}" onerror="this.style.display='none'"></td>
@@ -590,79 +667,254 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.hubPreparation.craftRecipeList.innerHTML += `<div class="recipe-item" data-recipe-id="${recipeId}">${recipe.name}</div>`;
         });
     }
+    
+    /**
+     * ATUALIZADO: Renderiza a UI de Embed com base no gameState
+     */
     function renderWsEmbed() { 
-        DOM.hubPreparation.embedBtn.disabled = !(gameState.hub.embed.slotGear && gameState.hub.embed.slotComponent);
+        const { slotGear, slotComponent } = gameState.hub.embed;
+        
+        // Renderiza Slot 1 (Equipamento)
+        if (slotGear) {
+            DOM.hubPreparation.embedSlotGear.innerHTML = `<img src="${slotGear.icon}" alt="${slotGear.name}" style="width: 50px;"> <p>${slotGear.name}</p>`;
+            DOM.hubPreparation.embedSlotGear.classList.add('equipped');
+        } else {
+            DOM.hubPreparation.embedSlotGear.innerHTML = '<span>Select Empty Equipment</span>';
+            DOM.hubPreparation.embedSlotGear.classList.remove('equipped');
+        }
+
+        // Renderiza Slot 2 (Componente)
+        if (slotComponent) {
+            const component = COMPONENTS_DB[slotComponent];
+            DOM.hubPreparation.embedSlotComponent.innerHTML = `<img src="${component.icon}" alt="${component.name}" style="width: 50px;"> <p>${component.name}</p>`;
+            DOM.hubPreparation.embedSlotComponent.classList.add('equipped');
+        } else {
+            DOM.hubPreparation.embedSlotComponent.innerHTML = '<span>Select Component</span>';
+            DOM.hubPreparation.embedSlotComponent.classList.remove('equipped');
+        }
+        
+        // Habilita/Desabilita Botões
+        DOM.hubPreparation.embedSlotComponent.classList.toggle('disabled', !slotGear);
+        DOM.hubPreparation.embedBtn.disabled = !(slotGear && slotComponent);
+        
+        // Mostra/Esconde Botões "X"
+        DOM.hubPreparation.embedUi.querySelector('.embed-remove-btn[data-slot-type="gear"]').style.display = slotGear ? 'block' : 'none';
+        DOM.hubPreparation.embedUi.querySelector('.embed-remove-btn[data-slot-type="component"]').style.display = slotComponent ? 'block' : 'none';
     }
     
+    /**
+     * NOVO: Limpa um slot de embed
+     */
+    function clearEmbedSlot(slotType) {
+        if (slotType === 'gear') {
+            gameState.hub.embed.slotGear = null;
+            gameState.hub.embed.slotComponent = null; // Limpa o componente se o equipamento for removido
+        } else if (slotType === 'component') {
+            gameState.hub.embed.slotComponent = null;
+        }
+        renderWsEmbed(); // Re-renderiza a UI de embed
+    }
+
+    
     // --- Funções de Ação do Hub (Modais) ---
-    let currentSlotToEquip = null;
-    function openEquipmentModal(slotName) {
-        currentSlotToEquip = slotName;
-        DOM.modals.equipTitle.textContent = `Select ${slotName}`;
-        DOM.modals.equipList.innerHTML = '';
+    
+    /**
+     * NOVO: Abre o modal de seleção de item universal
+     * @param {string} context - O motivo da abertura (ex: 'equip_helmet', 'embed_gear')
+     * @param {string} defaultFilter - O filtro a ser aplicado (ex: 'helmet', 'component')
+     */
+    function openItemSelectionModal(context, defaultFilter = 'all') {
+        gameState.hub.itemModalContext = context;
+        DOM.modals.itemSelect.style.display = 'flex';
+        
+        // Define o título
+        if (context.startsWith('equip_')) {
+            DOM.modals.itemSelectTitle.textContent = `Select ${context.split('_')[1]}`;
+        } else if (context === 'embed_gear') {
+            DOM.modals.itemSelectTitle.textContent = "Select Equipment to Embed";
+        } else if (context === 'embed_component') {
+            DOM.modals.itemSelectTitle.textContent = "Select Component";
+        }
 
-        const itemsForSlot = gameState.player.inventory.equipment.filter(item => item.slot === slotName);
+        // Mostra/Esconde filtros
+        const showEquipmentFilters = (context.startsWith('equip_') || context === 'embed_gear');
+        const showComponentFilters = (context === 'embed_component');
+        
+        DOM.modals.itemSelectFilterBar.querySelectorAll('[data-filter]').forEach(btn => {
+            const filter = btn.dataset.filter;
+            if (filter === 'all') btn.style.display = 'inline-block';
+            else if (filter === 'component') btn.style.display = showComponentFilters ? 'inline-block' : 'none';
+            else btn.style.display = showEquipmentFilters ? 'inline-block' : 'none';
+        });
 
-        if (itemsForSlot.length === 0) {
-            DOM.modals.equipList.innerHTML = '<p>No items found for this slot.</p>';
-        } else {
-            itemsForSlot.forEach(item => {
-                const statsHtml = Object.entries(item.stats).map(([stat, value]) => `<p class="item-stats">${stat}: +${value}</p>`).join('');
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'equip-list-item';
-                itemDiv.dataset.itemId = item.id;
-                itemDiv.innerHTML = `
-                    <h4>${item.name} (Lvl ${item.level})</h4>
-                    ${statsHtml}
-                `;
-                itemDiv.addEventListener('click', () => equipItem(item.id, slotName));
-                DOM.modals.equipList.appendChild(itemDiv);
+        // Renderiza o grid com o filtro padrão
+        renderItemModalGrid(defaultFilter);
+    }
+
+    /**
+     * NOVO: Renderiza o grid de itens no modal universal
+     */
+    function renderItemModalGrid(filter = 'all') {
+        const { itemModalContext, embed } = gameState.hub;
+        const grid = DOM.modals.itemSelectGrid;
+        grid.innerHTML = '';
+        
+        // Ativa o botão de filtro correto
+        DOM.modals.itemSelectFilterBar.querySelectorAll('.modal-filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+
+        let itemsToShow = [];
+
+        // 1. Define a lista de itens com base no CONTEXTO
+        if (itemModalContext.startsWith('equip_')) {
+            const slot = itemModalContext.split('_')[1];
+            itemsToShow = gameState.player.inventory.equipment.filter(item => item.slot === slot);
+        
+        } else if (itemModalContext === 'embed_gear') {
+            itemsToShow = gameState.player.inventory.equipment;
+        
+        } else if (itemModalContext === 'embed_component') {
+            const gear = embed.slotGear;
+            if (gear) {
+                const baseItem = EQUIPMENT_DB[gear.item_id];
+                const allowedTypes = SYNERGY_MAP[baseItem.synergy] || ["universal"];
+                
+                // Filtra o inventário de componentes
+                Object.keys(gameState.player.inventory.components).forEach(compId => {
+                    const component = COMPONENTS_DB[compId];
+                    const qty = gameState.player.inventory.components[compId];
+                    if (qty > 0 && component && allowedTypes.includes(component.type)) {
+                        itemsToShow.push(component); // Adiciona o TIPO de componente, não a instância
+                    }
+                });
+            }
+        }
+        
+        // 2. Aplica o filtro da barra de ícones (se não for "all")
+        if (filter !== 'all') {
+            itemsToShow = itemsToShow.filter(item => {
+                if (filter === 'component') return !!COMPONENTS_DB[item.id];
+                const itemData = EQUIPMENT_DB[item.item_id] || {};
+                return itemData.slot === filter;
             });
         }
-        DOM.modals.equipSelect.style.display = 'flex';
+        
+        // 3. Renderiza os Cards
+        if (itemsToShow.length === 0) {
+            DOM.modals.itemSelectPlaceholder.style.display = 'block';
+            return;
+        }
+        
+        DOM.modals.itemSelectPlaceholder.style.display = 'none';
+        itemsToShow.forEach(item => {
+            const isEquipment = !!item.instance_id;
+            const itemData = isEquipment ? item : COMPONENTS_DB[item.id]; // 'item' pode ser uma instância (equip) ou um tipo (componente)
+            const itemId = isEquipment ? item.instance_id : item.id;
+            
+            // Stats
+            const statsHtml = Object.entries(itemData.stats || {}).map(([stat, value]) => `<p>${stat}: +${value}</p>`).join('');
+            
+            // Slots (só para equipamento)
+            let slotsHtml = '';
+            if (isEquipment) {
+                slotsHtml = '<ul>';
+                item.embed_slots.forEach((slot, index) => {
+                    if (index < item.slots_unlocked) {
+                        slotsHtml += `<li>Slot ${index + 1}: [${slot.component ? COMPONENTS_DB[slot.component].name : 'EMPTY'}]</li>`;
+                    } else {
+                        slotsHtml += `<li>Slot ${index + 1}: [LOCKED]</li>`;
+                    }
+                });
+                slotsHtml += '</ul>';
+            }
+
+            const card = document.createElement('div');
+            card.className = 'modal-item-card panel';
+            card.innerHTML = `
+                <img src="${itemData.icon}" alt="${itemData.name}" onerror="this.src='images/kid-placeholder.png'">
+                <div class="card-info">
+                    <h4>${itemData.name} ${isEquipment ? `(Lvl ${itemData.level})` : ''}</h4>
+                    <div class="item-stats">
+                        ${statsHtml}
+                    </div>
+                    <div class="item-components">
+                        ${slotsHtml}
+                    </div>
+                </div>
+                <button class="action-btn small-btn select-item-btn" data-item-id="${itemId}">Select</button>
+            `;
+            grid.appendChild(card);
+        });
     }
 
-    function closeEquipmentModal() { DOM.modals.equipSelect.style.display = 'none'; }
-    function equipItem(itemId, slotName) {
-        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
-        if (!kid) return;
-        kid.equipped[slotName] = itemId;
-        renderHubPreparationScreen(); 
-        closeEquipmentModal();
-    }
-    function unequipItem(slotName) {
-        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
-        if (!kid) return;
-        kid.equipped[slotName] = null;
-        renderHubPreparationScreen();
-    }
-    function openEditNameModal() {
-        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
-        if (!kid) return;
-        DOM.modals.editNameInput.value = kid.name;
-        DOM.modals.editName.style.display = 'flex';
-    }
-    function closeEditNameModal() { DOM.modals.editName.style.display = 'none'; }
-    function saveEditName() {
-        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
-        if (!kid) return;
-        const newName = DOM.modals.editNameInput.value;
-        if (newName && newName.trim() !== "") {
-            kid.name = newName;
-            renderHubPreparationScreen(); 
-            closeEditNameModal();
+    /**
+     * NOVO: Chamado quando o botão "Select" no modal é clicado
+     */
+    function handleItemSelect(selectedId) {
+        const context = gameState.hub.itemModalContext;
+
+        if (context.startsWith('equip_')) {
+            const slot = context.split('_')[1];
+            equipItem(selectedId, slot); // selectedId é a instance_id
+        
+        } else if (context === 'embed_gear') {
+            const itemInstance = gameState.player.inventory.equipment.find(e => e.instance_id === selectedId);
+            gameState.hub.embed.slotGear = itemInstance;
+            renderWsEmbed();
+        
+        } else if (context === 'embed_component') {
+            gameState.hub.embed.slotComponent = selectedId; // selectedId é o comp_id
+            renderWsEmbed();
         }
+        
+        closeItemSelectionModal();
     }
+    
+    function closeItemSelectionModal() {
+        DOM.modals.itemSelect.style.display = 'none';
+        gameState.hub.itemModalContext = null;
+    }
+
+
+    function openEditNameModal() { /* ... (sem mudanças) ... */ }
+    function closeEditNameModal() { /* ... (sem mudanças) ... */ }
+    function saveEditName() { /* ... (sem mudanças) ... */ }
+    
+    /**
+     * ATUALIZADO: Calcula Antes e Depois para o modal de confirmação
+     */
     function openEmbedConfirmModal() { 
-        DOM.modals.embedBefore.innerHTML = "<h4>Before</h4><p>...</p>";
-        DOM.modals.embedAfter.innerHTML = "<h4>After</h4><p>...</p>";
+        const gear = gameState.hub.embed.slotGear;
+        const componentId = gameState.hub.embed.slotComponent;
+        const component = COMPONENTS_DB[componentId];
+        
+        // 1. Stats "Antes"
+        let beforeHtml = '<h4>Before</h4>';
+        Object.entries(gear.stats).forEach(([stat, val]) => beforeHtml += `<p>${stat}: +${val}</p>`);
+        DOM.modals.embedBefore.innerHTML = beforeHtml;
+        
+        // 2. Stats "Depois" (simulado)
+        let afterHtml = '<h4>After</h4>';
+        let afterStats = {...gear.stats};
+        for (const stat in component.stats) {
+            if (afterStats.hasOwnProperty(stat)) {
+                afterStats[stat] += component.stats[stat];
+            } else {
+                afterStats[stat] = component.stats[stat];
+            }
+        }
+        Object.entries(afterStats).forEach(([stat, val]) => afterHtml += `<p>${stat}: +${val}</p>`);
+        DOM.modals.embedAfter.innerHTML = afterHtml;
+        
         DOM.modals.embedConfirm.style.display = 'flex';
     }
+    
     function closeEmbedConfirmModal() { DOM.modals.embedConfirm.style.display = 'none'; }
 
 
     /* ==================================================================== */
-    /* SEÇÃO 8: LÓGICA DA TELA 4 (GAME SCREEN) - INTEGRADO COM DBs
+    /* SEÇÃO 8: LÓGICA DA TELA 4 (GAME SCREEN)
     /* ==================================================================== */
 
     function startGameplay() {
@@ -839,14 +1091,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    /**
-     * ATUALIZADO: Usa o database/drops.js
-     */
     function handleCollect() {
-        if (typeof DROP_TABLES === 'undefined') {
-            console.error("ERRO: database/drops.js não carregado!");
-            return;
-        }
+        if (typeof DROP_TABLES === 'undefined') { console.error("ERRO: database/drops.js não carregado!"); return; }
 
         gameState.expedition.currentAP--;
         
@@ -880,14 +1126,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGameStatusPanel();
     }
     
-    /**
-     * ATUALIZADO: Usa database/spawn_logic.js e database/drops.js
-     */
     function handleInvestigate() {
-        if (typeof DROP_TABLES === 'undefined') {
-            console.error("ERRO: database/drops.js não carregado!");
-            return;
-        }
+        if (typeof DROP_TABLES === 'undefined') { console.error("ERRO: database/drops.js não carregado!"); return; }
 
         gameState.expedition.currentAP--;
         const luck = gameState.expedition.stats.luck;
@@ -899,7 +1139,7 @@ document.addEventListener('DOMContentLoaded', () => {
              showActionFeedback("Ambush!", `A ${enemy.name} appeared!`);
              startCombat(enemy);
              renderGameStatusPanel();
-             return; // Para a ação aqui
+             return; 
         }
 
         // 2. Se não houver emboscada, rolar a tabela de saque (drops.js)
@@ -914,7 +1154,7 @@ document.addEventListener('DOMContentLoaded', () => {
              return;
         }
 
-        let roll = (Math.random() * 100) + luck; // Rola 0-99.9 e adiciona sorte
+        let roll = (Math.random() * 100) + luck; 
         let dropFound = null;
 
         for (const drop of investigateTable) {
@@ -938,7 +1178,6 @@ document.addEventListener('DOMContentLoaded', () => {
             logMessage(`You found a secret stash! (+${amount}x ${ITEM_DB[resourceId].name})`, 'reward');
             showActionFeedback("Success!", `You found ${amount}x ${ITEM_DB[resourceId].name}!`);
         } else {
-            // Resultado foi "nothing"
             logMessage("Investigation revealed nothing.");
             showActionFeedback("Nothing Found", `You found nothing of interest.`);
         }
@@ -946,9 +1185,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGameStatusPanel();
     }
     
-    /**
-     * ATUALIZADO: Usa database/spawn_logic.js
-     */
     function handleSearchEnemy() {
         gameState.expedition.currentAP -= 2;
         
@@ -965,11 +1201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGameStatusPanel();
     }
 
-    /**
-     * ATUALIZADO: Usa database/spawn_logic.js
-     */
     function getRandomEnemy(actionType) {
-        // Assegura que os DBs estão carregados
         if (typeof SPAWN_LOGIC === 'undefined' || typeof ENEMIES_BY_BIOME === 'undefined') {
             console.error("ERRO: Bancos de dados (spawn_logic.js ou enemies.js) não carregados!");
             return null;
@@ -978,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const logic = SPAWN_LOGIC[actionType];
         if (!logic) return null;
 
-        const roll = Math.random() * 100; // 0-99.9
+        const roll = Math.random() * 100; 
         let cumulativeChance = 0;
 
         for (const tier of logic.chances) {
@@ -992,16 +1224,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const biome = STATIC_MAP_DATA.get(biomeKey).biome;
                 
                 if (ENEMIES_BY_BIOME[biome] && ENEMIES_BY_BIOME[biome][tier.type]) {
-                    // Retorna um CLONE do objeto inimigo
                     return JSON.parse(JSON.stringify(ENEMIES_BY_BIOME[biome][tier.type]));
                 } else {
-                    // Fallback se um inimigo não estiver definido
                     console.warn(`Inimigo ${tier.type} não encontrado para bioma ${biome}. Usando fallback.`);
                     return JSON.parse(JSON.stringify(ENEMIES_BY_BIOME["wasteland"]["common"]));
                 }
             }
         }
-        return null; // Fallback
+        return null; 
     }
 
     
@@ -1097,7 +1327,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let found = 0;
             for (const resId in gameState.expedition.resourcesFound) {
                 const amount = gameState.expedition.resourcesFound[resId];
-                const itemDB = ITEM_DB[resId]; // Usa o DB Mestre
+                const itemDB = ITEM_DB[resId]; 
                 
                 if (amount > 0 && itemDB) {
                     DOM.modals.endExpeditionList.innerHTML += `
@@ -1124,15 +1354,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleReturnToHub(isSuccess) {
         if (isSuccess) {
-            // Adiciona recursos ao inventário principal
             for (const resId in gameState.expedition.resourcesFound) {
-                // Atualiza o inventário correto (materiais ou componentes)
-                if (MATERIALS[resId]) {
+                if (MATERIALS_DB[resId]) {
                     if (!gameState.player.inventory.materials[resId]) {
                         gameState.player.inventory.materials[resId] = 0;
                     }
                     gameState.player.inventory.materials[resId] += gameState.expedition.resourcesFound[resId];
-                } else if (COMPONENTS[resId]) {
+                } else if (COMPONENTS_DB[resId]) {
                     if (!gameState.player.inventory.components[resId]) {
                         gameState.player.inventory.components[resId] = 0;
                     }
@@ -1313,7 +1541,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     gameState.expedition.resourcesFound[resId] += amount;
                     
-                    const itemDB = ITEM_DB[resId]; // Usa o DB Mestre
+                    const itemDB = ITEM_DB[resId]; 
                     const itemName = itemDB ? itemDB.name : resId;
                     
                     DOM.modals.victoryRewardList.innerHTML += `<li>${amount}x ${itemName}</li>`;
@@ -1339,10 +1567,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ==================================================================== */
-    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
+    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS (Atualizado)
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v4.5 Initialized (DB Integration).");
+        console.log("CyberKidz Expedition v4.5 Initialized (Embed Logic Stub).");
 
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
@@ -1370,11 +1598,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Tela 3 (Abas e Manequim) ---
         DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen')); 
         DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
+        
+        // Listener do Manequim (chama o novo modal)
         DOM.hubPreparation.mannequin.addEventListener('click', (e) => {
             if (e.target.closest('.equip-slot')) {
-                const slotDiv = e.target.closest('.equip-slot'); if (!slotDiv.classList.contains('equipped')) { openEquipmentModal(slotDiv.dataset.slot); }
-            } else if (e.target.closest('.equip-remove-btn')) { const removeBtn = e.target.closest('.equip-remove-btn'); unequipItem(removeBtn.dataset.slot); }
+                const slotDiv = e.target.closest('.equip-slot');
+                if (!slotDiv.classList.contains('equipped')) {
+                    const slotName = slotDiv.dataset.slot;
+                    openItemSelectionModal(`equip_${slotName}`, slotName); // Ex: openItemSelectionModal('equip_helmet', 'helmet')
+                }
+            } else if (e.target.closest('.equip-remove-btn')) { 
+                const removeBtn = e.target.closest('.equip-remove-btn'); 
+                unequipItem(removeBtn.dataset.slot); 
+            }
         });
+        
+        // Listener das Abas do Workshop
         DOM.hubPreparation.workshopPanel.addEventListener('click', (e) => {
             const mainTabBtn = e.target.closest('.tab-btn[data-main-tab]'); const subTabBtn = e.target.closest('.tab-btn[data-sub-tab]');
             if (mainTabBtn) { gameState.hub.tabs.activeMainTab = mainTabBtn.dataset.mainTab; renderWorkshopTabs(); } 
@@ -1383,6 +1622,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (newSubTab.startsWith('inv-')) { gameState.hub.tabs.activeInvSubTab = newSubTab; } 
                 else if (newSubTab.startsWith('ws-')) { gameState.hub.tabs.activeWsSubTab = newSubTab; }
                 renderWorkshopTabs();
+            }
+        });
+
+        // NOVO: Listeners da Aba Embed
+        DOM.hubPreparation.embedUi.addEventListener('click', (e) => {
+            // Clique no botão "X" de remoção
+            if (e.target.closest('.embed-remove-btn')) {
+                const slotType = e.target.closest('.embed-remove-btn').dataset.slotType; // 'gear' or 'component'
+                clearEmbedSlot(slotType);
+            }
+            // Clique no slot de Equipamento
+            else if (e.target.closest('#embed-slot-gear')) {
+                openItemSelectionModal('embed_gear', 'all'); // Abre modal para selecionar equipamento
+            }
+            // Clique no slot de Componente (só se o de equipamento estiver preenchido)
+            else if (e.target.closest('#embed-slot-component')) {
+                if (!gameState.hub.embed.slotGear) {
+                    console.log("Select equipment first!");
+                    return;
+                }
+                openItemSelectionModal('embed_component', 'component'); // Abre modal para selecionar componente
             }
         });
         
@@ -1394,15 +1654,34 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.game.endTurnBtn.addEventListener('click', endDay);
         
         // --- Modais ---
-        DOM.modals.equipCloseBtn.addEventListener('click', closeEquipmentModal); 
-        DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
+        DOM.modals.editNameBtn.addEventListener('click', openEditNameModal);
         DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal); 
         DOM.modals.editNameSave.addEventListener('click', saveEditName);
         
+        // Modal Universal de Itens
+        DOM.modals.itemSelectCloseBtn.addEventListener('click', closeItemSelectionModal);
+        DOM.modals.itemSelectFilterBar.addEventListener('click', (e) => {
+            if(e.target.classList.contains('modal-filter-btn')) {
+                const filter = e.target.dataset.filter;
+                renderItemModalGrid(filter);
+            }
+        });
+        DOM.modals.itemSelectGrid.addEventListener('click', (e) => {
+            if(e.target.classList.contains('select-item-btn')) {
+                const itemId = e.target.dataset.itemId;
+                handleItemSelect(itemId);
+            }
+        });
+
         // Modal de Embed
         DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal); 
         DOM.modals.embedCancelBtn.addEventListener('click', closeEmbedConfirmModal);
-        DOM.modals.embedConfirmBtn.addEventListener('click', () => { console.log("Embedding confirmed (simulated)!"); closeEmbedConfirmModal(); });
+        DOM.modals.embedConfirmBtn.addEventListener('click', () => { 
+            // TODO: Adicionar lógica real de Embed (modificar o item no inventário)
+            console.log("Embedding confirmed (simulated)!");
+            clearEmbedSlot('gear'); // Limpa os slots
+            closeEmbedConfirmModal(); 
+        });
 
         // Modal de Combate
         DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack); 
