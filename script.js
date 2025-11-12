@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.6 (Correção de Bug de Inicialização 'equipCloseBtn')
+// VERSÃO 4.7 (Correção Final do Bug de Inicialização do Modal)
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ==================================================================== */
-    /* SEÇÃO 3: CACHE DE ELEMENTOS DO DOM
+    /* SEÇÃO 3: CACHE DE ELEMENTOS DO DOM (Corrigido)
     /* ==================================================================== */
 
     const DOM = {
@@ -214,6 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
             log: document.getElementById('game-log')
         },
         modals: {
+            // ** CORREÇÃO: Removido o cache do modal antigo (equipSelect, etc.) **
+            // Modal Universal de Itens
             itemSelect: document.getElementById('item-select-modal'),
             itemSelectTitle: document.getElementById('modal-item-title'),
             itemSelectFilterBar: document.getElementById('modal-filter-bar'),
@@ -292,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             itemInstance.embed_slots.forEach(slot => {
                 if(slot.component) {
-                    const component = COMPONENTS_DB[slot.component];
+                    const component = COMPONENTS_DB_SAFE[slot.component];
                     if (component && component.stats) {
                         for (const stat in component.stats) {
                              if (finalStats.hasOwnProperty(stat)) {
@@ -632,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (slotComponent) {
-            const component = COMPONENTS_DB[slotComponent];
+            const component = COMPONENTS_DB_SAFE[slotComponent];
             DOM.hubPreparation.embedSlotComponent.innerHTML = `<img src="${component.icon}" alt="${component.name}" style="width: 50px;"> <p>${component.name}</p>`;
             DOM.hubPreparation.embedSlotComponent.classList.add('equipped');
         } else {
@@ -707,7 +709,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const gear = embed.slotGear;
             if (gear) {
                 const baseItem = EQUIPMENT_DB_SAFE[gear.item_id];
-                const allowedTypes = SYNERGY_MAP[baseItem.synergy] || ["universal"];
+                // Assegura que SYNERGY_MAP está carregado
+                const allowedTypes = (typeof SYNERGY_MAP !== 'undefined' && SYNERGY_MAP[baseItem.synergy]) ? SYNERGY_MAP[baseItem.synergy] : ["universal"];
                 
                 Object.keys(gameState.player.inventory.components).forEach(compId => {
                     const component = COMPONENTS_DB_SAFE[compId];
@@ -1506,10 +1509,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ==================================================================== */
-    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
+    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS (Corrigido)
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v4.6 Initialized (Modular Item DBs).");
+        console.log("CyberKidz Expedition v4.7 Initialized (Button Fix).");
 
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
@@ -1587,7 +1590,11 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.game.endTurnBtn.addEventListener('click', endDay);
         
         // --- Modais ---
-        DOM.modals.editNameBtn.addEventListener('click', openEditNameModal);
+        
+        // ** CORREÇÃO V4.7: Removida a linha com bug abaixo **
+        // DOM.modals.equipCloseBtn.addEventListener('click', closeEquipmentModal); 
+        
+        DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
         DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal); 
         DOM.modals.editNameSave.addEventListener('click', saveEditName);
         
