@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.4 (Correção do Botão "Manage & Equip")
+// VERSÃO 4.4 (Integração com Banco de Dados de Drops)
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,34 +24,74 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1.2: Biomas ---
     const BIOMES = {
-        volcanics: { name: "Burning Ridge", resource: "scrap" }, reptilians: { name: "Covenant Swamp", resource: "food" },
-        radioactives: { name: "Lake Rancid", resource: "food" }, nocturnals: { name: "Ancient Ruins", resource: "scrap" },
-        undergrounders: { name: "Abandoned Mines", resource: "water" }, wasteland: { name: "Wasteland", resource: "scrap" }
+        volcanics: { name: "Burning Ridge", resource: "mat_metal" }, // Atualizado para ID do item
+        reptilians: { name: "Covenant Swamp", resource: "mat_food" },
+        radioactives: { name: "Lake Rancid", resource: "mat_strange_fluid" },
+        nocturnals: { name: "Ancient Ruins", resource: "mat_scrap" },
+        undergrounders: { name: "Abandoned Mines", resource: "mat_water" },
+        wasteland: { name: "Wasteland", resource: "mat_scrap" }
     };
     
-    // --- 1.3: Inimigos ---
-    // Carregado de database/enemies.js
+    // --- 1.3: Inimigos e Lógica de Spawn ---
+    // Carregado de database/enemies.js e database/spawn_logic.js
     
-    // --- 1.4: Banco de Dados de Crafting ---
-    const MATERIALS = { scrap: { name: "Scrap", icon: "images/icon_scrap.png" }, water: { name: "Clean Water", icon: "images/icon_water.png" }, food: { name: "Food", icon: "images/icon_food.png" }, metal: { name: "Metal", icon: "images/icon_metal.png" } };
-    const COMPONENTS = { volcanic_core: { name: "Volcanic Core", stats: { damage: 5 }, icon: "images/icon_component.png" }, defense_plate: { name: "Defense Plate", stats: { defense: 5 }, icon: "images/icon_component.png" } };
-    
-    COMPONENTS['volcanics_core'] = { name: "Volcanics Core", stats: { damage: 1 }, icon: "images/icon_component.png" };
-    COMPONENTS['undergrounders_core'] = { name: "Undergrounders Core", stats: { defense: 1 }, icon: "images/icon_component.png" };
-    COMPONENTS['nocturnals_core'] = { name: "Nocturnals Core", stats: { speed: 1 }, icon: "images/icon_component.png" };
-    COMPONENTS['radioactives_core'] = { name: "Radioactives Core", stats: { hpRegen: 1 }, icon: "images/icon_component.png" };
-    COMPONENTS['reptilians_core'] = { name: "Reptilians Core", stats: { hp: 10 }, icon: "images/icon_component.png" };
-    COMPONENTS['wasteland_core'] = { name: "Wasteland Core", stats: { luck: 1 }, icon: "images/icon_component.png" };
+    // --- 1.4: Banco de Dados de Crafting (ATUALIZADO) ---
+    // Esta é a lista mestre de todos os itens (Materiais e Componentes)
+    // Baseado na sua planilha (Excel)
+    const MATERIALS = {
+        // Volcanics
+        'mat_metal': { name: "Metal", icon: "images/icons/materials/mat_metal.png" },
+        'mat_magma': { name: "Magma", icon: "images/icons/materials/mat_magma.png" },
+        'mat_volcanic_pumice_stone': { name: "Volcanic Pumice Stone", icon: "images/icons/materials/mat_volcanic_pumice_stone.png" },
+        'mat_obsidian_tears': { name: "Obsidian Tears", icon: "images/icons/materials/mat_obsidian_tears.png" },
+        // Undergrounders
+        'mat_water': { name: "Water", icon: "images/icons/materials/mat_water.png" },
+        'mat_energized_crystals': { name: "Energized Crystals", icon: "images/icons/materials/mat_energized_crystals.png" },
+        'mat_thermal_water': { name: "Thermal Water", icon: "images/icons/materials/mat_thermal_water.png" },
+        'mat_special_clay': { name: "Special Clay", icon: "images/icons/materials/mat_special_clay.png" },
+        'mat_glass': { name: "Glass", icon: "images/icons/materials/mat_glass.png" },
+        // Nocturnals
+        'mat_scrap': { name: "Scrap", icon: "images/icons/materials/mat_scrap.png" },
+        'mat_polymer': { name: "Polymer", icon: "images/icons/materials/mat_polymer.png" },
+        'mat_nanochips': { name: "Nanochips", icon: "images/icons/materials/mat_nanochips.png" },
+        'mat_cybernetic_implants': { name: "Cybernetic Implants", icon: "images/icons/materials/mat_cybernetic_implants.png" },
+        'mat_quantum_energy_core': { name: "Quantum Energy Core", icon: "images/icons/materials/mat_quantum_energy_core.png" },
+        // Radioactives
+        'mat_strange_fluid': { name: "Strange Fluid", icon: "images/icons/materials/mat_strange_fluid.png" },
+        'mat_parasitic_fungus': { name: "Parasitic Fungus", icon: "images/icons/materials/mat_parasitic_fungus.png" },
+        'mat_venom_glands': { name: "Venom Glands", icon: "images/icons/materials/mat_venom_glands.png" },
+        'mat_luminescent_algae': { name: "Luminescent Algae", icon: "images/icons/materials/mat_luminescent_algae.png" },
+        // Reptilians
+        'mat_food': { name: "Food", icon: "images/icons/materials/mat_food.png" },
+        'mat_healing_plants': { name: "Healing Plants", icon: "images/icons/materials/mat_healing_plants.png" },
+        'mat_hallucinogenic_fungi': { name: "Hallucinogenic Fungi", icon: "images/icons/materials/mat_hallucinogenic_fungi.png" },
+        'mat_animal_skin': { name: "Animal Skin", icon: "images/icons/materials/mat_animal_skin.png" },
+        'mat_reptilian_blood': { name: "Reptilian Blood", icon: "images/icons/materials/mat_reptilian_blood.png" }
+    };
 
+    // Componentes (dos drops de boss e inventário inicial)
+    const COMPONENTS = { 
+        'volcanic_core': { name: "Volcanic Core", stats: { damage: 5 }, icon: "images/icon_component.png" }, 
+        'defense_plate': { name: "Defense Plate", stats: { defense: 5 }, icon: "images/icon_component.png" },
+        'volcanics_core': { name: "Volcanics Core", stats: { damage: 1 }, icon: "images/icon_component.png" },
+        'undergrounders_core': { name: "Undergrounders Core", stats: { defense: 1 }, icon: "images/icon_component.png" },
+        'nocturnals_core': { name: "Nocturnals Core", stats: { speed: 1 }, icon: "images/icon_component.png" },
+        'radioactives_core': { name:Am: "Radioactives Core", stats: { hpRegen: 1 }, icon: "images/icon_component.png" },
+        'reptilians_core': { name: "Reptilians Core", stats: { hp: 10 }, icon: "images/icon_component.png" },
+        'wasteland_core': { name: "Wasteland Core", stats: { luck: 1 }, icon: "images/icon_component.png" }
+    };
+    
+    // Combina ambos os bancos de dados em um mestre (para UI)
+    const ITEM_DB = { ...MATERIALS, ...COMPONENTS };
 
     const RECIPES_CRAFT = {
-        empty_helmet: { name: "Rustic Helmet (Empty)", cost: { scrap: 8 }, type: "equipment", level: 1, stats: {}, slot: "helmet", icon: "images/icon_helmet.png" },
-        empty_weapon: { name: "Rustic Blade (Empty)", cost: { scrap: 10 }, type: "equipment", level: 1, stats: {}, slot: "weapon", icon: "images/icon_weapon.png" }
+        empty_helmet: { name: "Rustic Helmet (Empty)", cost: { mat_scrap: 8 }, type: "equipment", level: 1, stats: {}, slot: "helmet", icon: "images/icon_helmet.png" },
+        empty_weapon: { name: "Rustic Blade (Empty)", cost: { mat_scrap: 10 }, type: "equipment", level: 1, stats: {}, slot: "weapon", icon: "images/icon_weapon.png" }
     };
     const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
     const STATS_LIST = ['hp', 'ap', 'speed', 'damage', 'defense', 'critChance', 'critDamage', 'attackSpeed', 'hpRegen', 'blockChance', 'luck'];
 
-    // --- 1.5: Definição do Mapa Estático (Coordenadas Fixas) ---
+    // --- 1.5: Definição do Mapa Estático ---
     const STATIC_MAP_DATA = new Map([
         ["-3,0", { biome: "volcanics" }], ["-3,1", { biome: "volcanics" }], ["-3,2", { biome: "volcanics" }],
         ["-2,-1", { biome: "volcanics" }], ["-2,0", { biome: "volcanics" }], ["-2,1", { biome: "volcanics" }],
@@ -100,8 +140,16 @@ document.addEventListener('DOMContentLoaded', () => {
         player: {
             tezerium: 1000,
             inventory: {
-                materials: { scrap: 100, water: 100, food: 100, metal: 5 },
-                components: { volcanic_core: 1, defense_plate: 1 },
+                // Inventário inicial de materiais
+                materials: { 
+                    "mat_scrap": 100, "mat_water": 100, "mat_food": 100, "mat_metal": 5, 
+                    "mat_magma": 0, "mat_volcanic_pumice_stone": 0, "mat_obsidian_tears": 0,
+                    "mat_energized_crystals": 0, "mat_thermal_water": 0, "mat_special_clay": 0, "mat_glass": 0,
+                    "mat_polymer": 0, "mat_nanochips": 0, "mat_cybernetic_implants": 0, "mat_quantum_energy_core": 0,
+                    "mat_strange_fluid": 0, "mat_parasitic_fungus": 0, "mat_venom_glands": 0, "mat_luminescent_algae": 0,
+                    "mat_healing_plants": 0, "mat_hallucinogenic_fungi": 0, "mat_animal_skin": 0, "mat_reptilian_blood": 0
+                },
+                components: { "volcanic_core": 1, "defense_plate": 1 },
                 equipment: [
                     { id: 'h1', name: 'Plate Helmet', level: 1, slot: 'helmet', stats: { defense: 5, blockChance: 3 }, icon: 'images/icon_helmet.png' },
                     { id: 'h2', name: 'Rustic Helmet', level: 1, slot: 'helmet', stats: { defense: 2 }, icon: 'images/icon_helmet.png' },
@@ -342,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ==================================================================== */
-    /* SEÇÃO 6: LÓGICA DA TELA 2 (HUB SELECTION) - CORRIGIDO
+    /* SEÇÃO 6: LÓGICA DA TELA 2 (HUB SELECTION)
     /* ==================================================================== */
 
     function renderHubSelectionScreen() {
@@ -379,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.className = 'nft-card panel';
                 card.dataset.nftId = kid.id;
                 
-                // ** CORREÇÃO V4.4: Corrigido 'classs' para 'class' **
                 card.innerHTML = `
                     <img src="${kid.placeholderImg}" alt="${kid.name}" onerror="this.src='images/kid-placeholder.png'">
                     <h4>${kid.name}</h4>
@@ -388,9 +435,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="action-btn select-kid-btn" data-kid-id="${kid.id}">Manage & Equip</button>
                 `;
                 
-                // ** CORREÇÃO V4.4: Removido o listener de clique daqui **
-                // (Ele agora está no initialize() via Delegação)
-
                 DOM.hubSelection.nftGrid.appendChild(card);
             });
         }
@@ -527,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = DOM.hubPreparation.materialsTableBody;
         tbody.innerHTML = ''; 
         for (const matId in gameState.player.inventory.materials) {
-            const material = MATERIALS[matId];
+            const material = ITEM_DB[matId]; // Usa o DB Mestre
             const quantity = gameState.player.inventory.materials[matId];
             if (material) {
                 tbody.innerHTML += `
@@ -747,8 +791,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let found = 0;
         for (const resId in gameState.expedition.resourcesFound) {
             const amount = gameState.expedition.resourcesFound[resId];
-            if (amount > 0 && MATERIALS[resId]) { 
-                DOM.game.resourceList.innerHTML += `<li>${MATERIALS[resId].name}: <span>${amount}</span></li>`; 
+            if (amount > 0 && ITEM_DB[resId]) { // Usa o DB Mestre
+                DOM.game.resourceList.innerHTML += `<li>${ITEM_DB[resId].name}: <span>${amount}</span></li>`; 
                 found++; 
             }
         }
@@ -798,28 +842,135 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    /**
+     * ATUALIZADO: Usa o database/drops.js
+     */
     function handleCollect() {
         gameState.expedition.currentAP--;
-        const luck = gameState.expedition.stats.luck / 100;
-        let amount = Math.ceil((Math.floor(Math.random() * 3) + 1) * (1 + luck));
+        
         const biomeKey = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
         const biome = STATIC_MAP_DATA.get(biomeKey).biome;
-        const resourceId = BIOMES[biome].resource;
+        const luck = gameState.expedition.stats.luck / 100;
         
-        if (!gameState.expedition.resourcesFound[resourceId]) {
-            gameState.expedition.resourcesFound[resourceId] = 0;
+        // Pega a tabela de coleta do bioma
+        const collectTable = DROP_TABLES[biome]?.collect;
+        if (!collectTable) {
+            logMessage("This land is barren. Nothing to collect.", 'error');
+            renderGameStatusPanel();
+            return;
         }
-        gameState.expedition.resourcesFound[resourceId] += amount;
 
-        logMessage(`Collected ${amount}x ${MATERIALS[resourceId].name}!`, 'reward');
-        showActionFeedback("Collection Succeeded!", `You found ${amount}x ${MATERIALS[resourceId].name}`);
+        // Processa cada item na tabela de coleta (normalmente apenas um)
+        collectTable.forEach(drop => {
+            const [min, max] = drop.quantity;
+            let amount = Math.floor(Math.random() * (max - min + 1)) + min;
+            amount = Math.ceil(amount * (1 + luck)); // Bônus de Sorte
+            
+            const resourceId = drop.item;
+            
+            if (!gameState.expedition.resourcesFound[resourceId]) {
+                gameState.expedition.resourcesFound[resourceId] = 0;
+            }
+            gameState.expedition.resourcesFound[resourceId] += amount;
+
+            logMessage(`Collected ${amount}x ${ITEM_DB[resourceId].name}!`, 'reward');
+            showActionFeedback("Collection Succeeded!", `You found ${amount}x ${ITEM_DB[resourceId].name}`);
+        });
+
         renderGameStatusPanel();
     }
     
     /**
-     * NOVO: Sorteia um inimigo com base nas chances da ação
+     * ATUALIZADO: Usa database/spawn_logic.js e database/drops.js
+     */
+    function handleInvestigate() {
+        gameState.expedition.currentAP--;
+        const luck = gameState.expedition.stats.luck;
+        
+        // 1. Verificar se há emboscada
+        const enemy = getRandomEnemy("Investigate");
+        if (enemy) {
+             logMessage(`It's an ambush! A ${enemy.name} appeared!`, 'combat');
+             showActionFeedback("Ambush!", `A ${enemy.name} appeared!`);
+             startCombat(enemy);
+             renderGameStatusPanel();
+             return; // Para a ação aqui
+        }
+
+        // 2. Se não houver emboscada, rolar a tabela de saque (drops.js)
+        const biomeKey = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
+        const biome = STATIC_MAP_DATA.get(biomeKey).biome;
+        const investigateTable = DROP_TABLES[biome]?.investigate;
+        
+        if (!investigateTable) {
+             logMessage("Investigation revealed nothing.");
+             showActionFeedback("Nothing Found", `You found nothing of interest.`);
+             renderGameStatusPanel();
+             return;
+        }
+
+        let roll = (Math.random() * 100) + luck; // Rola 0-99.9 e adiciona sorte
+        let dropFound = null;
+
+        for (const drop of investigateTable) {
+            if (roll <= drop.chance) {
+                dropFound = drop;
+                break;
+            }
+        }
+
+        // 3. Processar o resultado
+        if (dropFound && dropFound.type !== 'nothing') {
+            const [min, max] = dropFound.quantity;
+            const amount = Math.floor(Math.random() * (max - min + 1)) + min;
+            const resourceId = dropFound.item;
+            
+            if (!gameState.expedition.resourcesFound[resourceId]) {
+                gameState.expedition.resourcesFound[resourceId] = 0;
+            }
+            gameState.expedition.resourcesFound[resourceId] += amount;
+
+            logMessage(`You found a secret stash! (+${amount}x ${ITEM_DB[resourceId].name})`, 'reward');
+            showActionFeedback("Success!", `You found ${amount}x ${ITEM_DB[resourceId].name}!`);
+        } else {
+            // Resultado foi "nothing"
+            logMessage("Investigation revealed nothing.");
+            showActionFeedback("Nothing Found", `You found nothing of interest.`);
+        }
+        
+        renderGameStatusPanel();
+    }
+    
+    /**
+     * ATUALIZADO: Usa database/spawn_logic.js
+     */
+    function handleSearchEnemy() {
+        gameState.expedition.currentAP -= 2;
+        
+        const enemy = getRandomEnemy("Search Enemy");
+
+        if (enemy) {
+             logMessage(`You found a ${enemy.name}!`, 'combat');
+             showActionFeedback("Enemy Found!", `A ${enemy.name} appeared!`);
+             startCombat(enemy);
+        } else {
+             // (Não deve acontecer com a lógica atual, mas é um fallback)
+             logMessage("You searched, but found nothing.");
+             showActionFeedback("Nothing Found", `The area seems clear.`);
+        }
+        renderGameStatusPanel();
+    }
+
+    /**
+     * ATUALIZADO: Usa database/spawn_logic.js
      */
     function getRandomEnemy(actionType) {
+        // Assegura que os DBs estão carregados
+        if (typeof SPAWN_LOGIC === 'undefined' || typeof ENEMIES_BY_BIOME === 'undefined') {
+            console.error("ERRO: Bancos de dados (spawn_logic.js ou enemies.js) não carregados!");
+            return null;
+        }
+        
         const logic = SPAWN_LOGIC[actionType];
         if (!logic) return null;
 
@@ -841,6 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return JSON.parse(JSON.stringify(ENEMIES_BY_BIOME[biome][tier.type]));
                 } else {
                     // Fallback se um inimigo não estiver definido
+                    console.warn(`Inimigo ${tier.type} não encontrado para bioma ${biome}. Usando fallback.`);
                     return JSON.parse(JSON.stringify(ENEMIES_BY_BIOME["wasteland"]["common"]));
                 }
             }
@@ -848,45 +1000,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return null; // Fallback
     }
 
-    /**
-     * ATUALIZADO: Usa a nova lógica de spawn
-     */
-    function handleInvestigate() {
-        gameState.expedition.currentAP--;
-        const luck = gameState.expedition.stats.luck;
-        
-        const enemy = getRandomEnemy("Investigate");
-        
-        if (enemy) {
-             logMessage(`It's an ambush! A ${enemy.name} appeared!`, 'combat');
-             showActionFeedback("Ambush!", `A ${enemy.name} appeared!`);
-             startCombat(enemy);
-        } else {
-            // TODO: Adicionar lógica de drop de recurso aqui
-            logMessage("Investigation revealed nothing.");
-            showActionFeedback("Nothing Found", `You found nothing of interest.`);
-        }
-        renderGameStatusPanel();
-    }
-    
-    /**
-     * ATUALIZADO: Usa a nova lógica de spawn
-     */
-    function handleSearchEnemy() {
-        gameState.expedition.currentAP -= 2;
-        
-        const enemy = getRandomEnemy("Search Enemy");
-
-        if (enemy) {
-             logMessage(`You found a ${enemy.name}!`, 'combat');
-             showActionFeedback("Enemy Found!", `A ${enemy.name} appeared!`);
-             startCombat(enemy);
-        } else {
-             logMessage("You searched, but found nothing.");
-             showActionFeedback("Nothing Found", `The area seems clear.`);
-        }
-        renderGameStatusPanel();
-    }
     
     function showActionFeedback(title, description) {
         if (DOM.game.skipAnimationsCheck.checked) return;
@@ -980,8 +1093,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let found = 0;
             for (const resId in gameState.expedition.resourcesFound) {
                 const amount = gameState.expedition.resourcesFound[resId];
-                // Procura em ambos os bancos de dados (Materiais e Componentes)
-                const itemDB = MATERIALS[resId] || COMPONENTS[resId];
+                const itemDB = ITEM_DB[resId]; // Usa o DB Mestre
                 
                 if (amount > 0 && itemDB) {
                     DOM.modals.endExpeditionList.innerHTML += `
@@ -1196,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     gameState.expedition.resourcesFound[resId] += amount;
                     
-                    const itemDB = MATERIALS[resId] || COMPONENTS[resId];
+                    const itemDB = ITEM_DB[resId]; // Usa o DB Mestre
                     const itemName = itemDB ? itemDB.name : resId;
                     
                     DOM.modals.victoryRewardList.innerHTML += `<li>${amount}x ${itemName}</li>`;
@@ -1225,7 +1337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v4.3 Initialized (DB Integration).");
+        console.log("CyberKidz Expedition v4.4 Initialized (DB Integration).");
 
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
@@ -1243,7 +1355,7 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.hubSelection.paginationPrev.addEventListener('click', () => handlePageChange('prev')); 
         DOM.hubSelection.paginationNext.addEventListener('click', () => handlePageChange('next'));
 
-        // ** CORREÇÃO V4.4: Adicionado o listener de delegação ao Grid **
+        // Listener de Delegação para o Grid de NFTs
         DOM.hubSelection.nftGrid.addEventListener('click', (e) => {
             if (e.target && e.target.classList.contains('select-kid-btn')) {
                 const kidId = e.target.dataset.kidId;
