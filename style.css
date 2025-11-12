@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - CSS
-// VERSÃO 4.2 (Novos Modais de Fim de Dia / Fim de Expedição)
+// VERSÃO 4.5 (Novo Modal de Seleção de Itens Universal)
 // ==================================================================== */
 
 /* ==================================================================== */
@@ -17,10 +17,9 @@
     --color-hp-bar: #00ff6a; /* Verde para HP */
     --color-mp-bar: #3a8cff; /* Azul para MP */
 
-    /* Variáveis do Mapa Hexagonal (Baseado no JS: HEX_SIZE_VISUAL = 50px) */
-    --hex-visual-size: 50px; /* Raio (metade da largura) */
+    /* Variáveis do Mapa Hexagonal */
+    --hex-visual-size: 50px; 
     --hex-visual-width: calc(var(--hex-visual-size) * 2); /* 100px */
-    /* Altura = size * sqrt(3) */
     --hex-visual-height: calc(var(--hex-visual-size) * 1.732); /* ~86.6px */
 }
 
@@ -248,10 +247,27 @@ p {
 .recipe-item.selected { border-color: var(--color-accent-blue); }
 .craft-recipe-details { padding: 15px; background-color: var(--color-bg-dark); }
 
+/* ATUALIZADO: Aba de Embed */
 .embed-ui { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 30px 0; }
+.embed-slot-wrapper { position: relative; } /* Para o botão X */
 .embed-slot { width: 150px; height: 150px; padding: 10px; border-width: 2px; border-style: dashed; display: flex; justify-content: center; align-items: center; text-align: center; color: var(--color-text-dim); cursor: pointer; }
 .embed-slot:hover { border-color: var(--color-accent-blue); }
+.embed-slot.disabled { cursor: not-allowed; opacity: 0.5; }
+.embed-slot.equipped { border-style: solid; border-color: var(--color-accent-blue); }
 .embed-plus { font-size: 2em; font-weight: bold; color: var(--color-accent-red); }
+.embed-remove-btn {
+    position: absolute; top: -8px; right: -8px;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background-color: var(--color-accent-red);
+    color: white; border: 2px solid var(--color-bg-dark);
+    cursor: pointer; font-weight: bold;
+    display: none; /* Escondido por padrão */
+    z-index: 2; padding: 0;
+}
+.embed-slot.equipped + .embed-remove-btn {
+    display: block; /* Mostra o X se o slot estiver equipado */
+}
 
 /* ==================================================================== */
 /* SEÇÃO 7: TELA 4 (GAME SCREEN) - IMAGE MAP
@@ -265,7 +281,6 @@ p {
     height: 80vh; 
 }
 
-/* --- Coluna Esquerda: Status Panel --- */
 #status-panel { display: flex; flex-direction: column; }
 .info-section { border: 1px solid #444; border-radius: 5px; padding: 10px; margin-bottom: 15px; }
 .kid-identity { display: flex; align-items: center; gap: 15px; }
@@ -275,14 +290,12 @@ p {
 #game-resource-list { list-style: none; padding-left: 0; font-size: 0.9em; }
 #exit-expedition-btn { margin-top: auto; }
 
-/* --- Coluna Central: Map Panel (IMAGE MAP) --- */
 #map-panel { display: flex; flex-direction: column; padding: 10px; }
 #map-panel h3 { margin: 5px 10px; flex-shrink: 0; }
 
 #game-map-container {
     position: relative; 
     width: 100%;
-    /* Proporção 4:5 (400px altura / 500px largura) */
     padding-top: 80%; 
     overflow: hidden; 
     background-color: #000;
@@ -299,12 +312,10 @@ p {
     height: 100%; 
 }
 
-/* Força a imagem a preencher o contêiner */
 #map-image {
     object-fit: fill; 
 }
 
-/* Overlay de Neblina */
 .hex-fog {
     position: absolute;
     width: var(--hex-visual-width); 
@@ -313,14 +324,13 @@ p {
     transform: translate(-50%, -50%); 
     background-color: rgba(0, 0, 0, 0.9); 
     pointer-events: none; 
-    opacity: 1; /* Começa LIGADO */
+    opacity: 1; 
     transition: opacity 0.5s ease;
 }
 .hex-fog.revealed {
     opacity: 0;
 }
 
-/* Marcador do Jogador */
 .kid-marker {
     position: absolute;
     font-size: 2em;
@@ -331,8 +341,6 @@ p {
     z-index: 10;
 }
 
-
-/* --- Coluna Direita: Actions & Log --- */
 #action-panel { display: flex; flex-direction: column; }
 .ap-mp-display { display: flex; justify-content: space-around; background-color: #111; border: 1px solid #444; border-radius: 5px; padding: 10px; margin-bottom: 15px; }
 .ap-mp-display div { font-size: 1.2em; font-weight: bold; }
@@ -345,7 +353,7 @@ p {
 .log-entry.day { color: yellow; font-weight: bold; } .log-entry.action { color: white; } .log-entry.reward { color: var(--color-hp-bar); } .log-entry.combat { color: var(--color-accent-red); } .log-entry.error { color: var(--color-accent-red); font-weight: bold; }
 
 /* ==================================================================== */
-/* SEÇÃO 8: MODAIS UNIVERSAIS (Atualizado com novos modais)
+/* SEÇÃO 8: MODAIS UNIVERSAIS (Atualizado)
 /* ==================================================================== */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -361,6 +369,12 @@ p {
     overflow-y: auto; position: relative;
     box-shadow: 0 0 20px var(--color-accent-blue);
 }
+/* NOVO: Modal Maior para seleção de itens */
+.modal-content.modal-large {
+    max-width: 900px;
+    width: 90%;
+}
+
 .modal-close-btn {
     position: absolute; top: 10px; right: 15px;
     background: none; border: none; color: var(--color-accent-red);
@@ -370,16 +384,95 @@ p {
     display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;
 }
 
-.equip-list-item { background-color: var(--color-bg-dark); border: 1px solid #444; border-radius: 5px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s; }
-.equip-list-item:hover { background-color: #3c3c57; }
-.equip-list-item h4 { color: var(--color-accent-blue); margin-top: 0; }
-.equip-list-item p { margin: 3px 0; color: #ccc; }
-.item-stats { color: var(--color-hp-bar); font-weight: bold; }
+/* --- NOVO: Modal de Seleção de Item (Universal) --- */
+.modal-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: var(--color-bg-dark);
+    border-radius: 5px;
+}
+.modal-filter-btn {
+    background-color: var(--color-panel-dark);
+    border: 1px solid #444;
+    color: var(--color-text-dim);
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.modal-filter-btn:hover {
+    border-color: var(--color-accent-blue);
+    color: var(--color-accent-blue);
+}
+.modal-filter-btn.active {
+    border-color: var(--color-accent-blue);
+    color: var(--color-accent-blue);
+    box-shadow: 0 0 5px var(--color-accent-blue);
+}
+/* Botão de Refresh */
+.modal-filter-btn[data-filter="all"] {
+    color: var(--color-accent-red);
+}
+.modal-filter-btn[data-filter="all"].active {
+    color: var(--color-accent-red);
+    border-color: var(--color-accent-red);
+    box-shadow: 0 0 5px var(--color-accent-red);
+}
 
+.modal-item-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding-top: 5px;
+}
+.modal-item-card {
+    background-color: var(--color-bg-dark);
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+.modal-item-card img {
+    width: 100%;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+.modal-item-card h4 {
+    color: var(--color-accent-blue);
+    margin-bottom: 5px;
+    font-size: 1em;
+}
+.modal-item-card .item-stats {
+    font-size: 0.8em;
+    color: var(--color-hp-bar);
+    margin-bottom: 10px;
+}
+.modal-item-card .item-components {
+    font-size: 0.7em;
+    color: var(--color-text-dim);
+}
+.modal-item-card .item-components ul {
+    list-style: none;
+    padding-left: 0;
+}
+.modal-item-card .action-btn {
+    margin-top: auto; /* Empurra o botão para baixo */
+}
+
+
+/* --- Outros Modais --- */
 #edit-name-modal input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--color-accent-blue); background-color: var(--color-bg-dark); color: var(--color-text-light); font-size: 1.1em; }
 
 .feedback-modal { max-width: 400px; text-align: center; }
-/* Usado por #action-feedback-modal e #end-day-modal */
 .feedback-modal h2, .feedback-modal h3 {
     color: var(--color-accent-blue);
     text-shadow: 0 0 5px var(--color-accent-blue);
@@ -390,8 +483,15 @@ p {
 #embed-before h4, #embed-after h4 { color: var(--color-text-dim); border-bottom: 1px solid #444; padding-bottom: 5px; }
 #embed-after { border-color: var(--color-hp-bar); }
 #embed-after h4 { color: var(--color-hp-bar); }
+/* NOVO: Texto de Aviso */
+.warning-text {
+    color: var(--color-accent-red);
+    font-size: 0.9em;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 15px;
+}
 
-/* NOVO: Estilos para o Modal de Fim de Expedição */
 .expedition-summary {
     max-height: 200px;
     overflow-y: auto;
@@ -410,7 +510,7 @@ p {
     font-size: 1.1em;
 }
 .expedition-summary img {
-    width: 24px; /* Tamanho 16x16 + padding */
+    width: 24px; 
     height: 24px;
     object-fit: contain;
 }
@@ -421,7 +521,7 @@ p {
 
 
 /* ==================================================================== */
-/* SEÇÃO 9: MODAL DE COMBATE (Revisado para Auto-Attack)
+/* SEÇÃO 9: MODAL DE COMBATE
 /* ==================================================================== */
 .combat-modal { max-width: 800px; }
 .combat-arena { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
@@ -478,6 +578,18 @@ p {
     .game-container { grid-template-columns: 1fr; height: auto; }
     #map-panel { min-height: 500px; }
 }
+
+@media (max-width: 768px) {
+    /* NOVO: Ajusta o modal grande para telas menores */
+    .modal-content.modal-large {
+        max-width: 95%;
+        width: 95%;
+    }
+    .modal-item-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+}
+
 
 @media (max-width: 600px) {
     body { padding: 10px; }
