@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.7 (Correção Final do Bug de Inicialização do Modal)
+// VERSÃO 4.8 (Bancos de Dados Modulares de Itens)
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- 1.3: Inimigos, Spawns, Drops, Equipamentos, Componentes ---
-    // Carregados via <script> tags no index.html
+    // Carregados via <script> tags no index.html (ex: ENEMIES_BY_BIOME, DROP_TABLES, etc.)
     
     // --- 1.4: Banco de Dados de Crafting (ATUALIZADO) ---
     const MATERIALS_DB = {
@@ -61,6 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
         'mat_animal_skin': { name: "Animal Skin", icon: "images/icons/materials/mat_animal_skin.png" },
         'mat_reptilian_blood': { name: "Reptilian Blood", icon: "images/icons/materials/mat_reptilian_blood.png" }
     };
+    
+    // ** CORREÇÃO V4.8: Removidas as declarações 'const' daqui **
+    // As variáveis COMPONENTS_DB, EQUIPMENT_DB, e SYNERGY_MAP 
+    // agora são carregadas dos arquivos da pasta /database/
     
     // Assegura que as variáveis carregadas existam
     const COMPONENTS_DB_SAFE = (typeof COMPONENTS_DB !== 'undefined' ? COMPONENTS_DB : {});
@@ -169,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ==================================================================== */
-    /* SEÇÃO 3: CACHE DE ELEMENTOS DO DOM (Corrigido)
+    /* SEÇÃO 3: CACHE DE ELEMENTOS DO DOM
     /* ==================================================================== */
 
     const DOM = {
@@ -214,8 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
             log: document.getElementById('game-log')
         },
         modals: {
-            // ** CORREÇÃO: Removido o cache do modal antigo (equipSelect, etc.) **
-            // Modal Universal de Itens
             itemSelect: document.getElementById('item-select-modal'),
             itemSelectTitle: document.getElementById('modal-item-title'),
             itemSelectFilterBar: document.getElementById('modal-filter-bar'),
@@ -663,6 +665,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funções de Ação do Hub (Modais) ---
     
     function openItemSelectionModal(context, defaultFilter = 'all') {
+        // Assegura que os DBs estão carregados
+        if (typeof EQUIPMENT_DB === 'undefined' || typeof COMPONENTS_DB === 'undefined' || typeof SYNERGY_MAP === 'undefined') {
+            console.error("ERRO: Bancos de dados (equipment.js, components.js, ou crafting_rules.js) não carregados!");
+            return;
+        }
+        
         gameState.hub.itemModalContext = context;
         DOM.modals.itemSelect.style.display = 'flex';
         
@@ -709,7 +717,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const gear = embed.slotGear;
             if (gear) {
                 const baseItem = EQUIPMENT_DB_SAFE[gear.item_id];
-                // Assegura que SYNERGY_MAP está carregado
                 const allowedTypes = (typeof SYNERGY_MAP !== 'undefined' && SYNERGY_MAP[baseItem.synergy]) ? SYNERGY_MAP[baseItem.synergy] : ["universal"];
                 
                 Object.keys(gameState.player.inventory.components).forEach(compId => {
@@ -1509,10 +1516,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ==================================================================== */
-    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS (Corrigido)
+    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v4.7 Initialized (Button Fix).");
+        console.log("CyberKidz Expedition v4.8 Initialized (Modular Item DBs).");
 
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
@@ -1590,11 +1597,7 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.game.endTurnBtn.addEventListener('click', endDay);
         
         // --- Modais ---
-        
-        // ** CORREÇÃO V4.7: Removida a linha com bug abaixo **
-        // DOM.modals.equipCloseBtn.addEventListener('click', closeEquipmentModal); 
-        
-        DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
+        DOM.modals.editNameBtn.addEventListener('click', openEditNameModal);
         DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal); 
         DOM.modals.editNameSave.addEventListener('click', saveEditName);
         
