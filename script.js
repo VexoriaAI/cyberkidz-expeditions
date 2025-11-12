@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.2 (Novos Modais de Fim de Dia / Fim de Expedição)
+// VERSÃO 4.3 (Integração com Banco de Dados de Inimigos e Spawn)
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,14 +30,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- 1.3: Inimigos ---
-    const ENEMIES = {
-        DRONE: { id: "drone", name: "CKC Drone", strength: 5, hp: 15, speed: 10, sprite: "images/drone-sprite.png", rewards: { scrap: 5, metal: 1 } },
-        MUTANT: { id: "mutant", name: "Wasteland Mutant", strength: 8, hp: 25, speed: 5, sprite: "images/mutant-sprite.png", rewards: { scrap: 10, food: 3 } }
-    };
+    // REMOVIDO: const ENEMIES = {...} agora é carregado de database/enemies.js
     
     // --- 1.4: Banco de Dados de Crafting ---
+    // (Precisaremos expandir isso para incluir os drops de boss, ex: 'volcanic_core')
     const MATERIALS = { scrap: { name: "Scrap", icon: "images/icon_scrap.png" }, water: { name: "Clean Water", icon: "images/icon_water.png" }, food: { name: "Food", icon: "images/icon_food.png" }, metal: { name: "Metal", icon: "images/icon_metal.png" } };
     const COMPONENTS = { volcanic_core: { name: "Volcanic Core", stats: { damage: 5 }, icon: "images/icon_component.png" }, defense_plate: { name: "Defense Plate", stats: { defense: 5 }, icon: "images/icon_component.png" } };
+    
+    // Adicionando componentes dos drops (placeholders) ao DB
+    COMPONENTS['volcanics_core'] = { name: "Volcanics Core", stats: { damage: 1 }, icon: "images/icon_component.png" };
+    COMPONENTS['undergrounders_core'] = { name: "Undergrounders Core", stats: { defense: 1 }, icon: "images/icon_component.png" };
+    COMPONENTS['nocturnals_core'] = { name: "Nocturnals Core", stats: { speed: 1 }, icon: "images/icon_component.png" };
+    COMPONENTS['radioactives_core'] = { name: "Radioactives Core", stats: { hpRegen: 1 }, icon: "images/icon_component.png" };
+    COMPONENTS['reptilians_core'] = { name: "Reptilians Core", stats: { hp: 10 }, icon: "images/icon_component.png" };
+    COMPONENTS['wasteland_core'] = { name: "Wasteland Core", stats: { luck: 1 }, icon: "images/icon_component.png" };
+
+
     const RECIPES_CRAFT = {
         empty_helmet: { name: "Rustic Helmet (Empty)", cost: { scrap: 8 }, type: "equipment", level: 1, stats: {}, slot: "helmet", icon: "images/icon_helmet.png" },
         empty_weapon: { name: "Rustic Blade (Empty)", cost: { scrap: 10 }, type: "equipment", level: 1, stats: {}, slot: "weapon", icon: "images/icon_weapon.png" }
@@ -116,12 +124,11 @@ document.addEventListener('DOMContentLoaded', () => {
             kid: null, stats: {}, currentDay: 1, playerPos: { q: 0, r: 0 },
             currentHP: 100, currentAP: 0, maxAP: 0, currentMP: 0, maxMP: 0,
             resourcesFound: {}, revealedHexes: new Set(),
-            startTime: 0 // NOVO: Para calcular a duração
+            startTime: 0 
         },
         combat: {
             isActive: false, enemy: null, playerTurn: true, isAutoAttack: false
         },
-        // NOVO: Gerenciador de Timers
         timers: {
             actionFeedback: null,
             endDay: null
@@ -129,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ==================================================================== */
-    /* SEÇÃO 3: CACHE DE ELEMENTOS DO DOM (Atualizado)
+    /* SEÇÃO 3: CACHE DE ELEMENTOS DO DOM
     /* ==================================================================== */
 
     const DOM = {
@@ -176,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             editNameCancel: document.getElementById('edit-name-cancel'), editNameSave: document.getElementById('edit-name-save'), 
             feedback: document.getElementById('action-feedback-modal'),
             feedbackTitle: document.getElementById('feedback-title'), feedbackDesc: document.getElementById('feedback-description'),
-            feedbackCloseBtn: document.getElementById('feedback-close-btn'), // NOVO
+            feedbackCloseBtn: document.getElementById('feedback-close-btn'), 
             combat: document.getElementById('combat-modal'),
             combatPhaseBattle: document.getElementById('combat-phase-battle'), combatPhaseVictory: document.getElementById('combat-phase-victory'), combatPhaseDefeat: document.getElementById('combat-phase-defeat'),
             combatPlayer: document.getElementById('combat-player'), combatPlayerHpFill: document.getElementById('combat-player-hp-fill'), combatPlayerHpText: document.getElementById('combat-player-hp-text'),
@@ -186,15 +193,15 @@ document.addEventListener('DOMContentLoaded', () => {
             victoryEnemyName: document.getElementById('victory-enemy-name'), combatCloseVictoryBtn: document.getElementById('combat-close-victory-btn'), combatReturnHubBtn: document.getElementById('combat-return-hub-btn'),
             embedConfirm: document.getElementById('embed-confirm-modal'), embedBefore: document.getElementById('embed-before'), embedAfter: document.getElementById('embed-after'),
             embedCancelBtn: document.getElementById('embed-cancel-btn'), embedConfirmBtn: document.getElementById('embed-confirm-btn'),
-            endDay: document.getElementById('end-day-modal'), // NOVO
-            endDayTitle: document.getElementById('end-day-title'), // NOVO
-            endDayCloseBtn: document.getElementById('end-day-close-btn'), // NOVO
-            endExpedition: document.getElementById('end-expedition-modal'), // NOVO
-            endExpeditionTitle: document.getElementById('end-expedition-title'), // NOVO
-            endExpeditionList: document.getElementById('expedition-summary-list'), // NOVO
-            endExpeditionDuration: document.getElementById('expedition-duration'), // NOVO
-            endExpeditionCloseBtn: document.getElementById('end-expedition-close-btn'), // NOVO
-            endExpeditionReturnBtn: document.getElementById('end-expedition-return-btn') // NOVO
+            endDay: document.getElementById('end-day-modal'), 
+            endDayTitle: document.getElementById('end-day-title'), 
+            endDayCloseBtn: document.getElementById('end-day-close-btn'), 
+            endExpedition: document.getElementById('end-expedition-modal'), 
+            endExpeditionTitle: document.getElementById('end-expedition-title'), 
+            endExpeditionList: document.getElementById('expedition-summary-list'), 
+            endExpeditionDuration: document.getElementById('expedition-duration'), 
+            endExpeditionCloseBtn: document.getElementById('end-expedition-close-btn'), 
+            endExpeditionReturnBtn: document.getElementById('end-expedition-return-btn') 
         }
     };
 
@@ -414,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.hub.tabs.activeInvSubTab = 'inv-equipments';
         
         renderHubPreparationScreen();
-        showScreen('hub-preparation-screen');
+        showScreen('hub-selection-screen');
     }
 
     /* ==================================================================== */
@@ -629,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.expedition.maxAP = stats.ap; gameState.expedition.currentMP = stats.speed;
         gameState.expedition.maxMP = stats.speed; gameState.expedition.resourcesFound = {};
         gameState.expedition.revealedHexes.clear();
-        gameState.expedition.startTime = Date.now(); // NOVO: Registra o início
+        gameState.expedition.startTime = Date.now(); 
 
         DOM.game.log.innerHTML = ''; 
         logMessage(`--- DAY 1 START ---`, 'day');
@@ -695,9 +702,9 @@ document.addEventListener('DOMContentLoaded', () => {
         hexFogs.forEach(fogDiv => {
             const key = fogDiv.dataset.key;
             if (gameState.expedition.revealedHexes.has(key)) {
-                fogDiv.classList.add('revealed'); // CSS torna opacidade 0
+                fogDiv.classList.add('revealed');
             } else {
-                fogDiv.classList.remove('revealed'); // CSS torna opacidade 1
+                fogDiv.classList.remove('revealed');
             }
         });
     }
@@ -721,10 +728,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * ATUALIZADO V4.1: Garante que os botões de fim de turno/expedição
-     * sejam habilitados/desabilitados corretamente.
-     */
     function renderGameStatusPanel() {
         const kid = gameState.expedition.kid; 
         const stats = gameState.expedition.stats; 
@@ -760,8 +763,6 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.game.collectBtn.disabled = (gameState.expedition.currentAP < 1) || inCombat;
         DOM.game.investigateBtn.disabled = (gameState.expedition.currentAP < 1) || inCombat;
         DOM.game.searchEnemyBtn.disabled = (gameState.expedition.currentAP < 2) || inCombat;
-        
-        // CORREÇÃO: Ambos os botões são desabilitados apenas durante o combate
         DOM.game.endTurnBtn.disabled = inCombat; 
         DOM.game.exitExpeditionBtn.disabled = inCombat;
     }
@@ -813,59 +814,93 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGameStatusPanel();
     }
     
+    /**
+     * NOVO: Sorteia um inimigo com base nas chances da ação
+     */
+    function getRandomEnemy(actionType) {
+        const logic = SPAWN_LOGIC[actionType];
+        if (!logic) return null;
+
+        const roll = Math.random() * 100; // 0-99.9
+        let cumulativeChance = 0;
+
+        for (const tier of logic.chances) {
+            cumulativeChance += tier.chance;
+            if (roll < cumulativeChance) {
+                if (tier.type === "nothing") {
+                    return null; 
+                }
+                
+                const biomeKey = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
+                const biome = STATIC_MAP_DATA.get(biomeKey).biome;
+                
+                if (ENEMIES_BY_BIOME[biome] && ENEMIES_BY_BIOME[biome][tier.type]) {
+                    // Retorna um CLONE do objeto inimigo
+                    return JSON.parse(JSON.stringify(ENEMIES_BY_BIOME[biome][tier.type]));
+                } else {
+                    // Fallback se um inimigo não estiver definido
+                    return JSON.parse(JSON.stringify(ENEMIES_BY_BIOME["wasteland"]["common"]));
+                }
+            }
+        }
+        return null; // Fallback
+    }
+
+    /**
+     * ATUALIZADO: Usa a nova lógica de spawn
+     */
     function handleInvestigate() {
         gameState.expedition.currentAP--;
         const luck = gameState.expedition.stats.luck;
-        const roll = Math.random() * 100;
-
-        if (roll < (10 + luck)) { 
-            logMessage("You found a secret stash!", 'reward');
-            showActionFeedback("Success!", `You found a secret stash! (+10 Scrap)`);
-            if (!gameState.expedition.resourcesFound.scrap) gameState.expedition.resourcesFound.scrap = 0;
-            gameState.expedition.resourcesFound.scrap += 10;
-        } else if (roll < (30 + luck)) { 
-             logMessage("It's an ambush!", 'combat');
-             showActionFeedback("Ambush!", `A Drone appeared!`);
-             startCombat(ENEMIES.DRONE);
+        
+        const enemy = getRandomEnemy("Investigate");
+        
+        if (enemy) {
+             logMessage(`It's an ambush! A ${enemy.name} appeared!`, 'combat');
+             showActionFeedback("Ambush!", `A ${enemy.name} appeared!`);
+             startCombat(enemy);
         } else {
+            // TODO: Adicionar lógica de drop de recurso aqui
             logMessage("Investigation revealed nothing.");
             showActionFeedback("Nothing Found", `You found nothing of interest.`);
         }
         renderGameStatusPanel();
     }
     
+    /**
+     * ATUALIZADO: Usa a nova lógica de spawn
+     */
     function handleSearchEnemy() {
         gameState.expedition.currentAP -= 2;
-        logMessage("Searching for trouble...", 'combat');
-        showActionFeedback("Searching...", `A Mutant appeared!`);
-        startCombat(ENEMIES.MUTANT);
+        
+        const enemy = getRandomEnemy("Search Enemy");
+
+        if (enemy) {
+             logMessage(`You found a ${enemy.name}!`, 'combat');
+             showActionFeedback("Enemy Found!", `A ${enemy.name} appeared!`);
+             startCombat(enemy);
+        } else {
+             logMessage("You searched, but found nothing.");
+             showActionFeedback("Nothing Found", `The area seems clear.`);
+        }
         renderGameStatusPanel();
     }
     
-    /**
-     * NOVO: Mostra o modal de feedback (com X e Timer)
-     */
     function showActionFeedback(title, description) {
         if (DOM.game.skipAnimationsCheck.checked) return;
         
-        // Limpa timer anterior, se houver
         if (gameState.timers.actionFeedback) {
             clearTimeout(gameState.timers.actionFeedback);
         }
-
         DOM.modals.feedbackTitle.textContent = title;
         DOM.modals.feedbackDesc.textContent = description;
         DOM.modals.feedback.style.display = 'flex';
         
-        // Inicia novo timer
         gameState.timers.actionFeedback = setTimeout(() => {
             closeActionFeedbackModal();
-        }, 3000); // 3 segundos
+        }, 3000); 
     }
 
-    /**
-     * NOVO: Fecha o modal de feedback (chamado pelo X ou pelo timer)
-     */
     function closeActionFeedbackModal() {
         if (gameState.timers.actionFeedback) {
             clearTimeout(gameState.timers.actionFeedback);
@@ -875,19 +910,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    /**
-     * ATUALIZADO: Chama o modal de fim de dia
-     */
     function endDay() {
         if (gameState.expedition.currentDay >= MAX_DAYS) {
             logMessage("Expedition finished (10 days).", 'day');
-            gameOver(true); // Sucesso
+            gameOver(true);
             return;
         }
         
         gameState.expedition.currentDay++;
         
-        // Lógica de skip
         if (DOM.game.skipAnimationsCheck.checked) {
             proceedToEndDayLogic();
         } else {
@@ -895,42 +926,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * NOVO: Mostra o modal de fim de dia
-     */
     function showEndDayModal() {
-        // Limpa timer anterior, se houver
         if (gameState.timers.endDay) {
             clearTimeout(gameState.timers.endDay);
         }
-
         DOM.modals.endDayTitle.textContent = `DAY ${gameState.expedition.currentDay} START`;
         DOM.modals.endDay.style.display = 'flex';
         
-        // Inicia novo timer
         gameState.timers.endDay = setTimeout(() => {
             closeEndDayModal();
-        }, 3000); // 3 segundos
+        }, 3000); 
     }
 
-    /**
-     * NOVO: Fecha o modal de fim de dia (chamado pelo X ou timer)
-     * e continua a lógica do jogo
-     */
     function closeEndDayModal() {
         if (gameState.timers.endDay) {
             clearTimeout(gameState.timers.endDay);
             gameState.timers.endDay = null;
         }
         DOM.modals.endDay.style.display = 'none';
-        
-        // Continua a lógica do jogo
         proceedToEndDayLogic();
     }
 
-    /**
-     * NOVO: Lógica de jogo que ocorre após o modal de fim de dia
-     */
     function proceedToEndDayLogic() {
         gameState.expedition.currentAP = gameState.expedition.stats.ap;
         gameState.expedition.currentMP = gameState.expedition.stats.speed;
@@ -945,39 +961,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    /**
-     * ATUALIZADO: Chama o modal de fim de expedição em vez de alert()
-     */
     function gameOver(isSuccess) {
         showEndExpeditionModal(isSuccess);
-        
-        // A lógica de salvar os dados agora acontece
-        // quando o jogador clica em "Return to Hub"
     }
 
-    /**
-     * NOVO: Mostra o modal de resumo da expedição
-     */
     function showEndExpeditionModal(isSuccess) {
         if (isSuccess) {
             DOM.modals.endExpeditionTitle.textContent = "Expedition Successful";
             
-            // Calcula duração
             const durationMs = Date.now() - gameState.expedition.startTime;
             const minutes = Math.floor(durationMs / 60000);
             const seconds = ((durationMs % 60000) / 1000).toFixed(0);
             DOM.modals.endExpeditionDuration.textContent = `Duration: ${minutes}m ${seconds}s`;
             
-            // Preenche drops
             DOM.modals.endExpeditionList.innerHTML = '';
             let found = 0;
             for (const resId in gameState.expedition.resourcesFound) {
                 const amount = gameState.expedition.resourcesFound[resId];
-                if (amount > 0 && MATERIALS[resId]) {
+                // Procura em ambos os bancos de dados (Materiais e Componentes)
+                const itemDB = MATERIALS[resId] || COMPONENTS[resId];
+                
+                if (amount > 0 && itemDB) {
                     DOM.modals.endExpeditionList.innerHTML += `
                         <li>
-                            <img src="${MATERIALS[resId].icon}" alt="${MATERIALS[resId].name}" onerror="this.style.display='none'">
-                            <span>${amount}x ${MATERIALS[resId].name}</span>
+                            <img src="${itemDB.icon}" alt="${itemDB.name}" onerror="this.style.display='none'">
+                            <span>${amount}x ${itemDB.name}</span>
                         </li>
                     `;
                     found++;
@@ -996,42 +1004,46 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.modals.endExpedition.style.display = 'flex';
     }
 
-    /**
-     * NOVO: Lógica que executa ao fechar o modal de fim de expedição
-     */
     function handleReturnToHub(isSuccess) {
         if (isSuccess) {
-            // 1. Adiciona recursos ao inventário principal
+            // Adiciona recursos ao inventário principal
             for (const resId in gameState.expedition.resourcesFound) {
-                if (!gameState.player.inventory.materials[resId]) {
-                    gameState.player.inventory.materials[resId] = 0;
+                // Decide se é material ou componente
+                if (MATERIALS[resId]) {
+                    if (!gameState.player.inventory.materials[resId]) {
+                        gameState.player.inventory.materials[resId] = 0;
+                    }
+                    gameState.player.inventory.materials[resId] += gameState.expedition.resourcesFound[resId];
+                } else if (COMPONENTS[resId]) {
+                    if (!gameState.player.inventory.components[resId]) {
+                        gameState.player.inventory.components[resId] = 0;
+                    }
+                    gameState.player.inventory.components[resId] += gameState.expedition.resourcesFound[resId];
                 }
-                gameState.player.inventory.materials[resId] += gameState.expedition.resourcesFound[resId];
             }
-            // 2. Incrementa contador de expedições do Kid
             const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
             if (kid) kid.expeditions++;
             
-            logMessage("Expedição Concluída! Recursos transferidos.", 'day');
+            logMessage("Expedition Successful! Resources transferred.", 'day');
         } else {
-            logMessage("Expedição Falhou! Recursos perdidos.", 'error');
+            logMessage("Expedition Failed! Resources lost.", 'error');
         }
         
         DOM.modals.endExpedition.style.display = 'none';
         
-        // Retorna à tela de preparação
         renderHubPreparationScreen(); 
         showScreen('hub-preparation-screen');
     }
 
 
     /* ==================================================================== */
-    /* SEÇÃO 9: LÓGICA DA TELA 5 (COMBAT MODAL)
+    /* SEÇÃO 9: LÓGICA DA TELA 5 (COMBAT MODAL) - ATUALIZADO
     /* ==================================================================== */
 
     function combatLog(message) {
         const p = document.createElement('p'); p.textContent = message; DOM.modals.combatLog.prepend(p);
     }
+    
     function toggleAutoAttack() {
         if (!gameState.combat.isActive) return; gameState.combat.isAutoAttack = !gameState.combat.isAutoAttack;
         if (gameState.combat.isAutoAttack) {
@@ -1041,88 +1053,196 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.modals.combatAutoBtn.textContent = "Auto Attack"; DOM.modals.combatAutoBtn.classList.remove('auto-active');
         }
     }
+    
+    /**
+     * ATUALIZADO: Usa enemy.stats
+     */
     function startCombat(enemy) {
-        gameState.combat.isActive = true; gameState.combat.enemy = { ...enemy, currentHp: enemy.hp }; const playerStats = gameState.expedition.stats;
-        DOM.modals.combatEnemyName.textContent = enemy.name; DOM.modals.combatEnemy.querySelector('img').src = enemy.sprite;
-        gameState.combat.playerTurn = playerStats.speed >= enemy.speed;
+        gameState.combat.isActive = true; 
+        gameState.combat.enemy = { ...enemy, currentHp: enemy.stats.hp }; // Clona e define HP atual
+        const playerStats = gameState.expedition.stats;
+        
+        DOM.modals.combatEnemyName.textContent = enemy.name; 
+        DOM.modals.combatEnemy.querySelector('img').src = enemy.sprite;
+        
+        gameState.combat.playerTurn = playerStats.speed >= enemy.stats.speed;
+        
         updateCombatUI();
-        DOM.modals.combatPhaseBattle.style.display = 'block'; DOM.modals.combatPhaseVictory.style.display = 'none'; DOM.modals.combatPhaseDefeat.style.display = 'none'; DOM.modals.combatLog.innerHTML = '';
-        gameState.combat.isAutoAttack = false; DOM.modals.combatAutoBtn.textContent = "Auto Attack"; DOM.modals.combatAutoBtn.classList.remove('auto-active');
-        DOM.modals.combat.style.display = 'flex'; renderGameStatusPanel();
+        
+        DOM.modals.combatPhaseBattle.style.display = 'block'; 
+        DOM.modals.combatPhaseVictory.style.display = 'none'; 
+        DOM.modals.combatPhaseDefeat.style.display = 'none'; 
+        DOM.modals.combatLog.innerHTML = '';
+        
+        gameState.combat.isAutoAttack = false; 
+        DOM.modals.combatAutoBtn.textContent = "Auto Attack"; 
+        DOM.modals.combatAutoBtn.classList.remove('auto-active');
+        
+        DOM.modals.combat.style.display = 'flex'; 
+        renderGameStatusPanel(); 
+        
         if (!gameState.combat.playerTurn) {
-            combatLog(`${enemy.name} attacks first!`); DOM.modals.combatAttackBtn.disabled = true;
-            DOM.modals.combatFleeBtn.disabled = true; DOM.modals.combatAutoBtn.disabled = true; setTimeout(runEnemyTurn, 1000);
+            combatLog(`${enemy.name} attacks first!`); 
+            DOM.modals.combatAttackBtn.disabled = true;
+            DOM.modals.combatFleeBtn.disabled = true; 
+            DOM.modals.combatAutoBtn.disabled = true; 
+            setTimeout(runEnemyTurn, 1000);
         } else {
-            combatLog("Your turn!"); DOM.modals.combatAttackBtn.disabled = false;
-            DOM.modals.combatFleeBtn.disabled = false; DOM.modals.combatAutoBtn.disabled = false;
+            combatLog("Your turn!"); 
+            DOM.modals.combatAttackBtn.disabled = false;
+            DOM.modals.combatFleeBtn.disabled = false; 
+            DOM.modals.combatAutoBtn.disabled = false;
         }
     }
+
+    /**
+     * ATUALIZADO: Usa enemy.stats.hp
+     */
     function updateCombatUI() {
         const playerHPPercent = (gameState.expedition.currentHP / gameState.expedition.stats.hp) * 100;
-        DOM.modals.combatPlayerHpFill.style.width = `${playerHPPercent}%`; DOM.modals.combatPlayerHpText.textContent = `${gameState.expedition.currentHP} / ${gameState.expedition.stats.hp}`;
-        const enemy = gameState.combat.enemy; const enemyHPPercent = (enemy.currentHp / enemy.hp) * 100;
-        DOM.modals.combatEnemyHpFill.style.width = `${enemyHPPercent}%`; DOM.modals.combatEnemyHpText.textContent = `${enemy.currentHp} / ${enemy.hp}`;
+        DOM.modals.combatPlayerHpFill.style.width = `${playerHPPercent}%`; 
+        DOM.modals.combatPlayerHpText.textContent = `${gameState.expedition.currentHP} / ${gameState.expedition.stats.hp}`;
+        
+        const enemy = gameState.combat.enemy; 
+        const enemyHPPercent = (enemy.currentHp / enemy.stats.hp) * 100; // Usa stats.hp
+        DOM.modals.combatEnemyHpFill.style.width = `${enemyHPPercent}%`; 
+        DOM.modals.combatEnemyHpText.textContent = `${enemy.currentHp} / ${enemy.stats.hp}`; // Usa stats.hp
     }
+    
+    /**
+     * ATUALIZADO: Usa enemy.stats.defense
+     */
     function handleCombatAttack() {
-        if (!gameState.combat.playerTurn) return; DOM.modals.combatAttackBtn.disabled = true; DOM.modals.combatFleeBtn.disabled = true; DOM.modals.combatAutoBtn.disabled = true;
-        const playerStats = gameState.expedition.stats; const enemy = gameState.combat.enemy;
-        let damage = Math.max(1, playerStats.damage - (enemy.defense || 0)); enemy.currentHp -= damage;
+        if (!gameState.combat.playerTurn) return; 
+        DOM.modals.combatAttackBtn.disabled = true; 
+        DOM.modals.combatFleeBtn.disabled = true; 
+        DOM.modals.combatAutoBtn.disabled = true;
+        
+        const playerStats = gameState.expedition.stats; 
+        const enemy = gameState.combat.enemy;
+        
+        let damage = Math.max(1, playerStats.damage - (enemy.stats.defense || 0)); // Usa stats.defense
+        enemy.currentHp -= damage;
         combatLog(`You attack ${enemy.name} for ${damage} damage.`);
-        DOM.modals.combatEnemy.classList.add('hit'); setTimeout(() => DOM.modals.combatEnemy.classList.remove('hit'), 300); updateCombatUI();
+        
+        DOM.modals.combatEnemy.classList.add('hit'); 
+        setTimeout(() => DOM.modals.combatEnemy.classList.remove('hit'), 300); 
+        updateCombatUI();
+        
         if (enemy.currentHp <= 0) { endCombat(true); return; }
-        gameState.combat.playerTurn = false; setTimeout(runEnemyTurn, 1000);
+        
+        gameState.combat.playerTurn = false; 
+        setTimeout(runEnemyTurn, 1000);
     }
+    
+    /**
+     * ATUALIZADO: Usa enemy.stats.strength
+     */
     function runEnemyTurn() {
         if (gameState.combat.playerTurn) return;
-        const playerStats = gameState.expedition.stats; const enemy = gameState.combat.enemy;
-        let damage = Math.max(1, enemy.strength - (playerStats.defense || 0)); gameState.expedition.currentHP -= damage;
+        
+        const playerStats = gameState.expedition.stats; 
+        const enemy = gameState.combat.enemy;
+        
+        let damage = Math.max(1, enemy.stats.strength - (playerStats.defense || 0)); // Usa stats.strength
+        gameState.expedition.currentHP -= damage;
         combatLog(`${enemy.name} attacks you for ${damage} damage.`);
-        DOM.modals.combatPlayer.classList.add('hit'); setTimeout(() => DOM.modals.combatPlayer.classList.remove('hit'), 300);
-        updateCombatUI(); renderGameStatusPanel(); 
+        
+        DOM.modals.combatPlayer.classList.add('hit'); 
+        setTimeout(() => DOM.modals.combatPlayer.classList.remove('hit'), 300);
+        
+        updateCombatUI(); 
+        renderGameStatusPanel(); 
+        
         if (gameState.expedition.currentHP <= 0) { endCombat(false); return; }
-        gameState.combat.playerTurn = true; combatLog("Your turn!");
-        if (gameState.combat.isAutoAttack) { setTimeout(handleCombatAttack, 500); } 
-        else { DOM.modals.combatAttackBtn.disabled = false; DOM.modals.combatFleeBtn.disabled = false; DOM.modals.combatAutoBtn.disabled = false; }
+        
+        gameState.combat.playerTurn = true; 
+        combatLog("Your turn!");
+        
+        if (gameState.combat.isAutoAttack) { 
+            setTimeout(handleCombatAttack, 500); 
+        } else { 
+            DOM.modals.combatAttackBtn.disabled = false; 
+            DOM.modals.combatFleeBtn.disabled = false; 
+            DOM.modals.combatAutoBtn.disabled = false; 
+        }
     }
+    
     function handleCombatFlee() {
         if (!gameState.combat.playerTurn) return;
         if (gameState.combat.isAutoAttack) { toggleAutoAttack(); }
         const luck = gameState.expedition.stats.luck;
-        if (Math.random() * 100 < (50 + luck)) { combatLog("You successfully fled!"); logMessage("Fled from combat.", 'action'); closeCombatModal(); } 
-        else {
-            combatLog("Flee attempt failed!"); gameState.combat.playerTurn = false; 
-            DOM.modals.combatAttackBtn.disabled = true; DOM.modals.combatFleeBtn.disabled = true; DOM.modals.combatAutoBtn.disabled = true; 
+        if (Math.random() * 100 < (50 + luck)) { 
+            combatLog("You successfully fled!"); 
+            logMessage("Fled from combat.", 'action'); 
+            closeCombatModal(); 
+        } else {
+            combatLog("Flee attempt failed!"); 
+            gameState.combat.playerTurn = false; 
+            DOM.modals.combatAttackBtn.disabled = true; 
+            DOM.modals.combatFleeBtn.disabled = true; 
+            DOM.modals.combatAutoBtn.disabled = true; 
             setTimeout(runEnemyTurn, 1000);
         }
     }
+    
+    /**
+     * ATUALIZADO: Usa a nova lógica de recompensas (chance e quantidade)
+     */
     function endCombat(isVictory) {
         DOM.modals.combatPhaseBattle.style.display = 'none';
+        
         if (isVictory) {
-            const enemy = gameState.combat.enemy; DOM.modals.victoryEnemyName.textContent = enemy.name; DOM.modals.victoryRewardList.innerHTML = '';
+            const enemy = gameState.combat.enemy; 
+            DOM.modals.victoryEnemyName.textContent = enemy.name; 
+            DOM.modals.victoryRewardList.innerHTML = '';
+            
+            // NOVO: Loop de Recompensas
             for (const resId in enemy.rewards) {
-                const amount = enemy.rewards[resId];
-                if (!gameState.expedition.resourcesFound[resId]) { gameState.expedition.resourcesFound[resId] = 0; }
-                gameState.expedition.resourcesFound[resId] += amount; DOM.modals.victoryRewardList.innerHTML += `<li>${amount}x ${MATERIALS[resId].name}</li>`;
+                const reward = enemy.rewards[resId];
+                const roll = Math.random() * 100; // Roll para chance
+                
+                if (roll <= reward.chance) {
+                    // Sucesso! Calcular quantidade
+                    const [min, max] = reward.quantity;
+                    const amount = Math.floor(Math.random() * (max - min + 1)) + min;
+                    
+                    if (!gameState.expedition.resourcesFound[resId]) {
+                        gameState.expedition.resourcesFound[resId] = 0;
+                    }
+                    gameState.expedition.resourcesFound[resId] += amount;
+                    
+                    // Encontrar o nome do material (do DB de Materiais ou Componentes)
+                    const itemDB = MATERIALS[resId] || COMPONENTS[resId];
+                    const itemName = itemDB ? itemDB.name : resId;
+                    
+                    DOM.modals.victoryRewardList.innerHTML += `<li>${amount}x ${itemName}</li>`;
+                }
             }
-            logMessage(`Victory! Defeated ${enemy.name}.`, 'reward'); DOM.modals.combatPhaseVictory.style.display = 'block';
+            
+            logMessage(`Victory! Defeated ${enemy.name}.`, 'reward'); 
+            DOM.modals.combatPhaseVictory.style.display = 'block';
         } else {
             logMessage(`Defeated! Expedition Failed.`, 'error'); 
             DOM.modals.combatPhaseDefeat.style.display = 'block';
-            // gameOver(false) será chamado pelo botão de retorno
         }
     }
+    
     function closeCombatModal() {
-        gameState.combat.isActive = false; gameState.combat.isAutoAttack = false;
-        DOM.modals.combatAutoBtn.textContent = "Auto Attack"; DOM.modals.combatAutoBtn.classList.remove('auto-active');
-        DOM.modals.combat.style.display = 'none'; renderGameStatusPanel();
+        gameState.combat.isActive = false; 
+        gameState.combat.isAutoAttack = false;
+        DOM.modals.combatAutoBtn.textContent = "Auto Attack"; 
+        DOM.modals.combatAutoBtn.classList.remove('auto-active');
+        DOM.modals.combat.style.display = 'none'; 
+        renderGameStatusPanel();
     }
 
 
     /* ==================================================================== */
-    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS (Atualizado)
+    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v4.2 Initialized (New Modals).");
+        console.log("CyberKidz Expedition v4.3 Initialized (DB Integration).");
 
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
@@ -1183,20 +1303,18 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.modals.combatFleeBtn.addEventListener('click', handleCombatFlee); 
         DOM.modals.combatCloseVictoryBtn.addEventListener('click', closeCombatModal);
         DOM.modals.combatReturnHubBtn.addEventListener('click', () => { 
-            closeCombatModal(); // Fecha o modal de combate
-            handleReturnToHub(false); // Chama a função de retorno (falha)
+            closeCombatModal(); 
+            handleReturnToHub(false); 
         });
 
-        // NOVO: Listeners dos Modais de Ação/Dia
+        // Modais de Ação/Dia
         DOM.modals.feedbackCloseBtn.addEventListener('click', closeActionFeedbackModal);
         DOM.modals.endDayCloseBtn.addEventListener('click', closeEndDayModal);
         DOM.modals.endExpeditionReturnBtn.addEventListener('click', () => {
-            // Verifica o título para saber se foi sucesso ou falha
             const isSuccess = DOM.modals.endExpeditionTitle.textContent.includes("Successful");
             handleReturnToHub(isSuccess);
         });
         DOM.modals.endExpeditionCloseBtn.addEventListener('click', () => {
-            // Funciona da mesma forma que o botão de retorno
             const isSuccess = DOM.modals.endExpeditionTitle.textContent.includes("Successful");
             handleReturnToHub(isSuccess);
         });
