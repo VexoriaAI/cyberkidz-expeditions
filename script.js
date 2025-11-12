@@ -1,129 +1,144 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 4.8 (Bancos de Dados Modulares de Itens)
+// VERSÃO 4.9 (Correção do Bug de Inicialização/Carregamento do DB)
 // ==================================================================== */
+
+// ** CORREÇÃO V4.9: **
+// Movemos as definições de DB (que dependem de outros arquivos)
+// PARA DENTRO do listener 'DOMContentLoaded'.
+// Isso garante que os arquivos (ex: database/equipment.js) 
+// sejam carregados ANTES de tentarmos usá-los.
+
+/* ==================================================================== */
+/* SEÇÃO 1: BANCO DE DADOS E CONSTANTES (Definições Globais)
+/* ==================================================================== */
+
+const MAX_DAYS = 10;
+const MAX_PLACEHOLDER_IMAGES_PER_TRIBE = 5;
+const HEX_SIZE_VISUAL = 50; 
+
+// --- 1.1: Atributos Base das Tribos (Seguro definir aqui) ---
+const TRIBES = {
+    VOLCANICS: { name: "Volcanics", biome: "volcanics", baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 15, attackSpeed: 1, hpRegen: 1, ap: 5, hp: 110, luck: 1 } },
+    UNDERGROUNDERS: { name: "Undergrounders", biome: "undergrounders", baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 6, hp: 120, luck: 2 } },
+    NOCTURNALS: { name: "Nocturnals", biome: "nocturnals", baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 6, hp: 100, luck: 3 } },
+    RADIOACTIVES: { name: "Radioactives", biome: "radioactives", baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 7, hp: 80, luck: 5 } },
+    REPTILIANS: { name: "Reptilians", biome: "reptilians", baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 5, hp: 100, luck: 2 } }
+};
+
+// --- 1.2: Biomas (Seguro definir aqui) ---
+const BIOMES = {
+    volcanics: { name: "Burning Ridge", resource: "mat_metal" }, 
+    reptilians: { name: "Covenant Swamp", resource: "mat_food" },
+    radioactives: { name: "Lake Rancid", resource: "mat_strange_fluid" },
+    nocturnals: { name: "Ancient Ruins", resource: "mat_scrap" },
+    undergrounders: { name: "Abandoned Mines", resource: "mat_water" },
+    wasteland: { name: "Wasteland", resource: "mat_scrap" }
+};
+
+// --- 1.3: Inimigos, Spawns, Drops, Equipamentos, Componentes ---
+// Carregados via <script> tags no index.html
+
+// --- 1.4: Banco de Dados de Materiais (Seguro definir aqui) ---
+const MATERIALS_DB = {
+    'mat_metal': { name: "Metal", icon: "images/icons/materials/mat_metal.png" },
+    'mat_magma': { name: "Magma", icon: "images/icons/materials/mat_magma.png" },
+    'mat_volcanic_pumice_stone': { name: "Volcanic Pumice Stone", icon: "images/icons/materials/mat_volcanic_pumice_stone.png" },
+    'mat_obsidian_tears': { name: "Obsidian Tears", icon: "images/icons/materials/mat_obsidian_tears.png" },
+    'mat_water': { name: "Water", icon: "images/icons/materials/mat_water.png" },
+    'mat_energized_crystals': { name: "Energized Crystals", icon: "images/icons/materials/mat_energized_crystals.png" },
+    'mat_thermal_water': { name: "Thermal Water", icon: "images/icons/materials/mat_thermal_water.png" },
+    'mat_special_clay': { name: "Special Clay", icon: "images/icons/materials/mat_special_clay.png" },
+    'mat_glass': { name: "Glass", icon: "images/icons/materials/mat_glass.png" },
+    'mat_scrap': { name: "Scrap", icon: "images/icons/materials/mat_scrap.png" },
+    'mat_polymer': { name: "Polymer", icon: "images/icons/materials/mat_polymer.png" },
+    'mat_nanochips': { name: "Nanochips", icon: "images/icons/materials/mat_nanochips.png" },
+    'mat_cybernetic_implants': { name: "Cybernetic Implants", icon: "images/icons/materials/mat_cybernetic_implants.png" },
+    'mat_quantum_energy_core': { name: "Quantum Energy Core", icon: "images/icons/materials/mat_quantum_energy_core.png" },
+    'mat_strange_fluid': { name: "Strange Fluid", icon: "images/icons/materials/mat_strange_fluid.png" },
+    'mat_parasitic_fungus': { name: "Parasitic Fungus", icon: "images/icons/materials/mat_parasitic_fungus.png" },
+    'mat_venom_glands': { name: "Venom Glands", icon: "images/icons/materials/mat_venom_glands.png" },
+    'mat_luminescent_algae': { name: "Luminescent Algae", icon: "images/icons/materials/mat_luminescent_algae.png" },
+    'mat_food': { name: "Food", icon: "images/icons/materials/mat_food.png" },
+    'mat_healing_plants': { name: "Healing Plants", icon: "images/icons/materials/mat_healing_plants.png" },
+    'mat_hallucinogenic_fungi': { name: "Hallucinogenic Fungi", icon: "images/icons/materials/mat_hallucinogenic_fungi.png" },
+    'mat_animal_skin': { name: "Animal Skin", icon: "images/icons/materials/mat_animal_skin.png" },
+    'mat_reptilian_blood': { name: "Reptilian Blood", icon: "images/icons/materials/mat_reptilian_blood.png" }
+};
+
+// --- 1.5: Listas de Constantes (Seguro definir aqui) ---
+const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
+const STATS_LIST = ['hp', 'ap', 'speed', 'damage', 'defense', 'critChance', 'critDamage', 'attackSpeed', 'hpRegen', 'blockChance', 'luck'];
+
+// --- 1.6: Definição do Mapa Estático ---
+const STATIC_MAP_DATA = new Map([
+    ["-3,0", { biome: "volcanics" }], ["-3,1", { biome: "volcanics" }], ["-3,2", { biome: "volcanics" }],
+    ["-2,-1", { biome: "volcanics" }], ["-2,0", { biome: "volcanics" }], ["-2,1", { biome: "volcanics" }],
+    ["-1,-2", { biome: "undergrounders" }], ["-1,-1", { biome: "undergrounders" }], ["-1,0", { biome: "undergrounders" }],
+    ["0,-2", { biome: "undergrounders" }], ["0,-1", { biome: "undergrounders" }],
+    ["0,0", { biome: "wasteland" }], ["-1,1", { biome: "wasteland" }], ["1,-1", { biome: "wasteland" }],
+    ["1,0", { biome: "wasteland" }], ["0,1", { biome: "wasteland" }],
+    ["-2,2", { biome: "nocturnals" }], ["-2,3", { biome: "nocturnals" }],
+    ["-1,2", { biome: "nocturnals" }], ["-1,3", { biome: "nocturnals" }],
+    ["0,2", { biome: "nocturnals" }], ["0,3", { biome: "nocturnals" }],
+    ["1,-2", { biome: "radioactives" }], ["2,-3", { biome: "radioactives" }],
+    ["2,-2", { biome: "radioactives" }], ["3,-3", { biome: "radioactives" }],
+    ["3,-2", { biome: "radioactives" }],
+    ["1,1", { biome: "reptilians" }], ["1,2", { biome: "reptilians" }],
+    ["2,0", { biome: "reptilians" }], ["2,1", { biome: "reptilians" }],
+    ["3,-1", { biome: "reptilians" }], ["3,0", { biome: "reptilians" }],
+]);
+
+// --- 1.7: Carteira Simulada ---
+const MOCK_WALLET = [
+    { id: '#313', name: 'Blue Mutant', tribe: TRIBES.RADIOACTIVES, expeditions: 5, equipped: { helmet: 'h1', weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
+    { id: '#222', name: 'Demo Nocturnal', tribe: TRIBES.NOCTURNALS, expeditions: 2, equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null } },
+    { id: '#111', name: 'Demo Volcanic', tribe: TRIBES.VOLCANICS, expeditions: 10, equipped: { helmet: null, weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
+    { id: '#444', name: 'Swamp Kid', tribe: TRIBES.REPTILIANS, expeditions: 0, equipped: {} },
+    { id: '#555', name: 'Miner', tribe: TRIBES.UNDERGROUNDERS, expeditions: 1, equipped: {} },
+    { id: '#001', name: 'Rookie-1', tribe: TRIBES.VOLCANICS, expeditions: 0, equipped: {} },
+    { id: '#002', name: 'Rookie-2', tribe: TRIBES.VOLCANICS, expeditions: 0, equipped: {} },
+    { id: '#003', name: 'Rookie-3', tribe: TRIBES.NOCTURNALS, expeditions: 0, equipped: {} },
+    { id: '#004', name: 'Rookie-4', tribe: TRIBES.RADIOACTIVES, expeditions: 0, equipped: {} },
+    { id: '#005', name: 'Rookie-5', tribe: TRIBES.REPTILIANS, expeditions: 0, equipped: {} },
+    { id: '#006', name: 'Rookie-6', tribe: TRIBES.UNDERGROUNDERS, expeditions: 0, equipped: {} },
+    { id: '#007', name: 'Rookie-7', tribe: TRIBES.VOLCANICS, expeditions: 0, equipped: {} },
+    { id: '#008', name: 'Rookie-8', tribe: TRIBES.NOCTURNALS, expeditions: 0, equipped: {} },
+    { id: '#009', name: 'Rookie-9', tribe: TRIBES.RADIOACTIVES, expeditions: 0, equipped: {} },
+    { id: '#010', name: 'Rookie-10', tribe: TRIBES.REPTILIANS, expeditions: 0, equipped: {} },
+    { id: '#011', name: 'Rookie-11', tribe: TRIBES.UNDERGROUNDERS, expeditions: 0, equipped: {} },
+];
+const DEMO_KID_ID = '#313';
+
+
+// ** CORREÇÃO V4.9: Variáveis dependentes movidas para dentro do listener **
+let COMPONENTS_DB_SAFE, EQUIPMENT_DB_SAFE, ITEM_DB, RECIPES_CRAFT;
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
     /* ==================================================================== */
-    /* SEÇÃO 1: BANCO DE DADOS E CONSTANTES (Simulados)
+    /* SEÇÃO 1.9: PÓS-CARREGAMENTO DE BANCO DE DADOS
     /* ==================================================================== */
-
-    const MAX_DAYS = 10;
-    const MAX_PLACEHOLDER_IMAGES_PER_TRIBE = 5;
-    const HEX_SIZE_VISUAL = 50; 
-
-    // --- 1.1: Atributos Base das Tribos ---
-    const TRIBES = {
-        VOLCANICS: { name: "Volcanics", biome: "volcanics", baseStats: { damage: 4, critDamage: 5, defense: 3, blockChance: 3, critChance: 2, speed: 15, attackSpeed: 1, hpRegen: 1, ap: 5, hp: 110, luck: 1 } },
-        UNDERGROUNDERS: { name: "Undergrounders", biome: "undergrounders", baseStats: { damage: 2, critDamage: 2, defense: 5, blockChance: 5, critChance: 1, speed: 15, attackSpeed: 2, hpRegen: 2, ap: 6, hp: 120, luck: 2 } },
-        NOCTURNALS: { name: "Nocturnals", biome: "nocturnals", baseStats: { damage: 3, critDamage: 3, defense: 2, blockChance: 1, critChance: 5, speed: 15, attackSpeed: 4, hpRegen: 1, ap: 6, hp: 100, luck: 3 } },
-        RADIOACTIVES: { name: "Radioactives", biome: "radioactives", baseStats: { damage: 2, critDamage: 2, defense: 1, blockChance: 1, critChance: 3, speed: 20, attackSpeed: 5, hpRegen: 1, ap: 7, hp: 80, luck: 5 } },
-        REPTILIANS: { name: "Reptilians", biome: "reptilians", baseStats: { damage: 3, critDamage: 2, defense: 3, blockChance: 2, critChance: 2, speed: 13, attackSpeed: 2, hpRegen: 5, ap: 5, hp: 100, luck: 2 } }
-    };
-
-    // --- 1.2: Biomas ---
-    const BIOMES = {
-        volcanics: { name: "Burning Ridge", resource: "mat_metal" }, 
-        reptilians: { name: "Covenant Swamp", resource: "mat_food" },
-        radioactives: { name: "Lake Rancid", resource: "mat_strange_fluid" },
-        nocturnals: { name: "Ancient Ruins", resource: "mat_scrap" },
-        undergrounders: { name: "Abandoned Mines", resource: "mat_water" },
-        wasteland: { name: "Wasteland", resource: "mat_scrap" }
-    };
     
-    // --- 1.3: Inimigos, Spawns, Drops, Equipamentos, Componentes ---
-    // Carregados via <script> tags no index.html (ex: ENEMIES_BY_BIOME, DROP_TABLES, etc.)
+    // ** CORREÇÃO V4.9: **
+    // Agora que o DOM (e os <script> tags) carregaram,
+    // podemos construir com segurança os bancos de dados
     
-    // --- 1.4: Banco de Dados de Crafting (ATUALIZADO) ---
-    const MATERIALS_DB = {
-        'mat_metal': { name: "Metal", icon: "images/icons/materials/mat_metal.png" },
-        'mat_magma': { name: "Magma", icon: "images/icons/materials/mat_magma.png" },
-        'mat_volcanic_pumice_stone': { name: "Volcanic Pumice Stone", icon: "images/icons/materials/mat_volcanic_pumice_stone.png" },
-        'mat_obsidian_tears': { name: "Obsidian Tears", icon: "images/icons/materials/mat_obsidian_tears.png" },
-        'mat_water': { name: "Water", icon: "images/icons/materials/mat_water.png" },
-        'mat_energized_crystals': { name: "Energized Crystals", icon: "images/icons/materials/mat_energized_crystals.png" },
-        'mat_thermal_water': { name: "Thermal Water", icon: "images/icons/materials/mat_thermal_water.png" },
-        'mat_special_clay': { name: "Special Clay", icon: "images/icons/materials/mat_special_clay.png" },
-        'mat_glass': { name: "Glass", icon: "images/icons/materials/mat_glass.png" },
-        'mat_scrap': { name: "Scrap", icon: "images/icons/materials/mat_scrap.png" },
-        'mat_polymer': { name: "Polymer", icon: "images/icons/materials/mat_polymer.png" },
-        'mat_nanochips': { name: "Nanochips", icon: "images/icons/materials/mat_nanochips.png" },
-        'mat_cybernetic_implants': { name: "Cybernetic Implants", icon: "images/icons/materials/mat_cybernetic_implants.png" },
-        'mat_quantum_energy_core': { name: "Quantum Energy Core", icon: "images/icons/materials/mat_quantum_energy_core.png" },
-        'mat_strange_fluid': { name: "Strange Fluid", icon: "images/icons/materials/mat_strange_fluid.png" },
-        'mat_parasitic_fungus': { name: "Parasitic Fungus", icon: "images/icons/materials/mat_parasitic_fungus.png" },
-        'mat_venom_glands': { name: "Venom Glands", icon: "images/icons/materials/mat_venom_glands.png" },
-        'mat_luminescent_algae': { name: "Luminescent Algae", icon: "images/icons/materials/mat_luminescent_algae.png" },
-        'mat_food': { name: "Food", icon: "images/icons/materials/mat_food.png" },
-        'mat_healing_plants': { name: "Healing Plants", icon: "images/icons/materials/mat_healing_plants.png" },
-        'mat_hallucinogenic_fungi': { name: "Hallucinogenic Fungi", icon: "images/icons/materials/mat_hallucinogenic_fungi.png" },
-        'mat_animal_skin': { name: "Animal Skin", icon: "images/icons/materials/mat_animal_skin.png" },
-        'mat_reptilian_blood': { name: "Reptilian Blood", icon: "images/icons/materials/mat_reptilian_blood.png" }
-    };
-    
-    // ** CORREÇÃO V4.8: Removidas as declarações 'const' daqui **
-    // As variáveis COMPONENTS_DB, EQUIPMENT_DB, e SYNERGY_MAP 
-    // agora são carregadas dos arquivos da pasta /database/
-    
-    // Assegura que as variáveis carregadas existam
-    const COMPONENTS_DB_SAFE = (typeof COMPONENTS_DB !== 'undefined' ? COMPONENTS_DB : {});
-    const EQUIPMENT_DB_SAFE = (typeof EQUIPMENT_DB !== 'undefined' ? EQUIPMENT_DB : {});
+    COMPONENTS_DB_SAFE = (typeof COMPONENTS_DB !== 'undefined' ? COMPONENTS_DB : {});
+    EQUIPMENT_DB_SAFE = (typeof EQUIPMENT_DB !== 'undefined' ? EQUIPMENT_DB : {});
 
-    // Combina todos os bancos de dados em um mestre (para UI)
-    const ITEM_DB = { 
+    ITEM_DB = { 
         ...MATERIALS_DB, 
         ...COMPONENTS_DB_SAFE, 
         ...EQUIPMENT_DB_SAFE 
     };
 
-    const RECIPES_CRAFT = {
-        "eq_rust_helmet": { name: "Rustic Helmet", cost: { "mat_scrap": 8, "mat_metal": 2 }, ...EQUIPMENT_DB_SAFE["eq_rust_helmet"] },
-        "eq_rust_weapon": { name: "Rustic Blade", cost: { "mat_scrap": 10, "mat_metal": 1 }, ...EQUIPMENT_DB_SAFE["eq_rust_weapon"] }
+    RECIPES_CRAFT = {
+        "eq_rust_helmet": { name: "Rustic Helmet", cost: { "mat_scrap": 8, "mat_metal": 2 }, ...(EQUIPMENT_DB_SAFE["eq_rust_helmet"] || {}) },
+        "eq_rust_weapon": { name: "Rustic Blade", cost: { "mat_scrap": 10, "mat_metal": 1 }, ...(EQUIPMENT_DB_SAFE["eq_rust_weapon"] || {}) }
     };
-    
-    const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
-    const STATS_LIST = ['hp', 'ap', 'speed', 'damage', 'defense', 'critChance', 'critDamage', 'attackSpeed', 'hpRegen', 'blockChance', 'luck'];
 
-    // --- 1.5: Definição do Mapa Estático ---
-    const STATIC_MAP_DATA = new Map([
-        ["-3,0", { biome: "volcanics" }], ["-3,1", { biome: "volcanics" }], ["-3,2", { biome: "volcanics" }],
-        ["-2,-1", { biome: "volcanics" }], ["-2,0", { biome: "volcanics" }], ["-2,1", { biome: "volcanics" }],
-        ["-1,-2", { biome: "undergrounders" }], ["-1,-1", { biome: "undergrounders" }], ["-1,0", { biome: "undergrounders" }],
-        ["0,-2", { biome: "undergrounders" }], ["0,-1", { biome: "undergrounders" }],
-        ["0,0", { biome: "wasteland" }], ["-1,1", { biome: "wasteland" }], ["1,-1", { biome: "wasteland" }],
-        ["1,0", { biome: "wasteland" }], ["0,1", { biome: "wasteland" }],
-        ["-2,2", { biome: "nocturnals" }], ["-2,3", { biome: "nocturnals" }],
-        ["-1,2", { biome: "nocturnals" }], ["-1,3", { biome: "nocturnals" }],
-        ["0,2", { biome: "nocturnals" }], ["0,3", { biome: "nocturnals" }],
-        ["1,-2", { biome: "radioactives" }], ["2,-3", { biome: "radioactives" }],
-        ["2,-2", { biome: "radioactives" }], ["3,-3", { biome: "radioactives" }],
-        ["3,-2", { biome: "radioactives" }],
-        ["1,1", { biome: "reptilians" }], ["1,2", { biome: "reptilians" }],
-        ["2,0", { biome: "reptilians" }], ["2,1", { biome: "reptilians" }],
-        ["3,-1", { biome: "reptilians" }], ["3,0", { biome: "reptilians" }],
-    ]);
-
-    // --- 1.6: Carteira Simulada ---
-    const MOCK_WALLET = [
-        { id: '#313', name: 'Blue Mutant', tribe: TRIBES.RADIOACTIVES, expeditions: 5, equipped: { helmet: 'h1', weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
-        { id: '#222', name: 'Demo Nocturnal', tribe: TRIBES.NOCTURNALS, expeditions: 2, equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null } },
-        { id: '#111', name: 'Demo Volcanic', tribe: TRIBES.VOLCANICS, expeditions: 10, equipped: { helmet: null, weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
-        { id: '#444', name: 'Swamp Kid', tribe: TRIBES.REPTILIANS, expeditions: 0, equipped: {} },
-        { id: '#555', name: 'Miner', tribe: TRIBES.UNDERGROUNDERS, expeditions: 1, equipped: {} },
-        { id: '#001', name: 'Rookie-1', tribe: TRIBES.VOLCANICS, expeditions: 0, equipped: {} },
-        { id: '#002', name: 'Rookie-2', tribe: TRIBES.VOLCANICS, expeditions: 0, equipped: {} },
-        { id: '#003', name: 'Rookie-3', tribe: TRIBES.NOCTURNALS, expeditions: 0, equipped: {} },
-        { id: '#004', name: 'Rookie-4', tribe: TRIBES.RADIOACTIVES, expeditions: 0, equipped: {} },
-        { id: '#005', name: 'Rookie-5', tribe: TRIBES.REPTILIANS, expeditions: 0, equipped: {} },
-        { id: '#006', name: 'Rookie-6', tribe: TRIBES.UNDERGROUNDERS, expeditions: 0, equipped: {} },
-        { id: '#007', name: 'Rookie-7', tribe: TRIBES.VOLCANICS, expeditions: 0, equipped: {} },
-        { id: '#008', name: 'Rookie-8', tribe: TRIBES.NOCTURNALS, expeditions: 0, equipped: {} },
-        { id: '#009', name: 'Rookie-9', tribe: TRIBES.RADIOACTIVES, expeditions: 0, equipped: {} },
-        { id: '#010', name: 'Rookie-10', tribe: TRIBES.REPTILIANS, expeditions: 0, equipped: {} },
-        { id: '#011', name: 'Rookie-11', tribe: TRIBES.UNDERGROUNDERS, expeditions: 0, equipped: {} },
-    ];
-    const DEMO_KID_ID = '#313';
 
     /* ==================================================================== */
     /* SEÇÃO 2: MASTER STATE (gameState)
@@ -139,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     "mat_energized_crystals": 0, "mat_thermal_water": 0, "mat_special_clay": 0, "mat_glass": 0, "mat_polymer": 0, "mat_nanochips": 0, "mat_cybernetic_implants": 0, "mat_quantum_energy_core": 0,
                     "mat_strange_fluid": 0, "mat_parasitic_fungus": 0, "mat_venom_glands": 0, "mat_luminescent_algae": 0, "mat_healing_plants": 0, "mat_hallucinogenic_fungi": 0, "mat_animal_skin": 0, "mat_reptilian_blood": 0
                 },
-                components: { "comp_def_1": 1, "comp_dmg_1": 1, "comp_luck_1": 2, "comp_hp_1": 1 }, // IDs atualizados
+                components: { "comp_def_1": 1, "comp_dmg_1": 1, "comp_luck_1": 2, "comp_hp_1": 1 }, 
                 equipment: [
                     { instance_id: 'h1', item_id: 'eq_rust_helmet', name: 'Capacete Rústico', level: 1, slot: 'helmet', stats: { defense: 5, blockChance: 3 }, icon: 'images/icons/equipment/eq_rust_helmet.png', embed_slots: [{component: 'comp_def_1'}, {component: null}, {component: null}], slots_unlocked: 1 },
                     { instance_id: 'w1', item_id: 'eq_rust_weapon', name: 'Lâmina Rústica', level: 1, slot: 'weapon', stats: { damage: 5, critDamage: 5 }, icon: 'images/icons/equipment/eq_rust_weapon.png', embed_slots: [{component: 'comp_dmg_1'}, {component: null}, {component: null}], slots_unlocked: 1 },
@@ -732,7 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filter !== 'all') {
             itemsToShow = itemsToShow.filter(item => {
                 if (filter === 'component') return !!COMPONENTS_DB_SAFE[item.id];
-                const itemData = EQUIPMENT_DB_SAFE[item.item_id] || {};
+                const itemData = EQUIPMENT_DB_SAFE[item.item_id] || {}; // Usa item_id para buscar no DB base
                 return itemData.slot === filter;
             });
         }
@@ -1519,7 +1534,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v4.8 Initialized (Modular Item DBs).");
+        console.log("CyberKidz Expedition v4.9 Initialized (DB Load Fix).");
 
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
