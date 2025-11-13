@@ -6,7 +6,7 @@
 const COMPONENTS_DB = { 
     'comp_def_1': { id: 'comp_def_1', name: "Defense Plate", type: "defense", stats: { defense: 5 }, icon: "images/icons/components/comp_def_1.png" },
     'comp_hp_1': { id: 'comp_hp_1', name: "HP Matrix", type: "defense", stats: { hp: 20 }, icon: "images/icons/components/comp_hp_1.png" },
-    'comp_dmg_1': { id: 'comp_dmg_1', name: "Volcanic Core", type: "damage", stats: { damage: 5 }, icon: "images/icons/components/comp_dmg_1.png" },
+    'comp_dmg_1': { id: 'comp_dmg_1', name: "Magma Elixir", type: "damage", stats: { damage: 5 }, icon: "images/icons/components/comp_dmg_1.png" },
     'comp_crit_1': { id: 'comp_crit_1', name: "Precision Lens", type: "damage", stats: { critChance: 3 }, icon: "images/icons/components/comp_crit_1.png" },
     'comp_spd_1': { id: 'comp_spd_1', name: "Speed Injector", type: "speed", stats: { speed: 3 }, icon: "images/icons/components/comp_spd_1.png" },
     'comp_regen_1': { id: 'comp_regen_1', name: "Regen Matrix", type: "heal", stats: { hpRegen: 2 }, icon: "images/icons/components/comp_regen_1.png" },
