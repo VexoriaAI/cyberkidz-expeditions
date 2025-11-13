@@ -1518,11 +1518,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ==================================================================== */
-    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
+    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS (Corrigido)
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v4.9 Initialized (DB Load Fix).");
-
+        console.log("CyberKidz Expedition v5.0 Initialized (Button Fix).");
+    
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
         DOM.loggedOut.bodyConnectBtn.addEventListener('click', handleConnectWallet);
@@ -1538,14 +1538,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         DOM.hubSelection.paginationPrev.addEventListener('click', () => handlePageChange('prev')); 
         DOM.hubSelection.paginationNext.addEventListener('click', () => handlePageChange('next'));
-
+    
         DOM.hubSelection.nftGrid.addEventListener('click', (e) => {
             if (e.target && e.target.classList.contains('select-kid-btn')) {
                 const kidId = e.target.dataset.kidId;
                 handleKidSelect(kidId);
             }
         });
-
+    
         // --- Tela 3 (Abas e Manequim) ---
         DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen')); 
         DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
@@ -1573,7 +1573,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderWorkshopTabs();
             }
         });
-
+    
         DOM.hubPreparation.embedUi.addEventListener('click', (e) => {
             if (e.target.closest('.embed-remove-btn')) {
                 const slotType = e.target.closest('.embed-remove-btn').dataset.slotType; 
@@ -1599,7 +1599,9 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.game.endTurnBtn.addEventListener('click', endDay);
         
         // --- Modais ---
-        DOM.modals.editNameBtn.addEventListener('click', openEditNameModal);
+        
+        // ** CORREÇÃO V5.0: Referência corrigida de DOM.modals para DOM.hubPreparation **
+        DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal); 
         DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal); 
         DOM.modals.editNameSave.addEventListener('click', saveEditName);
         
@@ -1618,7 +1620,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleItemSelect(itemId);
             }
         });
-
+    
         // Modal de Embed
         DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal); 
         DOM.modals.embedCancelBtn.addEventListener('click', closeEmbedConfirmModal);
@@ -1628,7 +1630,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearEmbedSlot('gear'); // Limpa os slots
             closeEmbedConfirmModal(); 
         });
-
+    
         // Modal de Combate
         DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack); 
         DOM.modals.combatAutoBtn.addEventListener('click', toggleAutoAttack);
@@ -1638,7 +1640,7 @@ document.addEventListener('DOMContentLoaded', () => {
             closeCombatModal(); 
             handleReturnToHub(false); 
         });
-
+    
         // Modais de Ação/Dia
         DOM.modals.feedbackCloseBtn.addEventListener('click', closeActionFeedbackModal);
         DOM.modals.endDayCloseBtn.addEventListener('click', closeEndDayModal);
@@ -1650,8 +1652,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isSuccess = DOM.modals.endExpeditionTitle.textContent.includes("Successful");
             handleReturnToHub(isSuccess);
         });
-
-
+    
         // Inicia na Tela 1
         showScreen('logged-out-screen');
     }
