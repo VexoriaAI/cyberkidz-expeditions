@@ -1,21 +1,22 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 6.0 (Clean & Modular - Lógica Pura)
+// VERSÃO 6.2 (Modular Clean - Dados Externos)
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("System: DOM Loaded. Loading Database Modules...");
+    console.log("System: DOM Loaded. Linking Database Modules...");
 
     /* ==================================================================== */
-    /* 1. CONSTANTES DE CONFIGURAÇÃO (Motor do Jogo)
+    /* 1. CONSTANTES DE CONFIGURAÇÃO (UI e Motor)
     /* ==================================================================== */
+    // Estas constantes configuram o comportamento do motor e não são dados de "conteúdo".
     const MAX_DAYS = 10;
     const MAX_PLACEHOLDER_IMAGES_PER_TRIBE = 5;
     const HEX_SIZE_VISUAL = 50; 
     const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
     const STATS_LIST = ['hp', 'ap', 'speed', 'damage', 'defense', 'critChance', 'critDamage', 'attackSpeed', 'hpRegen', 'blockChance', 'luck'];
 
-    // Biomas (Mantido aqui pois mapeia IDs de recursos para nomes de exibição)
+    // Mapeamento de UI para Biomas (Nomes de exibição e IDs de recursos padrão)
     const BIOMES = {
         volcanics: { name: "Burning Ridge", resource: "mat_metal" }, 
         reptilians: { name: "Covenant Swamp", resource: "mat_food" },
@@ -26,10 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ==================================================================== */
-    /* 2. INTEGRAÇÃO DE BANCO DE DADOS (Carregamento Seguro)
+    /* 2. INTEGRAÇÃO DE BANCO DE DADOS (Globais)
     /* ==================================================================== */
     
-    // Verifica se os arquivos externos foram carregados
+    // Referências seguras aos objetos globais carregados dos arquivos /database/
     const DB = {
         EQUIPMENT: (typeof EQUIPMENT_DB !== 'undefined') ? EQUIPMENT_DB : {},
         COMPONENTS: (typeof COMPONENTS_DB !== 'undefined') ? COMPONENTS_DB : {},
@@ -40,33 +41,34 @@ document.addEventListener('DOMContentLoaded', () => {
         DROPS: (typeof DROP_TABLES !== 'undefined') ? DROP_TABLES : {},
         RECIPES: (typeof RECIPES_DB !== 'undefined') ? RECIPES_DB : {},
         WALLET: (typeof MOCK_WALLET !== 'undefined') ? MOCK_WALLET : [],
-        TRIBES: (typeof TRIBES !== 'undefined') ? TRIBES : {}
+        TRIBES: (typeof TRIBES !== 'undefined') ? TRIBES : {},
+        MAP: (typeof STATIC_MAP_DATA !== 'undefined') ? STATIC_MAP_DATA : new Map()
     };
 
-    // Validação básica
-    if (Object.keys(DB.EQUIPMENT).length === 0) console.error("Critical: EQUIPMENT_DB missing.");
-    if (Object.keys(DB.MATERIALS).length === 0) console.error("Critical: MATERIALS_DB missing.");
+    // Validação de Carregamento
+    if (Object.keys(DB.EQUIPMENT).length === 0) console.warn("Critical: EQUIPMENT_DB empty or missing.");
+    if (DB.MAP.size === 0) console.warn("Critical: STATIC_MAP_DATA empty or missing.");
 
-    // Constrói o "Item Master DB" para a UI (unifica tudo)
+    // Constrói o "Item Master DB" para a UI (unifica tudo em um objeto para busca fácil por ID)
     const ITEM_DB = { ...DB.MATERIALS, ...DB.COMPONENTS, ...DB.EQUIPMENT };
 
-    // Constrói as Receitas de Crafting (Mescla Custo + Dados do Item)
+    // Constrói as Receitas de Crafting (Mescla Custo da Receita + Dados do Item)
     const RECIPES_CRAFT = {};
     for (const [id, recipeData] of Object.entries(DB.RECIPES)) {
         if (DB.EQUIPMENT[id]) {
             RECIPES_CRAFT[id] = {
-                ...DB.EQUIPMENT[id], // Herda nome, ícone, stats
-                cost: recipeData.cost // Adiciona o custo
+                ...DB.EQUIPMENT[id], // Herda nome, ícone, stats do item base
+                cost: recipeData.cost // Adiciona o custo da receita
             };
         }
     }
 
     /* ==================================================================== */
-    /* 3. FUNÇÕES AUXILIARES (Helpers)
+    /* 3. HELPER FUNCTIONS
     /* ==================================================================== */
 
     function generateStartingInventory() {
-        // Gera um inventário com 1 de cada equipamento disponível no DB para testes
+        // Gera um inventário de teste com 1 de cada equipamento do banco de dados
         if (Object.keys(DB.EQUIPMENT).length === 0) return [];
         
         return Object.values(DB.EQUIPMENT).map((item, index) => {
@@ -92,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateItemCardHTML(item, actionButtonHTML) {
         const isEquipment = !!item.instance_id;
         let statsStr = "";
-        const statsObj = item.stats || {};
         
         if (item.stats) {
             Object.entries(item.stats).forEach(([k, v]) => {
@@ -139,16 +140,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getRandomPlaceholderImg(tribeName) {
-        if (!tribeName) return `images/kid-placeholder.png`;
+        if (!tribeName) return 'images/kid-placeholder.png';
         const tribeKey = tribeName.toLowerCase();
         const number = Math.floor(Math.random() * MAX_PLACEHOLDER_IMAGES_PER_TRIBE) + 1;
         return `images/${tribeKey}_${number}.png`;
     }
 
-    // Math Helpers
     function axialToPixelCenter(q, r, size) { return { x: size * (Math.sqrt(3) * q + Math.sqrt(3) / 2 * r), y: size * (3/2 * r) }; }
     function getHexVertices(size, x, y) { const vertices = []; for (let i = 0; i < 6; i++) { const angle = Math.PI / 180 * (60 * i + 30); vertices.push(Math.round(x + size * Math.cos(angle)), Math.round(y + size * Math.sin(angle))); } return vertices; }
     function axialDistance(q1, r1, q2, r2) { return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2; }
+
+    // --- FUNÇÕES DE GERENCIAMENTO DE EQUIPAMENTO ---
+    function calculateItemPower(itemInstance) {
+        let score = 0;
+        for (const stat in itemInstance.stats) score += itemInstance.stats[stat];
+        if (itemInstance.embed_slots) {
+            itemInstance.embed_slots.forEach(slot => {
+                if (slot.component) {
+                    const component = DB.COMPONENTS[slot.component];
+                    if (component && component.stats) { for (const stat in component.stats) score += component.stats[stat]; }
+                }
+            });
+        }
+        return score;
+    }
+
+    function autoEquip() {
+        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
+        if (!kid) return;
+        let equippedCount = 0;
+        EQUIPMENT_SLOTS.forEach(slot => {
+            const itemsForSlot = gameState.player.inventory.equipment.filter(item => item.slot === slot);
+            if (itemsForSlot.length > 0) {
+                itemsForSlot.sort((a, b) => calculateItemPower(b) - calculateItemPower(a));
+                const bestItem = itemsForSlot[0];
+                const currentEquippedId = kid.equipped[slot];
+                if (!currentEquippedId || currentEquippedId !== bestItem.instance_id) {
+                    kid.equipped[slot] = bestItem.instance_id;
+                    equippedCount++;
+                }
+            }
+        });
+        if (equippedCount > 0) renderHubPreparationScreen();
+    }
+
+    function removeAllEquipment() {
+        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
+        if (!kid) return;
+        EQUIPMENT_SLOTS.forEach(slot => { kid.equipped[slot] = null; });
+        renderHubPreparationScreen();
+    }
 
     /* ==================================================================== */
     /* 4. GAME STATE
@@ -159,13 +200,12 @@ document.addEventListener('DOMContentLoaded', () => {
         player: {
             tezerium: 1000,
             inventory: {
-                materials: { 
-                    "mat_scrap": 100, "mat_water": 100, "mat_food": 100, "mat_metal": 10, "mat_magma": 0, "mat_volcanic_pumice_stone": 0, "mat_obsidian_tears": 0,
-                    "mat_energized_crystals": 0, "mat_thermal_water": 0, "mat_special_clay": 0, "mat_glass": 0, "mat_polymer": 0, "mat_nanochips": 0, "mat_cybernetic_implants": 0, "mat_quantum_energy_core": 0,
-                    "mat_strange_fluid": 0, "mat_parasitic_fungus": 0, "mat_venom_glands": 0, "mat_luminescent_algae": 0, "mat_healing_plants": 0, "mat_hallucinogenic_fungi": 0, "mat_animal_skin": 0, "mat_reptilian_blood": 0
-                },
+                // Materiais iniciais para teste
+                materials: { "mat_scrap": 100, "mat_water": 100, "mat_food": 100, "mat_metal": 10 },
+                // Componentes iniciais para teste
                 components: { "comp_def_1": 5, "comp_dmg_1": 5, "comp_spd_1": 2, "comp_luck_1": 1 }, 
-                equipment: [] // Gerado no login
+                // Equipamento é gerado dinamicamente
+                equipment: generateStartingInventory() 
             },
             kidz: []
         },
@@ -204,23 +244,21 @@ document.addEventListener('DOMContentLoaded', () => {
             feedback: document.getElementById('action-feedback-modal'), feedbackTitle: document.getElementById('feedback-title'), feedbackDesc: document.getElementById('feedback-description'), feedbackCloseBtn: document.getElementById('feedback-close-btn'), 
             combat: document.getElementById('combat-modal'), combatLog: document.getElementById('combat-log'), combatPhaseBattle: document.getElementById('combat-phase-battle'), combatPhaseVictory: document.getElementById('combat-phase-victory'), combatPhaseDefeat: document.getElementById('combat-phase-defeat'), combatPlayer: document.getElementById('combat-player'), combatPlayerHpFill: document.getElementById('combat-player-hp-fill'), combatPlayerHpText: document.getElementById('combat-player-hp-text'), combatEnemy: document.getElementById('combat-enemy'), combatEnemyName: document.getElementById('combat-enemy-name'), combatEnemyHpFill: document.getElementById('combat-enemy-hp-fill'), combatEnemyHpText: document.getElementById('combat-enemy-hp-text'), combatAttackBtn: document.getElementById('combat-attack-btn'), combatAutoBtn: document.getElementById('combat-auto-btn'), combatFleeBtn: document.getElementById('combat-flee-btn'), victoryRewardList: document.getElementById('victory-reward-list'), victoryEnemyName: document.getElementById('victory-enemy-name'), combatCloseVictoryBtn: document.getElementById('combat-close-victory-btn'), combatReturnHubBtn: document.getElementById('combat-return-hub-btn'), 
             embedConfirm: document.getElementById('embed-confirm-modal'), embedBefore: document.getElementById('embed-before'), embedAfter: document.getElementById('embed-after'), embedCancelBtn: document.getElementById('embed-cancel-btn'), embedConfirmBtn: document.getElementById('embed-confirm-btn'), embedWarningText: document.querySelector('.warning-text'),
-            endDay: document.getElementById('end-day-modal'), endDayTitle: document.getElementById('end-day-title'), endDayCloseBtn: document.getElementById('end-day-close-btn'), 
-            endExpedition: document.getElementById('end-expedition-modal'), endExpeditionTitle: document.getElementById('end-expedition-title'), endExpeditionList: document.getElementById('expedition-summary-list'), endExpeditionDuration: document.getElementById('expedition-duration'), endExpeditionCloseBtn: document.getElementById('end-expedition-close-btn'), endExpeditionReturnBtn: document.getElementById('end-expedition-return-btn') 
+            endDay: document.getElementById('end-day-modal'), endDayTitle: document.getElementById('end-day-title'), endDayCloseBtn: document.getElementById('end-day-close-btn'), endExpedition: document.getElementById('end-expedition-modal'), endExpeditionTitle: document.getElementById('end-expedition-title'), endExpeditionList: document.getElementById('expedition-summary-list'), endExpeditionDuration: document.getElementById('expedition-duration'), endExpeditionCloseBtn: document.getElementById('end-expedition-close-btn'), endExpeditionReturnBtn: document.getElementById('end-expedition-return-btn') 
         }
     };
 
     /* ==================================================================== */
-    /* 6. LÓGICA DE TELAS (Hub, Selection, Game)
+    /* 6. LÓGICA DE TELAS
     /* ==================================================================== */
 
     function initializeMockWallet() {
         gameState.player.kidz = JSON.parse(JSON.stringify(DB.WALLET)).map(kid => {
             kid.equipped = {}; EQUIPMENT_SLOTS.forEach(slot => kid.equipped[slot] = null);
-            // Garante imagem
             kid.placeholderImg = getRandomPlaceholderImg(kid.tribe ? kid.tribe.name : "Volcanics");
             return kid;
         });
-        // Popula inventário inicial
+        // Popula inventário inicial (Dinâmico)
         gameState.player.inventory.equipment = generateStartingInventory();
 
         const select = DOM.hubSelection.filterTribe; select.innerHTML = '<option value="all">All Tribes</option>';
@@ -229,22 +267,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleConnectWallet() {
         initializeMockWallet();
-        DOM.header.tezeriumDisplay.style.visibility = 'visible';
-        DOM.header.tezeriumBalance.textContent = gameState.player.tezerium;
-        DOM.header.headerConnectBtn.style.display = 'none';
-        DOM.header.connectionStatus.style.display = 'inline';
-        renderHubSelectionScreen();
-        showScreen('hub-selection-screen');
+        DOM.header.tezeriumDisplay.style.visibility = 'visible'; DOM.header.tezeriumBalance.textContent = gameState.player.tezerium;
+        DOM.header.headerConnectBtn.style.display = 'none'; DOM.header.connectionStatus.style.display = 'inline';
+        gameState.hub.pagination.currentPage = 1; renderHubSelectionScreen(); showScreen('hub-selection-screen');
     }
 
     function handleDemoGame() {
         handleConnectWallet();
-        // Acha um kid qualquer para demo se o ID especifico nao existir
-        const demoKid = gameState.player.kidz[0];
-        if (demoKid) {
-            gameState.hub.activeKidId = demoKid.id;
-            startGameplay();
-        }
+        const demoKid = gameState.player.kidz.find(k => k.id === DEMO_KID_ID);
+        if (demoKid) { gameState.hub.activeKidId = demoKid.id; startGameplay(); }
     }
 
     function renderHubSelectionScreen() {
@@ -253,16 +284,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const tribeFilter = DOM.hubSelection.filterTribe.value;
         const itemsPerPage = parseInt(DOM.hubSelection.filterItemsPerPage.value);
         const page = gameState.hub.pagination.currentPage;
-
         const filtered = gameState.player.kidz.filter(kid => {
             const tribeName = kid.tribe ? kid.tribe.name : "";
             return (kid.name.toLowerCase().includes(searchTerm) || kid.id.toLowerCase().includes(searchTerm)) && (tribeFilter === 'all' || tribeName === tribeFilter);
         });
-
         gameState.hub.pagination.totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-        const start = (page - 1) * itemsPerPage;
-        const pageItems = filtered.slice(start, start + itemsPerPage);
-
+        const pageItems = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+        
         if (pageItems.length === 0) DOM.hubSelection.nftGridPlaceholder.style.display = 'block';
         else {
             DOM.hubSelection.nftGridPlaceholder.style.display = 'none';
@@ -305,7 +333,6 @@ document.addEventListener('DOMContentLoaded', () => {
         STATS_LIST.forEach(stat => { if (stats[stat] > 0) display.innerHTML += `<p><strong>${stat}:</strong> ${stats[stat]}</p>`; });
     }
 
-    /* SEÇÃO 7: WORKSHOP LOGIC */
     function renderWorkshopTabs() {
         const tabs = gameState.hub.tabs;
         DOM.hubPreparation.mainTabs.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.mainTab === tabs.activeMainTab));
@@ -354,7 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (qty > 0 && ITEM_DB[id]) tbody.innerHTML += `<tr><td><img src="${ITEM_DB[id].icon}"></td><td>${ITEM_DB[id].name}</td><td>${qty}</td></tr>`;
         });
     }
-    
     function renderWsCraft() {
         DOM.hubPreparation.craftRecipeList.innerHTML = '';
         DOM.hubPreparation.craftRecipeDetails.innerHTML = '<p>Select a recipe.</p>';
@@ -363,8 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- MODAL UNIVERSAL ---
     function openItemSelectionModal(context, defaultFilter = 'all') {
+        if (Object.keys(DB.EQUIPMENT).length === 0) { console.error("DB Error"); return; }
         gameState.hub.itemModalContext = context;
         DOM.modals.itemSelect.style.display = 'flex';
         const title = context.startsWith('equip_') ? `Select ${context.split('_')[1]}` : (context === 'embed_gear' ? 'Select Gear' : 'Select Component');
@@ -398,7 +424,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (filter !== 'all') items = items.filter(i => { if (i.instance_id) return i.slot === filter; return true; });
+        if (filter !== 'all') {
+            items = items.filter(i => { if (i.instance_id) return i.slot === filter; return true; });
+        }
+
         if (items.length === 0) { DOM.modals.itemSelectPlaceholder.style.display = 'block'; return; }
         DOM.modals.itemSelectPlaceholder.style.display = 'none';
 
@@ -421,8 +450,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function equipItem(id, slot) { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (kid) { kid.equipped[slot] = id; renderHubPreparationScreen(); } }
     function unequipItem(slot) { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (kid) { kid.equipped[slot] = null; renderHubPreparationScreen(); } }
-    
-    // --- AUTO EQUIP & EMBED ---
+    function openEditNameModal() { DOM.modals.editNameInput.value = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId).name; DOM.modals.editName.style.display = 'flex'; }
+    function closeEditNameModal() { DOM.modals.editName.style.display = 'none'; }
+    function saveEditName() { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); const newName = DOM.modals.editNameInput.value; if (newName) { kid.name = newName; renderHubPreparationScreen(); closeEditNameModal(); } }
+
+    function renderWsEmbed() {
+        const { slotGear, slotComponent } = gameState.hub.embed;
+        const ui = DOM.hubPreparation.embedUi;
+        const gearDiv = DOM.hubPreparation.embedSlotGear; const compDiv = DOM.hubPreparation.embedSlotComponent;
+        if (slotGear) { gearDiv.innerHTML = `<img src="${slotGear.icon}" width="40"><br>${slotGear.name}`; gearDiv.classList.add('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="gear"]').style.display = 'block'; }
+        else { gearDiv.innerHTML = 'Select Gear'; gearDiv.classList.remove('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="gear"]').style.display = 'none'; }
+        if (slotComponent) { const cInfo = DB.COMPONENTS[slotComponent]; compDiv.innerHTML = `<img src="${cInfo.icon}" width="40"><br>${cInfo.name}`; compDiv.classList.add('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="component"]').style.display = 'block'; }
+        else { compDiv.innerHTML = 'Select Comp'; compDiv.classList.remove('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="component"]').style.display = 'none'; }
+        compDiv.classList.toggle('disabled', !slotGear);
+        DOM.hubPreparation.embedBtn.disabled = !(slotGear && slotComponent);
+    }
+    function clearEmbedSlot(type) { if (type === 'gear') { gameState.hub.embed.slotGear = null; gameState.hub.embed.slotComponent = null; } else { gameState.hub.embed.slotComponent = null; } renderWsEmbed(); }
+    function performEmbedAction() {
+        const gear = gameState.hub.embed.slotGear; const compId = gameState.hub.embed.slotComponent;
+        if (!gear || !compId) return;
+        if (gameState.player.inventory.components[compId] > 0) gameState.player.inventory.components[compId]--; else { alert("Not enough components!"); return; }
+        const slotIndex = gear.embed_slots.findIndex(s => s.component === null);
+        if (slotIndex !== -1) { gear.embed_slots[slotIndex].component = compId; console.log("Embedded!"); } else { alert("No slots available!"); return; }
+        clearEmbedSlot('gear'); DOM.modals.embedConfirm.style.display = 'none'; renderHubPreparationScreen();
+    }
+    function openEmbedConfirmModal() {
+        const gear = gameState.hub.embed.slotGear; const comp = DB.COMPONENTS[gameState.hub.embed.slotComponent];
+        DOM.modals.embedBefore.innerHTML = "<h4>Current</h4>"; if(gear.stats) Object.entries(gear.stats).forEach(([k,v]) => DOM.modals.embedBefore.innerHTML += `${k}: +${v}<br>`);
+        DOM.modals.embedAfter.innerHTML = `<h4>Add: ${comp.name}</h4>`; if(comp.stats) Object.entries(comp.stats).forEach(([k,v]) => DOM.modals.embedAfter.innerHTML += `${k}: +${v}<br>`);
+        DOM.modals.embedConfirm.style.display = 'flex';
+    }
+    function closeEmbedConfirmModal() { DOM.modals.embedConfirm.style.display = 'none'; }
+
     function calculateItemPower(item) { let p = 0; if(item.stats) Object.values(item.stats).forEach(v => p += v); return p; }
     function autoEquip() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
@@ -434,50 +493,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function removeAllEquipment() { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); EQUIPMENT_SLOTS.forEach(slot => kid.equipped[slot] = null); renderHubPreparationScreen(); }
 
-    function renderWsEmbed() {
-        const { slotGear, slotComponent } = gameState.hub.embed;
-        const ui = DOM.hubPreparation.embedUi;
-        const gearDiv = DOM.hubPreparation.embedSlotGear; const compDiv = DOM.hubPreparation.embedSlotComponent;
-        
-        if (slotGear) {
-            gearDiv.innerHTML = `<img src="${slotGear.icon}" width="40"><br>${slotGear.name}`; gearDiv.classList.add('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="gear"]').style.display = 'block';
-        } else { gearDiv.innerHTML = 'Select Gear'; gearDiv.classList.remove('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="gear"]').style.display = 'none'; }
-        
-        if (slotComponent) {
-            const cInfo = DB.COMPONENTS[slotComponent];
-            compDiv.innerHTML = `<img src="${cInfo.icon}" width="40"><br>${cInfo.name}`; compDiv.classList.add('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="component"]').style.display = 'block';
-        } else { compDiv.innerHTML = 'Select Comp'; compDiv.classList.remove('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="component"]').style.display = 'none'; }
-        
-        compDiv.classList.toggle('disabled', !slotGear);
-        DOM.hubPreparation.embedBtn.disabled = !(slotGear && slotComponent);
-    }
-    function clearEmbedSlot(type) { if (type === 'gear') { gameState.hub.embed.slotGear = null; gameState.hub.embed.slotComponent = null; } else { gameState.hub.embed.slotComponent = null; } renderWsEmbed(); }
-    
-    function performEmbedAction() {
-        const gear = gameState.hub.embed.slotGear; const compId = gameState.hub.embed.slotComponent;
-        if (!gear || !compId) return;
-        if (gameState.player.inventory.components[compId] > 0) gameState.player.inventory.components[compId]--; else { alert("Not enough components!"); return; }
-        const slotIndex = gear.embed_slots.findIndex(s => s.component === null);
-        if (slotIndex !== -1) { gear.embed_slots[slotIndex].component = compId; console.log("Embedded!"); } else { alert("No slots available!"); return; }
-        clearEmbedSlot('gear'); DOM.modals.embedConfirm.style.display = 'none'; renderHubPreparationScreen();
-    }
-    
-    function openEmbedConfirmModal() {
-        const gear = gameState.hub.embed.slotGear; const comp = DB.COMPONENTS[gameState.hub.embed.slotComponent];
-        DOM.modals.embedBefore.innerHTML = "<h4>Current</h4>"; if(gear.stats) Object.entries(gear.stats).forEach(([k,v]) => DOM.modals.embedBefore.innerHTML += `${k}: +${v}<br>`);
-        DOM.modals.embedAfter.innerHTML = `<h4>Add: ${comp.name}</h4>`; if(comp.stats) Object.entries(comp.stats).forEach(([k,v]) => DOM.modals.embedAfter.innerHTML += `${k}: +${v}<br>`);
-        DOM.modals.embedConfirm.style.display = 'flex';
-    }
-
-    /* SEÇÃO 8: GAMEPLAY (Simplificado) */
+    /* SEÇÃO 8: GAMEPLAY */
     function startGameplay() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if(!kid) return;
         gameState.expedition.kid = JSON.parse(JSON.stringify(kid));
         gameState.expedition.stats = calculateFinalStats(kid);
         gameState.expedition.currentDay = 1; gameState.expedition.playerPos = getSpawnPoint(kid.tribe ? kid.tribe.biome : "wasteland");
-        gameState.expedition.currentHP = gameState.expedition.stats.hp; gameState.expedition.currentAP = gameState.expedition.stats.ap;
-        gameState.expedition.maxAP = gameState.expedition.stats.ap; gameState.expedition.currentMP = gameState.expedition.stats.speed;
-        gameState.expedition.maxMP = gameState.expedition.stats.speed; gameState.expedition.resourcesFound = {}; gameState.expedition.revealedHexes.clear(); gameState.expedition.startTime = Date.now();
+        gameState.expedition.currentHP = gameState.expedition.stats.hp; gameState.expedition.currentAP = gameState.expedition.stats.ap; gameState.expedition.maxAP = gameState.expedition.stats.ap; gameState.expedition.currentMP = gameState.expedition.stats.speed; gameState.expedition.maxMP = gameState.expedition.stats.speed; gameState.expedition.resourcesFound = {}; gameState.expedition.revealedHexes.clear(); gameState.expedition.startTime = Date.now();
         DOM.game.log.innerHTML = ''; logMessage("--- DAY 1 START ---", 'day');
         renderImageMap(); revealAdjacentHexes(gameState.expedition.playerPos); updateFogOfWar(); updatePlayerHexPosition(); renderGameStatusPanel();
         showScreen('game-screen');
@@ -485,8 +507,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderImageMap() {
         const mapAreas = DOM.game.mapAreas; const fogOverlay = DOM.game.fogOverlay; mapAreas.innerHTML = ''; fogOverlay.innerHTML = '';
         let minX = Infinity, minY = Infinity;
-        DB.EQUIPMENT && STATIC_MAP_DATA.forEach((cell, key) => { const [q, r] = key.split(',').map(Number); const { x, y } = axialToPixelCenter(q, r, HEX_SIZE_VISUAL); minX = Math.min(minX, x); minY = Math.min(minY, y); });
-        STATIC_MAP_DATA.forEach((cell, key) => {
+        DB.MAP && DB.MAP.forEach((cell, key) => { const [q, r] = key.split(',').map(Number); const { x, y } = axialToPixelCenter(q, r, HEX_SIZE_VISUAL); minX = Math.min(minX, x); minY = Math.min(minY, y); });
+        DB.MAP.forEach((cell, key) => {
             const [q, r] = key.split(',').map(Number); const { x: centerX, y: centerY } = axialToPixelCenter(q, r, HEX_SIZE_VISUAL);
             const mapX = centerX - minX + HEX_SIZE_VISUAL; const mapY = centerY - minY + HEX_SIZE_VISUAL;
             const areaTag = document.createElement('area'); areaTag.shape = "poly"; areaTag.coords = getHexVertices(HEX_SIZE_VISUAL, mapX, mapY).join(','); areaTag.href = "#";
@@ -532,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(roll < sum) {
                 if(tier.type === 'nothing') return null;
                 const key = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
-                const biome = STATIC_MAP_DATA.get(key).biome;
+                const biome = DB.MAP.get(key).biome;
                 return (DB.ENEMIES[biome] && DB.ENEMIES[biome][tier.type]) ? JSON.parse(JSON.stringify(DB.ENEMIES[biome][tier.type])) : null;
             }
         }
@@ -542,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleCollect() {
         gameState.expedition.currentAP--;
         const key = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
-        const biome = STATIC_MAP_DATA.get(key).biome;
+        const biome = DB.MAP.get(key).biome;
         const table = DB.DROPS[biome].collect;
         table.forEach(drop => {
             const amount = Math.floor(Math.random() * (drop.quantity[1] - drop.quantity[0] + 1)) + drop.quantity[0];
@@ -556,8 +578,22 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.expedition.currentAP--;
         const enemy = getRandomEnemy("Investigate");
         if(enemy) { startCombat(enemy); return; }
-        // Loot logic here (simplified)
-        logMessage("Nothing found.", 'action');
+        const key = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
+        const biome = DB.MAP.get(key).biome;
+        const table = DB.DROPS[biome].investigate;
+        const roll = Math.random() * 100 + gameState.expedition.stats.luck;
+        for(const drop of table) {
+            if(roll <= drop.chance) {
+                if(drop.type === 'nothing') { logMessage("Nothing found.", 'action'); }
+                else {
+                    const amount = Math.floor(Math.random() * (drop.quantity[1] - drop.quantity[0] + 1)) + drop.quantity[0];
+                    if(!gameState.expedition.resourcesFound[drop.item]) gameState.expedition.resourcesFound[drop.item] = 0;
+                    gameState.expedition.resourcesFound[drop.item] += amount;
+                    logMessage(`Found stash! +${amount}x ${ITEM_DB[drop.item].name}`, 'reward');
+                }
+                break;
+            }
+        }
         renderGameStatusPanel();
     }
     function handleSearchEnemy() {
@@ -575,9 +611,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGameStatusPanel();
         logMessage("New Day Started.", 'day');
     }
-    function gameOver(win) { showScreen('hub-preparation-screen'); }
+    function gameOver(win) { showEndExpeditionModal(win); }
 
-    // Combat Stubs (Full logic in V5.3)
     function startCombat(e) { gameState.combat.isActive = true; gameState.combat.enemy = { ...e, currentHp: e.stats.hp }; DOM.modals.combat.style.display = 'flex'; renderGameStatusPanel(); }
     function handleCombatAttack() { 
         if(!gameState.combat.isActive) return;
@@ -592,15 +627,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveEditName() { closeEditNameModal(); }
     function closeActionFeedbackModal() { DOM.modals.feedback.style.display = 'none'; }
     function closeEndDayModal() { DOM.modals.endDay.style.display = 'none'; }
+    function showEndExpeditionModal(isSuccess) {
+        DOM.modals.endExpeditionTitle.textContent = isSuccess ? "Success" : "Failed";
+        DOM.modals.endExpedition.style.display = 'flex';
+    }
     function handleReturnToHub() { DOM.modals.endExpedition.style.display = 'none'; showScreen('hub-preparation-screen'); }
 
 
     /* ==================================================================== */
-    /* SEÇÃO 10: INITIALIZE
+    /* SEÇÃO 10: INITIALIZE LISTENERS
     /* ==================================================================== */
     function initialize() {
-        console.log("Initializing...");
-
+        console.log("CyberKidz V6.2 Init (Modular).");
+        
         // Home
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet);
         DOM.loggedOut.bodyConnectBtn.addEventListener('click', handleConnectWallet);
@@ -608,7 +647,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Hub Selection
         DOM.hubSelection.nftGrid.addEventListener('click', (e) => { if (e.target.classList.contains('select-kid-btn')) handleKidSelect(e.target.dataset.kidId); });
-        
+        DOM.hubSelection.paginationNext.addEventListener('click', () => { gameState.hub.pagination.currentPage++; renderHubSelectionScreen(); });
+        DOM.hubSelection.paginationPrev.addEventListener('click', () => { gameState.hub.pagination.currentPage--; renderHubSelectionScreen(); });
+
         // Hub Prep
         DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen'));
         DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
@@ -627,8 +668,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderWorkshopTabs();
             }
         });
-        
-        // Embed
         DOM.hubPreparation.embedUi.addEventListener('click', (e) => {
             if (e.target.closest('.embed-remove-btn')) clearEmbedSlot(e.target.closest('.embed-remove-btn').dataset.slotType);
             else if (e.target.closest('#embed-slot-gear')) openItemSelectionModal('embed_gear');
@@ -637,16 +676,16 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal);
         DOM.modals.embedCancelBtn.addEventListener('click', () => DOM.modals.embedConfirm.style.display = 'none');
         DOM.modals.embedConfirmBtn.addEventListener('click', performEmbedAction);
-
-        // Modal Item
+        
+        // Modals
         DOM.modals.itemSelectCloseBtn.addEventListener('click', closeItemSelectionModal);
         DOM.modals.itemSelectFilterBar.addEventListener('click', (e) => { if (e.target.dataset.filter) renderItemModalGrid(e.target.dataset.filter); });
         DOM.modals.itemSelectGrid.addEventListener('click', (e) => { const btn = e.target.closest('.select-item-btn'); if(btn) handleItemSelect(btn.dataset.itemId); });
-
+        
         // Auto Equip
         const autoBtn = document.getElementById('auto-equip-btn'); if(autoBtn) autoBtn.addEventListener('click', autoEquip);
         const removeBtn = document.getElementById('remove-all-btn'); if(removeBtn) removeBtn.addEventListener('click', removeAllEquipment);
-
+        
         // Edit Name
         DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
         DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal);
@@ -659,27 +698,18 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.game.searchEnemyBtn.addEventListener('click', handleSearchEnemy);
         DOM.game.endTurnBtn.addEventListener('click', endDay);
 
-        // Combat
+        // Combat (CORRIGIDO)
         DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack);
-        
-        // --- LINHAS QUE FALTAVAM ---
-        DOM.modals.combatAutoBtn.addEventListener('click', toggleAutoAttack); // Faltava conectar o Auto Attack
-        DOM.modals.combatFleeBtn.addEventListener('click', handleCombatFlee); // Faltava conectar o Fugir
-        
+        DOM.modals.combatAutoBtn.addEventListener('click', toggleAutoAttack);
+        DOM.modals.combatFleeBtn.addEventListener('click', handleCombatFlee);
         DOM.modals.combatCloseVictoryBtn.addEventListener('click', closeCombatModal);
-        
-        // Faltava conectar o botão de retorno na derrota
-        DOM.modals.combatReturnHubBtn.addEventListener('click', () => { 
-            closeCombatModal(); 
-            // Passamos 'false' porque é uma derrota (perde os recursos)
-            handleReturnToHub(false); 
-        });        
+        DOM.modals.combatReturnHubBtn.addEventListener('click', () => { closeCombatModal(); handleReturnToHub(false); });
 
         // Other Modals
         DOM.modals.feedbackCloseBtn.addEventListener('click', closeActionFeedbackModal);
         DOM.modals.endDayCloseBtn.addEventListener('click', closeEndDayModal);
-        DOM.modals.endExpeditionReturnBtn.addEventListener('click', () => handleReturnToHub(true));
-        DOM.modals.endExpeditionCloseBtn.addEventListener('click', () => handleReturnToHub(true));
+        DOM.modals.endExpeditionReturnBtn.addEventListener('click', () => handleReturnToHub(DOM.modals.endExpeditionTitle.textContent.includes("Successful")));
+        DOM.modals.endExpeditionCloseBtn.addEventListener('click', () => handleReturnToHub(DOM.modals.endExpeditionTitle.textContent.includes("Successful")));
 
         initializeMockWallet();
         showScreen('logged-out-screen');
