@@ -172,3 +172,27 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 /* Responsividade */
 @media (max-width: 1200px) { .preparation-container, #game-container { grid-template-columns: 1fr; } #map-panel { min-height: 500px; } }
 @media (max-width: 768px) { .modal-content.modal-large { max-width: 95%; } .modal-item-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
+
+/* Correção para Grid de Itens */
+.item-grid-container, .modal-item-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 15px;
+    padding: 10px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.item-card {
+    background-color: var(--color-bg-dark);
+    border: 1px solid #444;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+.item-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-accent-blue);
+}
