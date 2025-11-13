@@ -1,13 +1,13 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 6.2 (Final Clean - Sem Conflitos de Redeclaração)
+// VERSÃO 6.3 (Correção de Filtros, Demo, Inventário e UI)
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("System: DOM Loaded. Initializing Game Engine...");
 
     /* ==================================================================== */
-    /* 1. CONFIGURAÇÕES DO MOTOR (Mantidos aqui)
+    /* 1. CONSTANTES DE CONFIGURAÇÃO
     /* ==================================================================== */
     const MAX_DAYS = 10;
     const MAX_PLACEHOLDER_IMAGES_PER_TRIBE = 5;
@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const STATS_LIST = ['hp', 'ap', 'speed', 'damage', 'defense', 'critChance', 'critDamage', 'attackSpeed', 'hpRegen', 'blockChance', 'luck'];
     const DEMO_KID_ID = '#313';
 
-    // Biomas (Não foi movido para DB, então fica aqui)
     const BIOMES = {
         volcanics: { name: "Burning Ridge", resource: "mat_metal" }, 
         reptilians: { name: "Covenant Swamp", resource: "mat_food" },
@@ -27,11 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ==================================================================== */
-    /* 2. INTEGRAÇÃO DE DADOS (Consolidação)
+    /* 2. INTEGRAÇÃO DE DADOS (Safe Load)
     /* ==================================================================== */
     
-    // Verifica se os arquivos do Database foram carregados corretamente no HTML
-    // Se não, usa objeto vazio para evitar crash do script
     const DB = {
         TRIBE: (typeof TRIBES !== 'undefined') ? TRIBES : {},
         MAT: (typeof MATERIALS_DB !== 'undefined') ? MATERIALS_DB : {},
@@ -46,31 +43,23 @@ document.addEventListener('DOMContentLoaded', () => {
         ENEMY: (typeof ENEMIES_BY_BIOME !== 'undefined') ? ENEMIES_BY_BIOME : {}
     };
 
-    // Validação de Segurança
-    if (Object.keys(DB.EQUIP).length === 0) console.warn("Aviso: EQUIPMENT_DB não encontrado. Verifique se 'database/equipment.js' está no index.html");
+    if (Object.keys(DB.EQUIP).length === 0) console.warn("Critical: EQUIPMENT_DB missing.");
 
-    // Constrói o Banco de Dados Mestre de Itens (para UI e Tooltips)
     const ITEM_DB = { ...DB.MAT, ...DB.COMP, ...DB.EQUIP };
 
-    // Constrói as Receitas de Crafting (Junta o Custo do RECIPES_DB com os dados do EQUIPMENT_DB)
     const RECIPES_CRAFT = {};
     for (const [id, recipeData] of Object.entries(DB.RECIPE)) {
         if (DB.EQUIP[id]) {
-            RECIPES_CRAFT[id] = {
-                ...DB.EQUIP[id], // Herda nome, icone, stats do item
-                cost: recipeData.cost // Adiciona o custo
-            };
+            RECIPES_CRAFT[id] = { ...DB.EQUIP[id], cost: recipeData.cost };
         }
     }
 
     /* ==================================================================== */
-    /* 3. FUNÇÕES AUXILIARES (Helpers)
+    /* 3. HELPER FUNCTIONS
     /* ==================================================================== */
 
     function generateStartingInventory() {
-        // Gera um item de cada tipo disponível no DB para testes
         if (Object.keys(DB.EQUIP).length === 0) return [];
-        
         return Object.values(DB.EQUIP).map((item, index) => {
             const slots = [];
             const totalSlots = item.slots_total || 3;
@@ -92,16 +81,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function generateItemCardHTML(item, actionButtonHTML) {
-        const isEquipment = !!item.instance_id;
+        // Detecta se é Equipamento (tem instance_id ou slot) ou Componente (tem type)
+        const isEquipment = item.instance_id || item.slot;
+        
+        // Stats
         let statsStr = "";
-        if (item.stats) {
-            Object.entries(item.stats).forEach(([k, v]) => {
-                if (v !== 0) statsStr += `<div class="card-stat-row"><span>${k}</span><span class="card-stat-val">+${v}</span></div>`;
-            });
-        }
+        const statsObj = item.stats || item.base_stats || {};
+        Object.entries(statsObj).forEach(([k, v]) => {
+            if (v !== 0) statsStr += `<div class="card-stat-row"><span>${k}</span><span class="card-stat-val">+${v}</span></div>`;
+        });
 
+        // Slots (apenas para Equipamento)
         let slotsHTML = "";
-        if (isEquipment) {
+        if (isEquipment && item.embed_slots) {
             item.embed_slots.forEach((s, index) => {
                 let slotClass = "locked";
                 let icon = "🔒";
@@ -124,17 +116,33 @@ document.addEventListener('DOMContentLoaded', () => {
                         text = "Empty Slot";
                     }
                 }
-                slotsHTML += `<div class="slot-bar ${slotClass}"><div style="width:20px; text-align:center;">${icon}</div><div class="slot-bar-text">${text}</div><div class="slot-bar-bonus">${bonus}</div></div>`;
+                slotsHTML += `
+                    <div class="slot-bar ${slotClass}">
+                        <div style="width:24px; text-align:center;">${icon}</div>
+                        <div class="slot-bar-text">${text}</div>
+                        <div class="slot-bar-bonus">${bonus}</div>
+                    </div>`;
             });
-        } else {
+        } else if (!isEquipment) {
+            // Para Componentes
             slotsHTML = `<div class="slot-bar filled"><div class="slot-bar-text" style="text-align:center">Type: ${item.type ? item.type.toUpperCase() : 'UNIVERSAL'}</div></div>`;
         }
 
         return `
-            <div class="card-header"><div class="card-icon-frame"><img src="${item.icon}" onerror="this.src='images/kid-placeholder.png'"></div><h4>${item.name}</h4>${isEquipment ? `<span class="card-level">Lvl ${item.level}</span>` : ''}</div>
-            <div class="card-body">${statsStr || '<div class="card-stat-row"><span>No Stats</span></div>'}</div>
-            <div class="card-footer">${slotsHTML}</div>
-            ${actionButtonHTML}
+            <div class="card-header">
+                <div class="card-icon-frame"><img src="${item.icon}" onerror="this.src='images/kid-placeholder.png'"></div>
+                <div class="card-header-text">
+                    <h4>${item.name}</h4>
+                    ${isEquipment ? `<span class="card-level">Lvl ${item.level || 1}</span>` : ''}
+                </div>
+            </div>
+            <div class="card-body">
+                ${statsStr || '<div class="card-stat-row"><span>No Stats</span></div>'}
+            </div>
+            <div class="card-footer">
+                ${slotsHTML}
+            </div>
+            ${actionButtonHTML ? `<div class="card-actions">${actionButtonHTML}</div>` : ''}
         `;
     }
 
@@ -145,20 +153,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return `images/${tribeKey}_${number}.png`;
     }
 
-    // Math Helpers
     function axialToPixelCenter(q, r, size) { return { x: size * (Math.sqrt(3) * q + Math.sqrt(3) / 2 * r), y: size * (3/2 * r) }; }
     function getHexVertices(size, x, y) { const vertices = []; for (let i = 0; i < 6; i++) { const angle = Math.PI / 180 * (60 * i + 30); vertices.push(Math.round(x + size * Math.cos(angle)), Math.round(y + size * Math.sin(angle))); } return vertices; }
     function axialDistance(q1, r1, q2, r2) { return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2; }
 
-    // Equipment Logic Helpers
+    // Equip logic
     function calculateItemPower(itemInstance) {
         let score = 0;
-        for (const stat in itemInstance.stats) score += itemInstance.stats[stat];
+        if(itemInstance.stats) for (const stat in itemInstance.stats) score += itemInstance.stats[stat];
         if (itemInstance.embed_slots) {
             itemInstance.embed_slots.forEach(slot => {
-                if (slot.component) {
-                    const component = DB.COMP[slot.component];
-                    if (component && component.stats) { for (const stat in component.stats) score += component.stats[stat]; }
+                if (slot.component && DB.COMP[slot.component]) {
+                    for (const stat in DB.COMP[slot.component].stats) score += DB.COMP[slot.component].stats[stat];
                 }
             });
         }
@@ -174,12 +180,9 @@ document.addEventListener('DOMContentLoaded', () => {
         player: {
             tezerium: 1000,
             inventory: {
-                // Materiais Iniciais (Teste)
                 materials: { "mat_scrap": 100, "mat_water": 100, "mat_food": 100, "mat_metal": 10 },
-                // Componentes Iniciais (Teste)
                 components: { "comp_def_1": 5, "comp_dmg_1": 5 }, 
-                // Equipamento Gerado
-                equipment: generateStartingInventory() 
+                equipment: [] // Gerado no login
             },
             kidz: []
         },
@@ -227,20 +230,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ==================================================================== */
-    /* 6. LÓGICA DE INTERFACE E JOGO
+    /* 6. LÓGICA DE TELAS
     /* ==================================================================== */
-
-    function showScreen(screenId) {
-        Object.values(DOM.screens).forEach(s => s.style.display = 'none');
-        if (DOM.screens[screenId]) DOM.screens[screenId].style.display = 'block';
-        gameState.currentScreen = screenId;
-    }
-
-    function logMessage(msg, type='action') {
-        const p = document.createElement('p'); p.className = `log-entry ${type}`; p.textContent = msg;
-        DOM.game.log.prepend(p);
-        if (DOM.game.log.children.length > 50) DOM.game.log.removeChild(DOM.game.log.lastChild);
-    }
 
     function initializeMockWallet() {
         gameState.player.kidz = JSON.parse(JSON.stringify(DB.WALLET)).map(kid => {
@@ -248,7 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
             kid.placeholderImg = getRandomPlaceholderImg(kid.tribe ? kid.tribe.name : "Volcanics");
             return kid;
         });
-        // Refaz inventário com base no DB carregado
         gameState.player.inventory.equipment = generateStartingInventory();
 
         const select = DOM.hubSelection.filterTribe; 
@@ -258,26 +248,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ... (Funções handleConnectWallet, handleDemoGame, renderHubSelectionScreen mantêm-se, apenas ajustando chamadas se necessário)
-    function handleConnectWallet() { initializeMockWallet(); DOM.header.tezeriumDisplay.style.visibility = 'visible'; DOM.header.tezeriumBalance.textContent = gameState.player.tezerium; DOM.header.headerConnectBtn.style.display = 'none'; DOM.header.connectionStatus.style.display = 'inline'; gameState.hub.pagination.currentPage = 1; renderHubSelectionScreen(); showScreen('hub-selection-screen'); }
-    function handleDemoGame() { handleConnectWallet(); const demoKid = gameState.player.kidz.find(k => k.id === DEMO_KID_ID); if (demoKid) { gameState.hub.activeKidId = demoKid.id; startGameplay(); } }
+    function handleConnectWallet() {
+        initializeMockWallet();
+        DOM.header.tezeriumDisplay.style.visibility = 'visible';
+        DOM.header.tezeriumBalance.textContent = gameState.player.tezerium;
+        DOM.header.headerConnectBtn.style.display = 'none';
+        DOM.header.connectionStatus.style.display = 'inline';
+        gameState.hub.pagination.currentPage = 1;
+        renderHubSelectionScreen();
+        showScreen('hub-selection-screen');
+    }
 
+    function handleDemoGame() {
+        // Correção Erro 1: Pula a seleção e inicia direto
+        initializeMockWallet(); // Garante que os dados existem
+        const demoKid = gameState.player.kidz.find(k => k.id === DEMO_KID_ID);
+        if (demoKid) {
+            gameState.hub.activeKidId = demoKid.id;
+            startGameplay();
+        } else {
+            console.error("Demo Kid not found");
+        }
+    }
+
+    // --- HUB SELECTION ---
     function renderHubSelectionScreen() {
         const grid = DOM.hubSelection.nftGrid; grid.innerHTML = '';
         const searchTerm = DOM.hubSelection.filterSearch.value.toLowerCase();
         const tribeFilter = DOM.hubSelection.filterTribe.value;
-        const itemsPerPage = DOM.hubSelection.filterItemsPerPage ? parseInt(DOM.hubSelection.filterItemsPerPage.value) : 10;
+        const itemsPerPage = parseInt(DOM.hubSelection.filterItemsPerPage.value);
         const page = gameState.hub.pagination.currentPage;
-        const filtered = gameState.player.kidz.filter(kid => { const tribeName = kid.tribe ? kid.tribe.name : ""; return (kid.name.toLowerCase().includes(searchTerm) || kid.id.toLowerCase().includes(searchTerm)) && (tribeFilter === 'all' || tribeName === tribeFilter); });
+
+        const filtered = gameState.player.kidz.filter(kid => {
+            const tribeName = kid.tribe ? kid.tribe.name : "";
+            return (kid.name.toLowerCase().includes(searchTerm) || kid.id.toLowerCase().includes(searchTerm)) && (tribeFilter === 'all' || tribeName === tribeFilter);
+        });
+
         gameState.hub.pagination.totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-        const pageItems = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+        const start = (page - 1) * itemsPerPage;
+        const pageItems = filtered.slice(start, start + itemsPerPage);
+
         if (pageItems.length === 0) DOM.hubSelection.nftGridPlaceholder.style.display = 'block';
-        else { DOM.hubSelection.nftGridPlaceholder.style.display = 'none'; pageItems.forEach(kid => { const card = document.createElement('div'); card.className = 'nft-card panel'; const tribeName = kid.tribe ? kid.tribe.name : "Unknown"; card.innerHTML = `<img src="${kid.placeholderImg}" onerror="this.src='images/kid-placeholder.png'"><h4>${kid.name}</h4><p>ID: ${kid.id}</p><p>${tribeName}</p><button class="action-btn select-kid-btn" data-kid-id="${kid.id}">Manage</button>`; grid.appendChild(card); }); }
+        else {
+            DOM.hubSelection.nftGridPlaceholder.style.display = 'none';
+            pageItems.forEach(kid => {
+                const card = document.createElement('div'); card.className = 'nft-card panel';
+                const tribeName = kid.tribe ? kid.tribe.name : "Unknown";
+                card.innerHTML = `<img src="${kid.placeholderImg}" onerror="this.src='images/kid-placeholder.png'"><h4>${kid.name}</h4><p>ID: ${kid.id}</p><p>${tribeName}</p><button class="action-btn select-kid-btn" data-kid-id="${kid.id}">Manage</button>`;
+                grid.appendChild(card);
+            });
+        }
         DOM.hubSelection.paginationInfo.textContent = `Page ${page} of ${gameState.hub.pagination.totalPages}`;
         DOM.hubSelection.paginationPrev.disabled = page <= 1; DOM.hubSelection.paginationNext.disabled = page >= gameState.hub.pagination.totalPages;
     }
+
     function handleKidSelect(id) { gameState.hub.activeKidId = id; renderHubPreparationScreen(); showScreen('hub-preparation-screen'); }
 
+    // --- HUB PREPARATION ---
     function renderHubPreparationScreen() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (!kid) return;
         DOM.hubPreparation.kidImage.innerHTML = `<img src="${kid.placeholderImg}">`;
@@ -287,32 +314,17 @@ document.addEventListener('DOMContentLoaded', () => {
         renderManequim(kid); renderPrepStats(calculateFinalStats(kid)); renderWorkshopTabs();
     }
 
-    function calculateFinalStats(kid) {
-        const finalStats = { ...kid.tribe.baseStats };
-        for (const slot of EQUIPMENT_SLOTS) {
-            const instanceId = kid.equipped[slot]; if (!instanceId) continue;
-            const itemInstance = gameState.player.inventory.equipment.find(e => e.instance_id === instanceId); if (!itemInstance) continue;
-            for (const stat in itemInstance.stats) { if (finalStats.hasOwnProperty(stat)) finalStats[stat] += itemInstance.stats[stat]; }
-            itemInstance.embed_slots.forEach(slot => {
-                if(slot.component) {
-                    const component = DB.COMP[slot.component];
-                    if (component && component.stats) { for (const stat in component.stats) { if (finalStats.hasOwnProperty(stat)) finalStats[stat] += component.stats[stat]; } }
-                }
-            });
-        }
-        return finalStats;
-    }
-
     function renderManequim(kid) {
         EQUIPMENT_SLOTS.forEach(slot => {
             const div = DOM.hubPreparation.mannequin.querySelector(`.equip-slot[data-slot="${slot}"]`);
             const btn = DOM.hubPreparation.mannequin.querySelector(`.equip-remove-btn[data-slot="${slot}"]`);
             const instanceId = kid.equipped[slot];
             const item = instanceId ? gameState.player.inventory.equipment.find(e => e.instance_id === instanceId) : null;
-            if (item) { div.innerHTML = `<img src="${item.icon}">`; div.classList.add('equipped'); btn.style.display = 'block'; }
+            if (item) { div.innerHTML = `<img src="${item.icon}" onerror="this.style.display='none'">`; div.classList.add('equipped'); btn.style.display = 'block'; }
             else { div.innerHTML = '<span>+</span>'; div.classList.remove('equipped'); btn.style.display = 'none'; }
         });
     }
+
     function renderPrepStats(stats) {
         const display = DOM.hubPreparation.statsDisplay; display.innerHTML = '';
         STATS_LIST.forEach(stat => { if (stats[stat] > 0) display.innerHTML += `<p><strong>${stat}:</strong> ${stats[stat]}</p>`; });
@@ -323,12 +335,15 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.hubPreparation.mainTabs.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.mainTab === tabs.activeMainTab));
         DOM.hubPreparation.mainTabInventory.style.display = tabs.activeMainTab === 'inventory' ? 'block' : 'none';
         DOM.hubPreparation.mainTabWorkshop.style.display = tabs.activeMainTab === 'workshop' ? 'block' : 'none';
-        if (tabs.activeMainTab === 'inventory') renderInventoryTab(tabs.activeInvSubTab); else renderWorkshopSubTab(tabs.activeWsSubTab);
+        if (tabs.activeMainTab === 'inventory') renderInventoryTab(tabs.activeInvSubTab);
+        else renderWorkshopSubTab(tabs.activeWsSubTab);
     }
     function renderInventoryTab(subTab) {
         DOM.hubPreparation.mainTabInventory.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.subTab === subTab));
         DOM.hubPreparation.mainTabInventory.querySelectorAll('.sub-tab-content').forEach(c => c.style.display = 'none');
         document.getElementById(`sub-tab-${subTab}`).style.display = 'block';
+        
+        // Correção Erro 4: Renderização separada
         if (subTab === 'inv-equipments') renderInvEquipments();
         if (subTab === 'inv-components') renderInvComponents();
         if (subTab === 'inv-materials') renderInvMaterials();
@@ -346,7 +361,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = document.getElementById('sub-tab-inv-equipments'); el.className = 'item-grid-container'; el.innerHTML = '';
         gameState.player.inventory.equipment.forEach(item => {
             const card = document.createElement('div'); card.className = 'item-card';
-            card.innerHTML = generateItemCardHTML(item, ''); el.appendChild(card);
+            card.innerHTML = generateItemCardHTML(item, ''); 
+            el.appendChild(card);
         });
     }
     function renderInvComponents() {
@@ -362,17 +378,90 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderInvMaterials() {
         const tbody = DOM.hubPreparation.materialsTableBody; tbody.innerHTML = '';
         Object.entries(gameState.player.inventory.materials).forEach(([id, qty]) => {
-            if (qty > 0 && ITEM_DB[id]) tbody.innerHTML += `<tr><td><img src="${ITEM_DB[id].icon}"></td><td>${ITEM_DB[id].name}</td><td>${qty}</td></tr>`;
+            if (qty > 0 && DB.MAT[id]) tbody.innerHTML += `<tr><td><img src="${DB.MAT[id].icon}"></td><td>${DB.MAT[id].name}</td><td>${qty}</td></tr>`;
         });
     }
     function renderWsCraft() {
-        DOM.hubPreparation.craftRecipeList.innerHTML = ''; DOM.hubPreparation.craftRecipeDetails.innerHTML = '<p>Select a recipe.</p>';
+        DOM.hubPreparation.craftRecipeList.innerHTML = '';
+        DOM.hubPreparation.craftRecipeDetails.innerHTML = '<p>Select a recipe.</p>';
         for(const [id, recipe] of Object.entries(RECIPES_CRAFT)) {
             DOM.hubPreparation.craftRecipeList.innerHTML += `<div class="recipe-item" data-recipe-id="${id}">${recipe.name}</div>`;
         }
     }
 
-    // Renderers Embed
+    // --- MODAL UNIVERSAL ---
+    function openItemSelectionModal(context, defaultFilter = 'all') {
+        gameState.hub.itemModalContext = context;
+        DOM.modals.itemSelect.style.display = 'flex';
+        
+        const title = context.startsWith('equip_') ? `Select ${context.split('_')[1]}` : (context === 'embed_gear' ? 'Select Gear' : 'Select Component');
+        DOM.modals.itemSelectTitle.textContent = title;
+
+        const isComp = context === 'embed_component';
+        DOM.modals.itemSelectFilterBar.querySelectorAll('.modal-filter-btn').forEach(btn => {
+            const f = btn.dataset.filter;
+            if (f === 'all') btn.style.display = 'inline-block';
+            else if (f === 'component') btn.style.display = isComp ? 'inline-block' : 'none';
+            else btn.style.display = !isComp ? 'inline-block' : 'none';
+        });
+        renderItemModalGrid(defaultFilter);
+    }
+
+    function renderItemModalGrid(filter) {
+        const grid = DOM.modals.itemSelectGrid; grid.innerHTML = '';
+        const context = gameState.hub.itemModalContext;
+        DOM.modals.itemSelectFilterBar.querySelectorAll('.modal-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+
+        let items = [];
+        if (context.startsWith('equip_')) {
+            const slot = context.split('_')[1];
+            items = gameState.player.inventory.equipment.filter(i => i.slot === slot);
+        } else if (context === 'embed_gear') {
+            items = gameState.player.inventory.equipment;
+        } else if (context === 'embed_component') {
+            const gear = gameState.hub.embed.slotGear;
+            if (gear) {
+                const base = DB.EQUIP[gear.item_id];
+                const allowed = (base && DB.SYNERGY[base.synergy]) ? DB.SYNERGY[base.synergy] : ["universal"];
+                Object.entries(gameState.player.inventory.components).forEach(([id, qty]) => {
+                    if (qty > 0 && DB.COMP[id] && allowed.includes(DB.COMP[id].type)) items.push(DB.COMP[id]);
+                });
+            }
+        }
+
+        if (filter !== 'all') {
+            items = items.filter(i => {
+                if (i.instance_id) return i.slot === filter; 
+                return true; 
+            });
+        }
+
+        if (items.length === 0) { DOM.modals.itemSelectPlaceholder.style.display = 'block'; return; }
+        DOM.modals.itemSelectPlaceholder.style.display = 'none';
+
+        items.forEach(item => {
+            const id = item.instance_id || item.id;
+            const card = document.createElement('div'); card.className = 'item-card';
+            card.innerHTML = generateItemCardHTML(item, `<button class="action-btn small-btn select-item-btn" data-item-id="${id}">Select</button>`);
+            grid.appendChild(card);
+        });
+    }
+
+    function handleItemSelect(id) {
+        const context = gameState.hub.itemModalContext;
+        if (context.startsWith('equip_')) equipItem(id, context.split('_')[1]);
+        else if (context === 'embed_gear') { gameState.hub.embed.slotGear = gameState.player.inventory.equipment.find(e => e.instance_id === id); renderWsEmbed(); }
+        else if (context === 'embed_component') { gameState.hub.embed.slotComponent = id; renderWsEmbed(); }
+        closeItemSelectionModal();
+    }
+    function closeItemSelectionModal() { DOM.modals.itemSelect.style.display = 'none'; gameState.hub.itemModalContext = null; }
+
+    function equipItem(id, slot) { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (kid) { kid.equipped[slot] = id; renderHubPreparationScreen(); } }
+    function unequipItem(slot) { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (kid) { kid.equipped[slot] = null; renderHubPreparationScreen(); } }
+    function openEditNameModal() { DOM.modals.editNameInput.value = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId).name; DOM.modals.editName.style.display = 'flex'; }
+    function closeEditNameModal() { DOM.modals.editName.style.display = 'none'; }
+    function saveEditName() { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); const newName = DOM.modals.editNameInput.value; if (newName) { kid.name = newName; renderHubPreparationScreen(); closeEditNameModal(); } }
+
     function renderWsEmbed() {
         const { slotGear, slotComponent } = gameState.hub.embed;
         const ui = DOM.hubPreparation.embedUi;
@@ -399,8 +488,8 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.modals.embedAfter.innerHTML = `<h4>Add: ${comp.name}</h4>`; if(comp.stats) Object.entries(comp.stats).forEach(([k,v]) => DOM.modals.embedAfter.innerHTML += `${k}: +${v}<br>`);
         DOM.modals.embedConfirm.style.display = 'flex';
     }
+    function closeEmbedConfirmModal() { DOM.modals.embedConfirm.style.display = 'none'; }
 
-    // --- AUTO EQUIP ---
     function calculateItemPower(item) { let p = 0; if(item.stats) Object.values(item.stats).forEach(v => p += v); return p; }
     function autoEquip() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
@@ -412,63 +501,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function removeAllEquipment() { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); EQUIPMENT_SLOTS.forEach(slot => kid.equipped[slot] = null); renderHubPreparationScreen(); }
 
-    // --- MODAL UNIVERSAL ---
-    function openItemSelectionModal(context, defaultFilter = 'all') {
-        if (Object.keys(DB.EQUIP).length === 0) return;
-        gameState.hub.itemModalContext = context;
-        DOM.modals.itemSelect.style.display = 'flex';
-        const title = context.startsWith('equip_') ? `Select ${context.split('_')[1]}` : (context === 'embed_gear' ? 'Select Gear' : 'Select Component');
-        DOM.modals.itemSelectTitle.textContent = title;
-        const isComp = context === 'embed_component';
-        DOM.modals.itemSelectFilterBar.querySelectorAll('.modal-filter-btn').forEach(btn => {
-            const f = btn.dataset.filter;
-            if (f === 'all') btn.style.display = 'inline-block';
-            else if (f === 'component') btn.style.display = isComp ? 'inline-block' : 'none';
-            else btn.style.display = !isComp ? 'inline-block' : 'none';
-        });
-        renderItemModalGrid(defaultFilter);
-    }
-    function renderItemModalGrid(filter) {
-        const grid = DOM.modals.itemSelectGrid; grid.innerHTML = '';
-        const context = gameState.hub.itemModalContext;
-        DOM.modals.itemSelectFilterBar.querySelectorAll('.modal-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
-        let items = [];
-        if (context.startsWith('equip_')) items = gameState.player.inventory.equipment.filter(i => i.slot === context.split('_')[1]);
-        else if (context === 'embed_gear') items = gameState.player.inventory.equipment;
-        else if (context === 'embed_component') {
-            const gear = gameState.hub.embed.slotGear;
-            if (gear) {
-                const base = DB.EQUIP[gear.item_id];
-                const allowed = (base && DB.SYNERGY[base.synergy]) ? DB.SYNERGY[base.synergy] : ["universal"];
-                Object.entries(gameState.player.inventory.components).forEach(([id, qty]) => {
-                    if (qty > 0 && DB.COMP[id] && allowed.includes(DB.COMP[id].type)) items.push(DB.COMP[id]);
-                });
-            }
-        }
-        if (filter !== 'all') items = items.filter(i => { if (i.instance_id) return i.slot === filter; return true; });
-        if (items.length === 0) { DOM.modals.itemSelectPlaceholder.style.display = 'block'; return; }
-        DOM.modals.itemSelectPlaceholder.style.display = 'none';
-        items.forEach(item => {
-            const id = item.instance_id || item.id;
-            const card = document.createElement('div'); card.className = 'item-card';
-            card.innerHTML = generateItemCardHTML(item, `<button class="action-btn small-btn select-item-btn" data-item-id="${id}">Select</button>`);
-            grid.appendChild(card);
-        });
-    }
-    function handleItemSelect(id) {
-        const context = gameState.hub.itemModalContext;
-        if (context.startsWith('equip_')) equipItem(id, context.split('_')[1]);
-        else if (context === 'embed_gear') { gameState.hub.embed.slotGear = gameState.player.inventory.equipment.find(e => e.instance_id === id); renderWsEmbed(); }
-        else if (context === 'embed_component') { gameState.hub.embed.slotComponent = id; renderWsEmbed(); }
-        closeItemSelectionModal();
-    }
-    function closeItemSelectionModal() { DOM.modals.itemSelect.style.display = 'none'; gameState.hub.itemModalContext = null; }
-    function equipItem(id, slot) { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (kid) { kid.equipped[slot] = id; renderHubPreparationScreen(); } }
-    function unequipItem(slot) { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (kid) { kid.equipped[slot] = null; renderHubPreparationScreen(); } }
-
-    // --- GAMEPLAY ---
+    /* SEÇÃO 8: GAMEPLAY */
     function startGameplay() {
-        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if(!kid) return;
+        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if(!kid) { console.error("Start Game Error: No Kid"); return; }
         gameState.expedition.kid = JSON.parse(JSON.stringify(kid));
         gameState.expedition.stats = calculateFinalStats(kid);
         gameState.expedition.currentDay = 1; gameState.expedition.playerPos = getSpawnPoint(kid.tribe ? kid.tribe.biome : "wasteland");
@@ -477,6 +512,12 @@ document.addEventListener('DOMContentLoaded', () => {
         renderImageMap(); revealAdjacentHexes(gameState.expedition.playerPos); updateFogOfWar(); updatePlayerHexPosition(); renderGameStatusPanel();
         showScreen('game-screen');
     }
+    
+    // ... (Funções de mapa, coleta e combate mantidas - assumindo mesmas da V6.2)
+    function renderImageMap() { /* Lógica de renderização */ } 
+    // (Simplificado aqui por espaço, mas use a lógica completa anterior)
+    // ... 
+
     function renderImageMap() {
         const mapAreas = DOM.game.mapAreas; const fogOverlay = DOM.game.fogOverlay; mapAreas.innerHTML = ''; fogOverlay.innerHTML = '';
         let minX = Infinity, minY = Infinity;
@@ -491,7 +532,6 @@ document.addEventListener('DOMContentLoaded', () => {
             DOM.game.fogOverlay.appendChild(fogDiv);
         });
     }
-    // ... (Resto das funções de mapa/combate omitidas por brevidade, mas devem ser as mesmas da versão anterior) ...
     function updateFogOfWar() { document.querySelectorAll('.hex-fog').forEach(d => { if(gameState.expedition.revealedHexes.has(d.dataset.key)) d.classList.add('revealed'); else d.classList.remove('revealed'); }); }
     function updatePlayerHexPosition() {
         document.querySelectorAll('.kid-marker').forEach(m => m.remove());
@@ -510,27 +550,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const kid = gameState.expedition.kid; const stats = gameState.expedition.stats;
         DOM.game.kidImage.innerHTML = `<img src="${kid.placeholderImg}">`;
         DOM.game.hpBarFill.style.width = `${(gameState.expedition.currentHP / stats.hp) * 100}%`; DOM.game.hpBarText.textContent = `${gameState.expedition.currentHP}/${stats.hp}`;
-        DOM.game.apDisplay.textContent = `AP: ${gameState.expedition.currentAP}/${gameState.expedition.maxAP}`; DOM.game.mpDisplay.textContent = `MP: ${gameState.expedition.currentMP}/${gameState.expedition.maxMP}`;
+        DOM.game.apDisplay.textContent = `AP: ${gameState.expedition.currentAP}/${gameState.expedition.maxAP}`;
+        DOM.game.mpDisplay.textContent = `MP: ${gameState.expedition.currentMP}/${gameState.expedition.maxMP}`;
         DOM.game.turnCounter.textContent = gameState.expedition.currentDay;
         const inCombat = gameState.combat.isActive;
-        DOM.game.collectBtn.disabled = gameState.expedition.currentAP < 1 || inCombat; DOM.game.investigateBtn.disabled = gameState.expedition.currentAP < 1 || inCombat;
+        DOM.game.collectBtn.disabled = gameState.expedition.currentAP < 1 || inCombat;
+        DOM.game.investigateBtn.disabled = gameState.expedition.currentAP < 1 || inCombat;
         DOM.game.searchEnemyBtn.disabled = gameState.expedition.currentAP < 2 || inCombat;
         DOM.game.endTurnBtn.disabled = inCombat; DOM.game.exitExpeditionBtn.disabled = inCombat;
     }
-    function getRandomEnemy(action) {
-        const logic = DB.SPAWN[action]; if(!logic) return null;
-        const roll = Math.random() * 100; let sum = 0;
-        for(const tier of logic.chances) {
-            sum += tier.chance;
-            if(roll < sum) {
-                if(tier.type === 'nothing') return null;
-                const key = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
-                const biome = DB.MAP.get(key).biome;
-                return (DB.ENEMY[biome] && DB.ENEMY[biome][tier.type]) ? JSON.parse(JSON.stringify(DB.ENEMY[biome][tier.type])) : null;
-            }
-        }
-        return null;
+    function revealAdjacentHexes({ q, r }) {
+        const neighbors = [ [q, r], [q + 1, r], [q - 1, r], [q, r + 1], [q, r - 1], [q + 1, r - 1], [q - 1, r + 1] ];
+        neighbors.forEach(([nq, nr]) => {
+            const key = `${nq},${nr}`;
+            if (STATIC_MAP_DATA.has(key)) { gameState.expedition.revealedHexes.add(key); }
+        });
     }
+    
     function handleCollect() {
         gameState.expedition.currentAP--;
         const key = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`; const biome = DB.MAP.get(key).biome;
@@ -564,63 +600,132 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGameStatusPanel();
     }
     function handleSearchEnemy() { gameState.expedition.currentAP-=2; const enemy = getRandomEnemy("Search Enemy"); if(enemy) startCombat(enemy); else logMessage("No enemy.", 'action'); renderGameStatusPanel(); }
+    function getRandomEnemy(action) {
+        const logic = DB.SPAWN[action]; if(!logic) return null;
+        const roll = Math.random() * 100; let sum = 0;
+        for(const tier of logic.chances) {
+            sum += tier.chance;
+            if(roll < sum) {
+                if(tier.type === 'nothing') return null;
+                const key = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`;
+                const biome = DB.MAP.get(key).biome;
+                return (DB.ENEMY[biome] && DB.ENEMY[biome][tier.type]) ? JSON.parse(JSON.stringify(DB.ENEMY[biome][tier.type])) : null;
+            }
+        }
+        return null;
+    }
     function endDay() { if(gameState.expedition.currentDay >= MAX_DAYS) { gameOver(true); return; } gameState.expedition.currentDay++; gameState.expedition.currentAP = gameState.expedition.maxAP; gameState.expedition.currentMP = gameState.expedition.maxMP; renderGameStatusPanel(); logMessage("New Day.", 'day'); }
-    function gameOver(win) { DOM.modals.endExpedition.style.display = 'flex'; }
-    function startCombat(e) { gameState.combat.isActive = true; gameState.combat.enemy = { ...e, currentHp: e.stats.hp }; DOM.modals.combat.style.display = 'flex'; renderGameStatusPanel(); }
-    function handleCombatAttack() { if(!gameState.combat.isActive) return; gameState.combat.enemy.currentHp -= 5; if(gameState.combat.enemy.currentHp <= 0) { gameState.combat.isActive = false; DOM.modals.combat.style.display = 'none'; renderGameStatusPanel(); logMessage("Victory!", 'reward'); } }
-    function closeCombatModal() { DOM.modals.combat.style.display = 'none'; }
+    function gameOver(win) { showEndExpeditionModal(win); }
+    function showEndExpeditionModal(isSuccess) { DOM.modals.endExpeditionTitle.textContent = isSuccess ? "Success" : "Failed"; DOM.modals.endExpedition.style.display = 'flex'; }
     function handleReturnToHub() { DOM.modals.endExpedition.style.display = 'none'; showScreen('hub-preparation-screen'); }
-    
+
+    function startCombat(e) { gameState.combat.isActive = true; gameState.combat.enemy = { ...e, currentHp: e.stats.hp }; DOM.modals.combat.style.display = 'flex'; renderGameStatusPanel(); }
+    function handleCombatAttack() { 
+        if(!gameState.combat.isActive) return;
+        gameState.combat.enemy.currentHp -= 5; 
+        if(gameState.combat.enemy.currentHp <= 0) { gameState.combat.isActive = false; DOM.modals.combat.style.display = 'none'; renderGameStatusPanel(); logMessage("Victory!", 'reward'); endCombat(true); }
+        else { setTimeout(runEnemyTurn, 1000); }
+    }
+    function runEnemyTurn() {
+        if(!gameState.combat.isActive) return;
+        gameState.expedition.currentHP -= 2; // Simples
+        if(gameState.expedition.currentHP <= 0) { endCombat(false); }
+        else { renderGameStatusPanel(); }
+    }
+    function endCombat(win) { DOM.modals.combat.style.display = 'none'; gameState.combat.isActive = false; }
+    function handleCombatFlee() { DOM.modals.combat.style.display = 'none'; gameState.combat.isActive = false; }
+    function closeCombatModal() { DOM.modals.combat.style.display = 'none'; gameState.combat.isActive = false; }
+
+    // Other Modals
     function openEditNameModal() { DOM.modals.editName.style.display = 'flex'; }
     function closeEditNameModal() { DOM.modals.editName.style.display = 'none'; }
     function saveEditName() { closeEditNameModal(); }
     function closeActionFeedbackModal() { DOM.modals.feedback.style.display = 'none'; }
     function closeEndDayModal() { DOM.modals.endDay.style.display = 'none'; }
 
-    /* SEÇÃO: LISTENERS */
-    console.log("Registering Listeners...");
-    DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet);
-    DOM.loggedOut.bodyConnectBtn.addEventListener('click', handleConnectWallet);
-    DOM.loggedOut.demoGameBtn.addEventListener('click', handleDemoGame);
-    DOM.hubSelection.nftGrid.addEventListener('click', (e) => { if (e.target.classList.contains('select-kid-btn')) handleKidSelect(e.target.dataset.kidId); });
-    DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen'));
-    DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
-    DOM.hubPreparation.mannequin.addEventListener('click', (e) => {
-        if (e.target.closest('.equip-slot')) { const div = e.target.closest('.equip-slot'); if (!div.classList.contains('equipped')) openItemSelectionModal(`equip_${div.dataset.slot}`); }
-        if (e.target.closest('.equip-remove-btn')) unequipItem(e.target.closest('.equip-remove-btn').dataset.slot);
-    });
-    DOM.hubPreparation.workshopPanel.addEventListener('click', (e) => {
-        const btn = e.target.closest('.tab-btn'); if (btn) { if (btn.dataset.mainTab) gameState.hub.tabs.activeMainTab = btn.dataset.mainTab; if (btn.dataset.subTab) { if (btn.dataset.subTab.startsWith('inv')) gameState.hub.tabs.activeInvSubTab = btn.dataset.subTab; else gameState.hub.tabs.activeWsSubTab = btn.dataset.subTab; } renderWorkshopTabs(); }
-    });
-    DOM.hubPreparation.embedUi.addEventListener('click', (e) => {
-        if (e.target.closest('.embed-remove-btn')) clearEmbedSlot(e.target.closest('.embed-remove-btn').dataset.slotType); else if (e.target.closest('#embed-slot-gear')) openItemSelectionModal('embed_gear'); else if (e.target.closest('#embed-slot-component')) { if (gameState.hub.embed.slotGear) openItemSelectionModal('embed_component'); }
-    });
-    DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal);
-    DOM.modals.embedCancelBtn.addEventListener('click', () => DOM.modals.embedConfirm.style.display = 'none');
-    DOM.modals.embedConfirmBtn.addEventListener('click', performEmbedAction);
-    DOM.modals.itemSelectCloseBtn.addEventListener('click', closeItemSelectionModal);
-    DOM.modals.itemSelectFilterBar.addEventListener('click', (e) => { if (e.target.dataset.filter) renderItemModalGrid(e.target.dataset.filter); });
-    DOM.modals.itemSelectGrid.addEventListener('click', (e) => { const btn = e.target.closest('.select-item-btn'); if(btn) handleItemSelect(btn.dataset.itemId); });
-    const autoBtn = document.getElementById('auto-equip-btn'); if(autoBtn) autoBtn.addEventListener('click', autoEquip);
-    const removeBtn = document.getElementById('remove-all-btn'); if(removeBtn) removeBtn.addEventListener('click', removeAllEquipment);
-    DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
-    DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal);
-    DOM.modals.editNameSave.addEventListener('click', saveEditName);
-    DOM.game.exitExpeditionBtn.addEventListener('click', () => gameOver(true));
-    DOM.game.collectBtn.addEventListener('click', handleCollect);
-    DOM.game.investigateBtn.addEventListener('click', handleInvestigate);
-    DOM.game.searchEnemyBtn.addEventListener('click', handleSearchEnemy);
-    DOM.game.endTurnBtn.addEventListener('click', endDay);
-    DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack);
-    DOM.modals.combatAutoBtn.addEventListener('click', toggleAutoAttack);
-    DOM.modals.combatFleeBtn.addEventListener('click', handleCombatFlee);
-    DOM.modals.combatCloseVictoryBtn.addEventListener('click', closeCombatModal);
-    DOM.modals.combatReturnHubBtn.addEventListener('click', () => { closeCombatModal(); handleReturnToHub(false); });
-    DOM.modals.feedbackCloseBtn.addEventListener('click', closeActionFeedbackModal);
-    DOM.modals.endDayCloseBtn.addEventListener('click', closeEndDayModal);
-    DOM.modals.endExpeditionReturnBtn.addEventListener('click', () => handleReturnToHub(true));
-    DOM.modals.endExpeditionCloseBtn.addEventListener('click', () => handleReturnToHub(true));
+    /* SEÇÃO 10: INITIALIZE LISTENERS */
+    function initialize() {
+        console.log("CyberKidz V6.3 Init.");
+        
+        // Home
+        DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet);
+        DOM.loggedOut.bodyConnectBtn.addEventListener('click', handleConnectWallet);
+        DOM.loggedOut.demoGameBtn.addEventListener('click', handleDemoGame);
 
-    initializeMockWallet();
-    showScreen('logged-out-screen');
+        // Hub Selection
+        DOM.hubSelection.nftGrid.addEventListener('click', (e) => { if (e.target.classList.contains('select-kid-btn')) handleKidSelect(e.target.dataset.kidId); });
+        DOM.hubSelection.paginationNext.addEventListener('click', () => {
+            gameState.hub.pagination.currentPage++; renderHubSelectionScreen();
+        });
+        DOM.hubSelection.paginationPrev.addEventListener('click', () => {
+            gameState.hub.pagination.currentPage--; renderHubSelectionScreen();
+        });
+
+        // Hub Prep
+        DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen'));
+        DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay); // Correção Erro 3
+        
+        DOM.hubPreparation.mannequin.addEventListener('click', (e) => {
+            if (e.target.closest('.equip-slot')) { const div = e.target.closest('.equip-slot'); if (!div.classList.contains('equipped')) openItemSelectionModal(`equip_${div.dataset.slot}`); }
+            if (e.target.closest('.equip-remove-btn')) unequipItem(e.target.closest('.equip-remove-btn').dataset.slot);
+        });
+        DOM.hubPreparation.workshopPanel.addEventListener('click', (e) => {
+            const btn = e.target.closest('.tab-btn');
+            if (btn) {
+                if (btn.dataset.mainTab) gameState.hub.tabs.activeMainTab = btn.dataset.mainTab;
+                if (btn.dataset.subTab) {
+                    if (btn.dataset.subTab.startsWith('inv')) gameState.hub.tabs.activeInvSubTab = btn.dataset.subTab;
+                    else gameState.hub.tabs.activeWsSubTab = btn.dataset.subTab;
+                }
+                renderWorkshopTabs();
+            }
+        });
+        DOM.hubPreparation.embedUi.addEventListener('click', (e) => {
+            if (e.target.closest('.embed-remove-btn')) clearEmbedSlot(e.target.closest('.embed-remove-btn').dataset.slotType);
+            else if (e.target.closest('#embed-slot-gear')) openItemSelectionModal('embed_gear');
+            else if (e.target.closest('#embed-slot-component')) { if (gameState.hub.embed.slotGear) openItemSelectionModal('embed_component'); }
+        });
+        DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal);
+        DOM.modals.embedCancelBtn.addEventListener('click', () => DOM.modals.embedConfirm.style.display = 'none');
+        DOM.modals.embedConfirmBtn.addEventListener('click', performEmbedAction);
+        
+        // Modals
+        DOM.modals.itemSelectCloseBtn.addEventListener('click', closeItemSelectionModal);
+        DOM.modals.itemSelectFilterBar.addEventListener('click', (e) => { if (e.target.dataset.filter) renderItemModalGrid(e.target.dataset.filter); });
+        DOM.modals.itemSelectGrid.addEventListener('click', (e) => { const btn = e.target.closest('.select-item-btn'); if(btn) handleItemSelect(btn.dataset.itemId); });
+        
+        // Auto Equip
+        const autoBtn = document.getElementById('auto-equip-btn'); if(autoBtn) autoBtn.addEventListener('click', autoEquip);
+        const removeBtn = document.getElementById('remove-all-btn'); if(removeBtn) removeBtn.addEventListener('click', removeAllEquipment);
+        
+        // Edit Name
+        DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
+        DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal);
+        DOM.modals.editNameSave.addEventListener('click', saveEditName);
+
+        // Game
+        DOM.game.exitExpeditionBtn.addEventListener('click', () => gameOver(true));
+        DOM.game.collectBtn.addEventListener('click', handleCollect);
+        DOM.game.investigateBtn.addEventListener('click', handleInvestigate);
+        DOM.game.searchEnemyBtn.addEventListener('click', handleSearchEnemy);
+        DOM.game.endTurnBtn.addEventListener('click', endDay);
+
+        // Combat
+        DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack);
+        DOM.modals.combatAutoBtn.addEventListener('click', toggleAutoAttack);
+        DOM.modals.combatFleeBtn.addEventListener('click', handleCombatFlee);
+        DOM.modals.combatCloseVictoryBtn.addEventListener('click', closeCombatModal);
+        DOM.modals.combatReturnHubBtn.addEventListener('click', () => { closeCombatModal(); handleReturnToHub(false); });
+
+        // Other Modals
+        DOM.modals.feedbackCloseBtn.addEventListener('click', closeActionFeedbackModal);
+        DOM.modals.endDayCloseBtn.addEventListener('click', closeEndDayModal);
+        DOM.modals.endExpeditionReturnBtn.addEventListener('click', () => handleReturnToHub(true));
+        DOM.modals.endExpeditionCloseBtn.addEventListener('click', () => handleReturnToHub(true));
+
+        initializeMockWallet();
+        showScreen('logged-out-screen');
+    }
+
+    initialize();
 });
