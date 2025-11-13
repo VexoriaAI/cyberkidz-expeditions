@@ -1,6 +1,6 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 5.1 (Inventário Dinâmico Automático)
+// VERSÃO 5.2 (Embed Funcional e Consumo de Itens)
 // ==================================================================== */
 
 /* ==================================================================== */
@@ -76,9 +76,9 @@ const STATIC_MAP_DATA = new Map([
 ]);
 
 const MOCK_WALLET = [
-    { id: '#313', name: 'Blue Mutant', tribe: TRIBES.RADIOACTIVES, expeditions: 5, equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null } },
+    { id: '#313', name: 'Blue Mutant', tribe: TRIBES.RADIOACTIVES, expeditions: 5, equipped: { helmet: 'h1', weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
     { id: '#222', name: 'Demo Nocturnal', tribe: TRIBES.NOCTURNALS, expeditions: 2, equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null } },
-    { id: '#111', name: 'Demo Volcanic', tribe: TRIBES.VOLCANICS, expeditions: 10, equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null } },
+    { id: '#111', name: 'Demo Volcanic', tribe: TRIBES.VOLCANICS, expeditions: 10, equipped: { helmet: null, weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
     { id: '#444', name: 'Swamp Kid', tribe: TRIBES.REPTILIANS, expeditions: 0, equipped: {} },
     { id: '#555', name: 'Miner', tribe: TRIBES.UNDERGROUNDERS, expeditions: 1, equipped: {} },
     { id: '#001', name: 'Rookie-1', tribe: TRIBES.VOLCANICS, expeditions: 0, equipped: {} },
@@ -107,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     COMPONENTS_DB_SAFE = (typeof COMPONENTS_DB !== 'undefined' ? COMPONENTS_DB : {});
     EQUIPMENT_DB_SAFE = (typeof EQUIPMENT_DB !== 'undefined' ? EQUIPMENT_DB : {});
-    // Assegura que outras variáveis globais estejam definidas
     const SYNERGY_MAP_SAFE = (typeof SYNERGY_MAP !== 'undefined' ? SYNERGY_MAP : {});
     const ENEMIES_BY_BIOME_SAFE = (typeof ENEMIES_BY_BIOME !== 'undefined' ? ENEMIES_BY_BIOME : {});
     const SPAWN_LOGIC_SAFE = (typeof SPAWN_LOGIC !== 'undefined' ? SPAWN_LOGIC : {});
@@ -124,29 +123,27 @@ document.addEventListener('DOMContentLoaded', () => {
         "eq_rust_weapon": { name: "Rustic Blade", cost: { "mat_scrap": 10, "mat_metal": 1 }, ...(EQUIPMENT_DB_SAFE["eq_rust_weapon"] || {}) }
     };
 
-    // *** FUNÇÃO NOVA PARA GERAR INVENTÁRIO INICIAL ***
+    // *** FUNÇÃO PARA GERAR INVENTÁRIO INICIAL ***
     function generateStartingInventory() {
         if (Object.keys(EQUIPMENT_DB_SAFE).length === 0) {
             console.warn("Equipment DB is empty or not loaded.");
             return [];
         }
 
-        // Mapeia cada entrada do EQUIPMENT_DB para um item no inventário do jogador
         return Object.values(EQUIPMENT_DB_SAFE).map((item, index) => {
-            // Cria slots vazios baseados no slots_total do item
             const slots = [];
-            const totalSlots = item.slots_total || 3; // Fallback para 3
+            const totalSlots = item.slots_total || 3; 
             for (let i = 0; i < totalSlots; i++) {
                 slots.push({ component: null });
             }
 
             return {
-                instance_id: `inst_${index + 1}`, // ID único para esta instância
-                item_id: item.id,                 // ID do modelo (Database ID)
+                instance_id: `inst_${index + 1}`, 
+                item_id: item.id,                 
                 name: item.name,
                 level: 1,
                 slot: item.slot,
-                stats: { ...item.base_stats },    // Clona os stats base
+                stats: { ...item.base_stats },    
                 icon: item.icon,
                 embed_slots: slots,
                 slots_unlocked: item.slots_unlocked || 1
@@ -171,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 // Damos alguns componentes iniciais para teste
                 components: { "comp_def_1": 2, "comp_dmg_1": 2, "comp_luck_1": 2, "comp_hp_1": 2, "comp_spd_1": 2 }, 
-                // O inventário de equipamento é gerado dinamicamente agora
                 equipment: generateStartingInventory() 
             },
             kidz: []
@@ -377,6 +373,68 @@ document.addEventListener('DOMContentLoaded', () => {
             vertices.push(Math.round(vx), Math.round(vy));
         }
         return vertices;
+    }
+
+    // --- NOVAS FUNÇÕES DE GERENCIAMENTO DE EQUIPAMENTO ---
+    function calculateItemPower(itemInstance) {
+        let score = 0;
+        for (const stat in itemInstance.stats) {
+            score += itemInstance.stats[stat];
+        }
+        if (itemInstance.embed_slots) {
+            itemInstance.embed_slots.forEach(slot => {
+                if (slot.component) {
+                    const component = COMPONENTS_DB_SAFE[slot.component];
+                    if (component && component.stats) {
+                        for (const stat in component.stats) {
+                            score += component.stats[stat];
+                        }
+                    }
+                }
+            });
+        }
+        return score;
+    }
+
+    function autoEquip() {
+        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
+        if (!kid) return;
+
+        let equippedCount = 0;
+
+        EQUIPMENT_SLOTS.forEach(slot => {
+            const itemsForSlot = gameState.player.inventory.equipment.filter(item => item.slot === slot);
+            
+            if (itemsForSlot.length > 0) {
+                itemsForSlot.sort((a, b) => calculateItemPower(b) - calculateItemPower(a));
+                
+                const bestItem = itemsForSlot[0];
+                const currentEquippedId = kid.equipped[slot];
+                
+                if (!currentEquippedId || currentEquippedId !== bestItem.instance_id) {
+                    kid.equipped[slot] = bestItem.instance_id;
+                    equippedCount++;
+                }
+            }
+        });
+
+        if (equippedCount > 0) {
+            console.log(`Auto-Equipped ${equippedCount} slots.`);
+            renderHubPreparationScreen(); 
+        } else {
+            console.log("No better equipment found.");
+        }
+    }
+
+    function removeAllEquipment() {
+        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
+        if (!kid) return;
+
+        EQUIPMENT_SLOTS.forEach(slot => {
+            kid.equipped[slot] = null;
+        });
+
+        renderHubPreparationScreen(); 
     }
 
     /* ==================================================================== */
@@ -689,7 +747,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderWsEmbed(); 
     }
 
-    
     // --- Funções de Ação do Hub (Modais) ---
     
     function openItemSelectionModal(context, defaultFilter = 'all') {
@@ -847,90 +904,6 @@ document.addEventListener('DOMContentLoaded', () => {
         kid.equipped[slotName] = null;
         renderHubPreparationScreen();
     }
-    // --- NOVAS FUNÇÕES DE GERENCIAMENTO DE EQUIPAMENTO ---
-
-    /**
-     * Calcula o "Power Score" de um item para comparação.
-     * Soma simples de todos os atributos positivos.
-     */
-    function calculateItemPower(itemInstance) {
-        let score = 0;
-        
-        // 1. Score dos Stats Base
-        for (const stat in itemInstance.stats) {
-            score += itemInstance.stats[stat];
-        }
-        
-        // 2. Score dos Componentes Embutidos
-        if (itemInstance.embed_slots) {
-            itemInstance.embed_slots.forEach(slot => {
-                if (slot.component) {
-                    const component = COMPONENTS_DB_SAFE[slot.component];
-                    if (component && component.stats) {
-                        for (const stat in component.stats) {
-                            score += component.stats[stat];
-                        }
-                    }
-                }
-            });
-        }
-        
-        return score;
-    }
-    
-    /**
-     * Equipa automaticamente o MELHOR item disponível para cada slot vazio.
-     */
-    function autoEquip() {
-        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
-        if (!kid) return;
-    
-        let equippedCount = 0;
-    
-        EQUIPMENT_SLOTS.forEach(slot => {
-            // Só equipa se o slot estiver vazio (ou podemos forçar a substituição, se preferir)
-            // Vamos fazer a lógica de "Preencher Vazios ou Substituir por Melhor"
-            
-            // Filtra inventário para este slot
-            const itemsForSlot = gameState.player.inventory.equipment.filter(item => item.slot === slot);
-            
-            if (itemsForSlot.length > 0) {
-                // Ordena por Power Score (Decrescente)
-                itemsForSlot.sort((a, b) => calculateItemPower(b) - calculateItemPower(a));
-                
-                const bestItem = itemsForSlot[0];
-                const currentEquippedId = kid.equipped[slot];
-                
-                // Se o slot estiver vazio OU o melhor item for diferente do atual
-                if (!currentEquippedId || currentEquippedId !== bestItem.instance_id) {
-                    kid.equipped[slot] = bestItem.instance_id;
-                    equippedCount++;
-                }
-            }
-        });
-    
-        if (equippedCount > 0) {
-            console.log(`Auto-Equipped ${equippedCount} slots.`);
-            renderHubPreparationScreen(); // Atualiza a tela
-        } else {
-            console.log("No better equipment found.");
-        }
-    }
-    
-    /**
-     * Remove todos os equipamentos do Kid ativo.
-     */
-    function removeAllEquipment() {
-        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
-        if (!kid) return;
-    
-        EQUIPMENT_SLOTS.forEach(slot => {
-            kid.equipped[slot] = null;
-        });
-    
-        renderHubPreparationScreen(); // Atualiza a tela
-    }
-    
     function openEditNameModal() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
         if (!kid) return;
@@ -974,6 +947,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function closeEmbedConfirmModal() { DOM.modals.embedConfirm.style.display = 'none'; }
+
+    /**
+     * NOVO V5.2: Lógica real de Embed (modifica o inventário)
+     */
+    function performEmbedAction() {
+        const gear = gameState.hub.embed.slotGear;
+        const compId = gameState.hub.embed.slotComponent;
+
+        if (!gear || !compId) return;
+
+        // Verifica quantidade
+        if (gameState.player.inventory.components[compId] <= 0) {
+            alert("Not enough components!"); 
+            return;
+        }
+
+        // Encontra slot vazio
+        const emptySlotIndex = gear.embed_slots.findIndex(s => s.component === null);
+        if (emptySlotIndex === -1) {
+            alert("No empty slots available!");
+            return;
+        }
+
+        // Executa
+        gameState.player.inventory.components[compId]--; 
+        gear.embed_slots[emptySlotIndex].component = compId; 
+
+        // UI de Sucesso e Limpeza
+        console.log(`Embedded ${COMPONENTS_DB_SAFE[compId].name} into ${gear.name}`);
+        clearEmbedSlot('gear'); 
+        closeEmbedConfirmModal();
+        renderHubPreparationScreen(); 
+    }
 
 
     /* ==================================================================== */
@@ -1630,7 +1636,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
     /* ==================================================================== */
     function initialize() {
-        console.log("CyberKidz Expedition v5.0 Initialized (Button Fix).");
+        console.log("CyberKidz Expedition v5.2 Initialized (Embed Real).");
 
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
@@ -1699,14 +1705,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 openItemSelectionModal('embed_component', 'component'); 
             }
         });
-
+        
         // NOVO: Botões de Controle de Equipamento
         const autoEquipBtn = document.getElementById('auto-equip-btn');
         const removeAllBtn = document.getElementById('remove-all-btn');
-        
         if (autoEquipBtn) autoEquipBtn.addEventListener('click', autoEquip);
         if (removeAllBtn) removeAllBtn.addEventListener('click', removeAllEquipment);
-        
+
         // --- Tela 4 ---
         DOM.game.exitExpeditionBtn.addEventListener('click', () => gameOver(true));
         DOM.game.collectBtn.addEventListener('click', handleCollect);
@@ -1715,9 +1720,7 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.game.endTurnBtn.addEventListener('click', endDay);
         
         // --- Modais ---
-        
-        // ** CORREÇÃO V5.0: Referência corrigida de DOM.modals para DOM.hubPreparation **
-        DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal); 
+        DOM.modals.editNameBtn.addEventListener('click', openEditNameModal); 
         DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal); 
         DOM.modals.editNameSave.addEventListener('click', saveEditName);
         
@@ -1740,12 +1743,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Modal de Embed
         DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal); 
         DOM.modals.embedCancelBtn.addEventListener('click', closeEmbedConfirmModal);
-        DOM.modals.embedConfirmBtn.addEventListener('click', () => { 
-            // TODO: Adicionar lógica real de Embed (modificar o item no inventário)
-            console.log("Embedding confirmed (simulated)!");
-            clearEmbedSlot('gear'); // Limpa os slots
-            closeEmbedConfirmModal(); 
-        });
+        // ** ATUALIZADO: Agora chama performEmbedAction **
+        DOM.modals.embedConfirmBtn.addEventListener('click', performEmbedAction);
 
         // Modal de Combate
         DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack); 
