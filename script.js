@@ -1,13 +1,12 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 5.0 (Correção do Bug de Carregamento de Banco de Dados)
+// VERSÃO 5.1 (Inventário Dinâmico Automático)
 // ==================================================================== */
 
 /* ==================================================================== */
 /* SEÇÃO 1: DEFINIÇÕES GLOBAIS (Seguras para carregar)
 /* ==================================================================== */
 
-// Estas constantes não dependem de nenhum outro arquivo
 const MAX_DAYS = 10;
 const MAX_PLACEHOLDER_IMAGES_PER_TRIBE = 5;
 const HEX_SIZE_VISUAL = 50; 
@@ -77,9 +76,9 @@ const STATIC_MAP_DATA = new Map([
 ]);
 
 const MOCK_WALLET = [
-    { id: '#313', name: 'Blue Mutant', tribe: TRIBES.RADIOACTIVES, expeditions: 5, equipped: { helmet: 'h1', weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
+    { id: '#313', name: 'Blue Mutant', tribe: TRIBES.RADIOACTIVES, expeditions: 5, equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null } },
     { id: '#222', name: 'Demo Nocturnal', tribe: TRIBES.NOCTURNALS, expeditions: 2, equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null } },
-    { id: '#111', name: 'Demo Volcanic', tribe: TRIBES.VOLCANICS, expeditions: 10, equipped: { helmet: null, weapon: 'w1', accessory: null, armor: null, gloves: null, implant: null, boots: null } },
+    { id: '#111', name: 'Demo Volcanic', tribe: TRIBES.VOLCANICS, expeditions: 10, equipped: { helmet: null, weapon: null, accessory: null, armor: null, gloves: null, implant: null, boots: null } },
     { id: '#444', name: 'Swamp Kid', tribe: TRIBES.REPTILIANS, expeditions: 0, equipped: {} },
     { id: '#555', name: 'Miner', tribe: TRIBES.UNDERGROUNDERS, expeditions: 1, equipped: {} },
     { id: '#001', name: 'Rookie-1', tribe: TRIBES.VOLCANICS, expeditions: 0, equipped: {} },
@@ -97,35 +96,63 @@ const MOCK_WALLET = [
 const DEMO_KID_ID = '#313';
 
 
-// ** CORREÇÃO V4.9: O JOGO COMEÇA AQUI **
-// O script espera o DOM (HTML) e todos os outros scripts (bancos de dados)
-// serem carregados antes de executar qualquer lógica.
+let COMPONENTS_DB_SAFE, EQUIPMENT_DB_SAFE, ITEM_DB, RECIPES_CRAFT;
+
+
 document.addEventListener('DOMContentLoaded', () => {
 
     /* ==================================================================== */
     /* SEÇÃO 1.9: PÓS-CARREGAMENTO DE BANCO DE DADOS
     /* ==================================================================== */
     
-    // Assegura que as variáveis carregadas existam
-    const COMPONENTS_DB_SAFE = (typeof COMPONENTS_DB !== 'undefined' ? COMPONENTS_DB : {});
-    const EQUIPMENT_DB_SAFE = (typeof EQUIPMENT_DB !== 'undefined' ? EQUIPMENT_DB : {});
+    COMPONENTS_DB_SAFE = (typeof COMPONENTS_DB !== 'undefined' ? COMPONENTS_DB : {});
+    EQUIPMENT_DB_SAFE = (typeof EQUIPMENT_DB !== 'undefined' ? EQUIPMENT_DB : {});
+    // Assegura que outras variáveis globais estejam definidas
     const SYNERGY_MAP_SAFE = (typeof SYNERGY_MAP !== 'undefined' ? SYNERGY_MAP : {});
     const ENEMIES_BY_BIOME_SAFE = (typeof ENEMIES_BY_BIOME !== 'undefined' ? ENEMIES_BY_BIOME : {});
     const SPAWN_LOGIC_SAFE = (typeof SPAWN_LOGIC !== 'undefined' ? SPAWN_LOGIC : {});
     const DROP_TABLES_SAFE = (typeof DROP_TABLES !== 'undefined' ? DROP_TABLES : {});
 
-
-    // Combina todos os bancos de dados em um mestre (para UI)
-    const ITEM_DB = { 
+    ITEM_DB = { 
         ...MATERIALS_DB, 
         ...COMPONENTS_DB_SAFE, 
         ...EQUIPMENT_DB_SAFE 
     };
 
-    const RECIPES_CRAFT = {
+    RECIPES_CRAFT = {
         "eq_rust_helmet": { name: "Rustic Helmet", cost: { "mat_scrap": 8, "mat_metal": 2 }, ...(EQUIPMENT_DB_SAFE["eq_rust_helmet"] || {}) },
         "eq_rust_weapon": { name: "Rustic Blade", cost: { "mat_scrap": 10, "mat_metal": 1 }, ...(EQUIPMENT_DB_SAFE["eq_rust_weapon"] || {}) }
     };
+
+    // *** FUNÇÃO NOVA PARA GERAR INVENTÁRIO INICIAL ***
+    function generateStartingInventory() {
+        if (Object.keys(EQUIPMENT_DB_SAFE).length === 0) {
+            console.warn("Equipment DB is empty or not loaded.");
+            return [];
+        }
+
+        // Mapeia cada entrada do EQUIPMENT_DB para um item no inventário do jogador
+        return Object.values(EQUIPMENT_DB_SAFE).map((item, index) => {
+            // Cria slots vazios baseados no slots_total do item
+            const slots = [];
+            const totalSlots = item.slots_total || 3; // Fallback para 3
+            for (let i = 0; i < totalSlots; i++) {
+                slots.push({ component: null });
+            }
+
+            return {
+                instance_id: `inst_${index + 1}`, // ID único para esta instância
+                item_id: item.id,                 // ID do modelo (Database ID)
+                name: item.name,
+                level: 1,
+                slot: item.slot,
+                stats: { ...item.base_stats },    // Clona os stats base
+                icon: item.icon,
+                embed_slots: slots,
+                slots_unlocked: item.slots_unlocked || 1
+            };
+        });
+    }
 
 
     /* ==================================================================== */
@@ -142,12 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     "mat_energized_crystals": 0, "mat_thermal_water": 0, "mat_special_clay": 0, "mat_glass": 0, "mat_polymer": 0, "mat_nanochips": 0, "mat_cybernetic_implants": 0, "mat_quantum_energy_core": 0,
                     "mat_strange_fluid": 0, "mat_parasitic_fungus": 0, "mat_venom_glands": 0, "mat_luminescent_algae": 0, "mat_healing_plants": 0, "mat_hallucinogenic_fungi": 0, "mat_animal_skin": 0, "mat_reptilian_blood": 0
                 },
-                components: { "comp_def_1": 1, "comp_dmg_1": 1, "comp_luck_1": 2, "comp_hp_1": 1 }, 
-                equipment: [
-                    { instance_id: 'h1', item_id: 'eq_rust_helmet', name: 'Capacete Rústico', level: 1, slot: 'helmet', stats: { defense: 5, blockChance: 3 }, icon: 'images/icons/equipment/eq_rust_helmet.png', embed_slots: [{component: 'comp_def_1'}, {component: null}, {component: null}], slots_unlocked: 1 },
-                    { instance_id: 'w1', item_id: 'eq_rust_weapon', name: 'Lâmina Rústica', level: 1, slot: 'weapon', stats: { damage: 5, critDamage: 5 }, icon: 'images/icons/equipment/eq_rust_weapon.png', embed_slots: [{component: 'comp_dmg_1'}, {component: null}, {component: null}], slots_unlocked: 1 },
-                    { instance_id: 'h2', item_id: 'eq_rust_helmet', name: 'Capacete Vazio', level: 1, slot: 'helmet', stats: { hp: 10, defense: 2 }, icon: 'images/icons/equipment/eq_rust_helmet.png', embed_slots: [{component: null}, {component: null}, {component: null}], slots_unlocked: 1 }
-                ]
+                // Damos alguns componentes iniciais para teste
+                components: { "comp_def_1": 2, "comp_dmg_1": 2, "comp_luck_1": 2, "comp_hp_1": 2, "comp_spd_1": 2 }, 
+                // O inventário de equipamento é gerado dinamicamente agora
+                equipment: generateStartingInventory() 
             },
             kidz: []
         },
@@ -668,7 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funções de Ação do Hub (Modais) ---
     
     function openItemSelectionModal(context, defaultFilter = 'all') {
-        if (typeof EQUIPMENT_DB_SAFE === 'undefined' || typeof COMPONENTS_DB_SAFE === 'undefined' || typeof SYNERGY_MAP === 'undefined') {
+        if (typeof EQUIPMENT_DB_SAFE === 'undefined' || typeof COMPONENTS_DB_SAFE === 'undefined' || typeof SYNERGY_MAP_SAFE === 'undefined') {
             console.error("ERRO: Bancos de dados (equipment.js, components.js, ou crafting_rules.js) não carregados!");
             return;
         }
@@ -719,7 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const gear = embed.slotGear;
             if (gear) {
                 const baseItem = EQUIPMENT_DB_SAFE[gear.item_id];
-                const allowedTypes = (typeof SYNERGY_MAP !== 'undefined' && SYNERGY_MAP[baseItem.synergy]) ? SYNERGY_MAP[baseItem.synergy] : ["universal"];
+                const allowedTypes = (typeof SYNERGY_MAP_SAFE !== 'undefined' && SYNERGY_MAP_SAFE[baseItem.synergy]) ? SYNERGY_MAP_SAFE[baseItem.synergy] : ["universal"];
                 
                 Object.keys(gameState.player.inventory.components).forEach(compId => {
                     const component = COMPONENTS_DB_SAFE[compId];
@@ -734,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filter !== 'all') {
             itemsToShow = itemsToShow.filter(item => {
                 if (filter === 'component') return !!COMPONENTS_DB_SAFE[item.id];
-                const itemData = EQUIPMENT_DB_SAFE[item.item_id] || {}; // Usa item_id para buscar no DB base
+                const itemData = EQUIPMENT_DB_SAFE[item.item_id] || {};
                 return itemData.slot === filter;
             });
         }
@@ -789,7 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (context.startsWith('equip_')) {
             const slot = context.split('_')[1];
-            equipItem(selectedId, slot); // selectedId é a instance_id
+            equipItem(selectedId, slot); 
         
         } else if (context === 'embed_gear') {
             const itemInstance = gameState.player.inventory.equipment.find(e => e.instance_id === selectedId);
@@ -797,7 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderWsEmbed();
         
         } else if (context === 'embed_component') {
-            gameState.hub.embed.slotComponent = selectedId; // selectedId é o comp_id
+            gameState.hub.embed.slotComponent = selectedId; 
             renderWsEmbed();
         }
         
@@ -1046,7 +1071,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function handleCollect() {
-        if (typeof DROP_TABLES === 'undefined') { console.error("ERRO: database/drops.js não carregado!"); return; }
+        if (typeof DROP_TABLES_SAFE === 'undefined') { console.error("ERRO: database/drops.js não carregado!"); return; }
 
         gameState.expedition.currentAP--;
         
@@ -1081,7 +1106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function handleInvestigate() {
-        if (typeof DROP_TABLES === 'undefined') { console.error("ERRO: database/drops.js não carregado!"); return; }
+        if (typeof DROP_TABLES_SAFE === 'undefined') { console.error("ERRO: database/drops.js não carregado!"); return; }
 
         gameState.expedition.currentAP--;
         const luck = gameState.expedition.stats.luck;
@@ -1518,11 +1543,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ==================================================================== */
-    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS (Corrigido)
+    /* SEÇÃO 10: INICIALIZAÇÃO E LISTENERS DE EVENTOS
     /* ==================================================================== */
     function initialize() {
         console.log("CyberKidz Expedition v5.0 Initialized (Button Fix).");
-    
+
         // --- Tela 1 ---
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet); 
         DOM.loggedOut.bodyConnectBtn.addEventListener('click', handleConnectWallet);
@@ -1538,14 +1563,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         DOM.hubSelection.paginationPrev.addEventListener('click', () => handlePageChange('prev')); 
         DOM.hubSelection.paginationNext.addEventListener('click', () => handlePageChange('next'));
-    
+
         DOM.hubSelection.nftGrid.addEventListener('click', (e) => {
             if (e.target && e.target.classList.contains('select-kid-btn')) {
                 const kidId = e.target.dataset.kidId;
                 handleKidSelect(kidId);
             }
         });
-    
+
         // --- Tela 3 (Abas e Manequim) ---
         DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen')); 
         DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
@@ -1573,7 +1598,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderWorkshopTabs();
             }
         });
-    
+
         DOM.hubPreparation.embedUi.addEventListener('click', (e) => {
             if (e.target.closest('.embed-remove-btn')) {
                 const slotType = e.target.closest('.embed-remove-btn').dataset.slotType; 
@@ -1620,7 +1645,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleItemSelect(itemId);
             }
         });
-    
+
         // Modal de Embed
         DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal); 
         DOM.modals.embedCancelBtn.addEventListener('click', closeEmbedConfirmModal);
@@ -1630,7 +1655,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearEmbedSlot('gear'); // Limpa os slots
             closeEmbedConfirmModal(); 
         });
-    
+
         // Modal de Combate
         DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack); 
         DOM.modals.combatAutoBtn.addEventListener('click', toggleAutoAttack);
@@ -1640,7 +1665,7 @@ document.addEventListener('DOMContentLoaded', () => {
             closeCombatModal(); 
             handleReturnToHub(false); 
         });
-    
+
         // Modais de Ação/Dia
         DOM.modals.feedbackCloseBtn.addEventListener('click', closeActionFeedbackModal);
         DOM.modals.endDayCloseBtn.addEventListener('click', closeEndDayModal);
@@ -1652,7 +1677,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isSuccess = DOM.modals.endExpeditionTitle.textContent.includes("Successful");
             handleReturnToHub(isSuccess);
         });
-    
+
         // Inicia na Tela 1
         showScreen('logged-out-screen');
     }
