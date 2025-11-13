@@ -125,6 +125,50 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 .hex-fog.revealed { opacity: 0; }
 .kid-marker { position: absolute; font-size: 2em; transform: translate(-50%, -100%); z-index: 10; pointer-events: none; text-shadow: 0 0 5px white; }
 
+/* --- TELA 1: LOGGED OUT (Correção Visual V7) --- */
+#logged-out-screen {
+    display: flex; /* Garante centralização */
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+}
+
+#logged-out-screen .landing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 500px; /* Largura máxima contida */
+    width: 90%;
+    margin: 0 auto;
+    padding: 40px;
+    background-color: var(--color-panel-dark); /* Garante fundo do painel */
+    border: 2px solid var(--color-accent-blue); /* Borda visível */
+}
+
+#game-logo {
+    width: 100%;
+    max-width: 250px; /* Força tamanho máximo da logo */
+    height: auto;
+    margin-bottom: 20px;
+    object-fit: contain;
+}
+
+.landing-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 300px; /* Limita largura dos botões */
+    margin-top: 20px;
+}
+
+.landing-actions .action-btn {
+    padding: 15px; /* Botões mais "gordinhos" e clicáveis */
+    font-size: 1.1em;
+}
+
 /* Responsividade */
 @media (max-width: 1200px) { .preparation-container, #game-container { grid-template-columns: 1fr; } #map-panel { min-height: 500px; } }
 @media (max-width: 768px) { .modal-content.modal-large { max-width: 95%; } .modal-item-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
