@@ -847,6 +847,90 @@ document.addEventListener('DOMContentLoaded', () => {
         kid.equipped[slotName] = null;
         renderHubPreparationScreen();
     }
+    // --- NOVAS FUNÇÕES DE GERENCIAMENTO DE EQUIPAMENTO ---
+
+    /**
+     * Calcula o "Power Score" de um item para comparação.
+     * Soma simples de todos os atributos positivos.
+     */
+    function calculateItemPower(itemInstance) {
+        let score = 0;
+        
+        // 1. Score dos Stats Base
+        for (const stat in itemInstance.stats) {
+            score += itemInstance.stats[stat];
+        }
+        
+        // 2. Score dos Componentes Embutidos
+        if (itemInstance.embed_slots) {
+            itemInstance.embed_slots.forEach(slot => {
+                if (slot.component) {
+                    const component = COMPONENTS_DB_SAFE[slot.component];
+                    if (component && component.stats) {
+                        for (const stat in component.stats) {
+                            score += component.stats[stat];
+                        }
+                    }
+                }
+            });
+        }
+        
+        return score;
+    }
+    
+    /**
+     * Equipa automaticamente o MELHOR item disponível para cada slot vazio.
+     */
+    function autoEquip() {
+        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
+        if (!kid) return;
+    
+        let equippedCount = 0;
+    
+        EQUIPMENT_SLOTS.forEach(slot => {
+            // Só equipa se o slot estiver vazio (ou podemos forçar a substituição, se preferir)
+            // Vamos fazer a lógica de "Preencher Vazios ou Substituir por Melhor"
+            
+            // Filtra inventário para este slot
+            const itemsForSlot = gameState.player.inventory.equipment.filter(item => item.slot === slot);
+            
+            if (itemsForSlot.length > 0) {
+                // Ordena por Power Score (Decrescente)
+                itemsForSlot.sort((a, b) => calculateItemPower(b) - calculateItemPower(a));
+                
+                const bestItem = itemsForSlot[0];
+                const currentEquippedId = kid.equipped[slot];
+                
+                // Se o slot estiver vazio OU o melhor item for diferente do atual
+                if (!currentEquippedId || currentEquippedId !== bestItem.instance_id) {
+                    kid.equipped[slot] = bestItem.instance_id;
+                    equippedCount++;
+                }
+            }
+        });
+    
+        if (equippedCount > 0) {
+            console.log(`Auto-Equipped ${equippedCount} slots.`);
+            renderHubPreparationScreen(); // Atualiza a tela
+        } else {
+            console.log("No better equipment found.");
+        }
+    }
+    
+    /**
+     * Remove todos os equipamentos do Kid ativo.
+     */
+    function removeAllEquipment() {
+        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
+        if (!kid) return;
+    
+        EQUIPMENT_SLOTS.forEach(slot => {
+            kid.equipped[slot] = null;
+        });
+    
+        renderHubPreparationScreen(); // Atualiza a tela
+    }
+    
     function openEditNameModal() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId);
         if (!kid) return;
@@ -1615,6 +1699,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 openItemSelectionModal('embed_component', 'component'); 
             }
         });
+
+        // NOVO: Botões de Controle de Equipamento
+        const autoEquipBtn = document.getElementById('auto-equip-btn');
+        const removeAllBtn = document.getElementById('remove-all-btn');
+        
+        if (autoEquipBtn) autoEquipBtn.addEventListener('click', autoEquip);
+        if (removeAllBtn) removeAllBtn.addEventListener('click', removeAllEquipment);
         
         // --- Tela 4 ---
         DOM.game.exitExpeditionBtn.addEventListener('click', () => gameOver(true));
