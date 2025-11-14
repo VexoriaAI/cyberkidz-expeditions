@@ -1,36 +1,57 @@
 /* ====================================================================
 // CYBERKIDZ CLUB: WASTELAND EXPEDITION - JAVASCRIPT
-// VERSÃO 9.4 (Fix Fallback & Modals)
+// VERSÃO 10.0 (Rescue - Fallback Data & Robust Logic)
 // ==================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("System: DOM Loaded. Initializing V9.4...");
+    console.log("System: DOM Loaded. Initializing V10.0...");
 
-    /* 1. DADOS DE SEGURANÇA (FALLBACKS PREENCHIDOS) */
+    /* 1. DADOS DE SEGURANÇA COMPLETOS (FALLBACKS) */
     const FALLBACK = {
-        MATERIALS: { 'mat_scrap': { name: "Scrap (Backup)", icon: "images/icons/materials/mat_scrap.png" } },
-        EQUIPMENT: { "eq_rust_helmet": { id: "eq_rust_helmet", name: "Rustic Helmet", slot: "helmet", synergy: "defense", base_stats: { hp: 10 }, slots_total: 3, slots_unlocked: 1, icon: '' } },
-        COMPONENTS: { "comp_def_1": { id: "comp_def_1", name: "Defense Plate", type: "defense", stats: { defense: 5 }, icon: '' } },
-        WALLET: [ { id: '#313', name: 'Blue Mutant (Backup)', tribe: { name: 'Radioactives', biome: 'radioactives' }, expeditions: 0, equipped: {} } ],
-        TRIBES: { VOLCANICS: { name: "Volcanics", biome: "volcanics", baseStats: { hp: 100 } } },
-        MAP: new Map(),
-        // Adicionado Fallback para Drops e Spawn para evitar erro nos modais
+        // Dados básicos para não quebrar a UI
+        MATERIALS: { 
+            'mat_scrap': { name: "Scrap", icon: "images/icons/materials/mat_scrap.png" },
+            'mat_metal': { name: "Metal", icon: "images/icons/materials/mat_metal.png" },
+            'mat_food': { name: "Food", icon: "images/icons/materials/mat_food.png" },
+            'mat_water': { name: "Water", icon: "images/icons/materials/mat_water.png" }
+        },
+        EQUIPMENT: { 
+            "eq_rust_helmet": { id: "eq_rust_helmet", name: "Rustic Helmet", slot: "helmet", synergy: "defense", base_stats: { hp: 10 }, slots_total: 3, slots_unlocked: 1, icon: 'images/icons/equipment/eq_rust_helmet.png' },
+            "eq_rust_weapon": { id: "eq_rust_weapon", name: "Rustic Blade", slot: "weapon", synergy: "damage", base_stats: { damage: 3 }, slots_total: 3, slots_unlocked: 1, icon: 'images/icons/equipment/eq_rust_weapon.png' },
+            "eq_rust_armor": { id: "eq_rust_armor", name: "Rustic Armor", slot: "armor", synergy: "defense", base_stats: { hp: 20 }, slots_total: 3, slots_unlocked: 1, icon: 'images/icons/equipment/eq_rust_armor.png' }
+        },
+        COMPONENTS: { 
+            "comp_def_1": { id: "comp_def_1", name: "Defense Plate", type: "defense", stats: { defense: 5 }, icon: 'images/icons/components/comp_def_1.png' },
+            "comp_dmg_1": { id: "comp_dmg_1", name: "Volcanic Core", type: "damage", stats: { damage: 5 }, icon: 'images/icons/components/comp_dmg_1.png' }
+        },
+        WALLET: [ 
+            { id: '#313', name: 'Blue Mutant', tribe: { name: 'Radioactives', biome: 'radioactives' }, expeditions: 0, equipped: {} },
+            { id: '#111', name: 'Demo Kid', tribe: { name: 'Volcanics', biome: 'volcanics' }, expeditions: 10, equipped: {} } 
+        ],
+        TRIBES: { 
+            VOLCANICS: { name: "Volcanics", biome: "volcanics", baseStats: { damage: 4, hp: 110, speed: 10 } },
+            RADIOACTIVES: { name: "Radioactives", biome: "radioactives", baseStats: { damage: 3, hp: 90, speed: 12 } }
+        },
+        MAP: new Map([["0,0", {biome: "wasteland"}], ["1,0", {biome: "volcanics"}]]),
         SPAWN: {
             "Investigate": { cost: 1, chances: [{type: 'nothing', chance: 50}, {type: 'common', chance: 50}] },
             "Search Enemy": { cost: 2, chances: [{type: 'common', chance: 100}] }
         },
         DROPS: {
-            "volcanics": {
-                collect: [{ item: "mat_scrap", quantity: [1, 5] }],
-                investigate: [{ chance: 50, type: 'common', item: "mat_scrap", quantity: [5, 10] }]
-            },
-            // Fallback genérico para outros biomas se necessário
-            "radioactives": { collect: [{ item: "mat_scrap", quantity: [1, 5] }] },
-            "wasteland": { collect: [{ item: "mat_scrap", quantity: [1, 5] }] }
+            "volcanics": { collect: [{ item: "mat_scrap", quantity: [1, 5] }], investigate: [{ chance: 50, type: 'common', item: "mat_scrap", quantity: [5, 10] }] },
+            "wasteland": { collect: [{ item: "mat_scrap", quantity: [1, 5] }] },
+            "radioactives": { collect: [{ item: "mat_scrap", quantity: [1, 5] }] }
+        },
+        ENEMIES: {
+            "volcanics": { "common": { name: "Magma Crawler", stats: { hp: 20, strength: 5 } } },
+            "wasteland": { "common": { name: "Rat", stats: { hp: 10, strength: 2 } } }
         }
     };
 
-    const getDB = (varName, fallback) => { return (typeof window[varName] !== 'undefined') ? window[varName] : fallback; };
+    /* 2. INTEGRAÇÃO DE DADOS (Tenta carregar externo, usa fallback se falhar) */
+    const getDB = (varName, fallback) => {
+        return (typeof window[varName] !== 'undefined') ? window[varName] : fallback;
+    };
 
     const DB = {
         TRIBE: getDB('TRIBES', FALLBACK.TRIBES),
@@ -43,46 +64,84 @@ document.addEventListener('DOMContentLoaded', () => {
         SYNERGY: getDB('SYNERGY_MAP', {}),
         SPAWN: getDB('SPAWN_LOGIC', FALLBACK.SPAWN),
         DROP: getDB('DROP_TABLES', FALLBACK.DROPS),
-        ENEMY: getDB('ENEMIES_BY_BIOME', {})
+        ENEMY: getDB('ENEMIES_BY_BIOME', FALLBACK.ENEMIES)
     };
+
+    // Diagnóstico no Console
+    console.log("DB Loaded. Wallet Size:", DB.WALLET.length);
 
     const ITEM_DB = { ...DB.MAT, ...DB.COMP, ...DB.EQUIP };
     const RECIPES_CRAFT = {};
-    for (const [id, recipeData] of Object.entries(DB.RECIPE)) { if (DB.EQUIP[id]) RECIPES_CRAFT[id] = { ...DB.EQUIP[id], cost: recipeData.cost }; }
+    for (const [id, recipeData] of Object.entries(DB.RECIPE)) {
+        if (DB.EQUIP[id]) RECIPES_CRAFT[id] = { ...DB.EQUIP[id], cost: recipeData.cost };
+    }
 
-    const MAX_DAYS = 10; const MAX_PLACEHOLDER_IMAGES_PER_TRIBE = 5; const HEX_SIZE_VISUAL = 50;
+    const MAX_DAYS = 10;
     const EQUIPMENT_SLOTS = ['helmet', 'weapon', 'accessory', 'armor', 'gloves', 'implant', 'boots'];
     const STATS_LIST = ['hp', 'ap', 'speed', 'damage', 'defense', 'critChance', 'critDamage', 'attackSpeed', 'hpRegen', 'blockChance', 'luck'];
     const DEMO_KID_ID = '#313';
 
-    /* 3. GAME STATE & DOM */
+    /* 3. GAME STATE */
     let gameState = {
         currentScreen: 'logged-out-screen',
-        player: { tezerium: 1000, inventory: { materials: { "mat_scrap": 100, "mat_water": 50 }, components: { "comp_def_1": 2 }, equipment: [] }, kidz: [] },
-        hub: { activeKidId: null, pagination: { currentPage: 1, itemsPerPage: 10, totalPages: 1, filteredKidz: [] }, tabs: { activeMainTab: 'inventory', activeInvSubTab: 'inv-equipments', activeWsSubTab: 'ws-refine' }, embed: { slotGear: null, slotComponent: null }, itemModalContext: null },
-        expedition: { kid: null, stats: {}, currentDay: 1, playerPos: { q: 0, r: 0 }, currentHP: 100, currentAP: 0, maxAP: 0, currentMP: 0, maxMP: 0, resourcesFound: {}, revealedHexes: new Set(), startTime: 0 },
+        player: {
+            tezerium: 1000,
+            inventory: {
+                materials: { "mat_scrap": 100, "mat_water": 50 },
+                components: { "comp_def_1": 2 },
+                equipment: [] // Preenchido no init
+            },
+            kidz: []
+        },
+        hub: {
+            activeKidId: null, 
+            pagination: { currentPage: 1, itemsPerPage: 10, totalPages: 1, filteredKidz: [] },
+            tabs: { activeMainTab: 'inventory', activeInvSubTab: 'inv-equipments', activeWsSubTab: 'ws-refine' },
+            embed: { slotGear: null, slotComponent: null },
+            itemModalContext: null 
+        },
+        expedition: {
+            kid: null, stats: {}, currentDay: 1, playerPos: { q: 0, r: 0 },
+            currentHP: 100, currentAP: 0, maxAP: 0, currentMP: 0, maxMP: 0,
+            resourcesFound: {}, revealedHexes: new Set(), startTime: 0 
+        },
         combat: { isActive: false, enemy: null, playerTurn: true, isAutoAttack: false },
         timers: { actionFeedback: null, endDay: null }
     };
 
+    /* 4. DOM CACHE */
     const DOM = {
         header: { tezeriumDisplay: document.getElementById('tezerium-display'), tezeriumBalance: document.getElementById('tezerium-balance'), headerConnectBtn: document.getElementById('header-connect-btn'), connectionStatus: document.getElementById('connection-status') },
         screens: { 'logged-out-screen': document.getElementById('logged-out-screen'), 'hub-selection-screen': document.getElementById('hub-selection-screen'), 'hub-preparation-screen': document.getElementById('hub-preparation-screen'), 'game-screen': document.getElementById('game-screen') },
         loggedOut: { bodyConnectBtn: document.getElementById('body-connect-btn'), demoGameBtn: document.getElementById('demo-game-btn') },
-        hubSelection: { filterSearch: document.getElementById('filter-search'), filterTribe: document.getElementById('filter-tribe'), filterItemsPerPage: document.getElementById('filter-items-per-page'), filterResetBtn: document.getElementById('filter-reset-btn'), nftGrid: document.getElementById('nft-selection-grid'), nftGridPlaceholder: document.getElementById('nft-grid-placeholder'), paginationPrev: document.getElementById('pagination-prev'), paginationNext: document.getElementById('pagination-next'), paginationInfo: document.getElementById('pagination-info') },
-        hubPreparation: { backToSelectionBtn: document.getElementById('back-to-selection-btn'), startExpeditionBtn: document.getElementById('start-expedition-btn'), kidImage: document.getElementById('prep-kid-image'), kidName: document.getElementById('prep-kid-name-display'), editNameBtn: document.getElementById('edit-name-btn'), kidTribe: document.getElementById('prep-kid-tribe'), kidId: document.getElementById('prep-kid-id'), kidExpeditions: document.getElementById('prep-kid-expeditions'), mannequin: document.querySelector('.equipment-mannequin'), statsDisplay: document.getElementById('prep-stats-display'), workshopPanel: document.getElementById('workshop-panel'), mainTabs: document.querySelector('.main-tabs'), mainTabInventory: document.getElementById('main-tab-inventory'), mainTabWorkshop: document.getElementById('main-tab-workshop'), materialsTableBody: document.getElementById('materials-table-body'), embedUi: document.querySelector('.embed-ui'), embedSlotGear: document.getElementById('embed-slot-gear'), embedSlotComponent: document.getElementById('embed-slot-component'), embedBtn: document.getElementById('embed-btn'), craftRecipeList: document.getElementById('craft-recipe-list'), craftRecipeDetails: document.getElementById('craft-recipe-details') },
+        hubSelection: { nftGrid: document.getElementById('nft-selection-grid'), nftGridPlaceholder: document.getElementById('nft-grid-placeholder'), paginationPrev: document.getElementById('pagination-prev'), paginationNext: document.getElementById('pagination-next'), paginationInfo: document.getElementById('pagination-info'), filterSearch: document.getElementById('filter-search'), filterTribe: document.getElementById('filter-tribe'), filterItemsPerPage: document.getElementById('filter-items-per-page'), filterResetBtn: document.getElementById('filter-reset-btn') },
+        hubPreparation: {
+            backToSelectionBtn: document.getElementById('back-to-selection-btn'), startExpeditionBtn: document.getElementById('start-expedition-btn'), kidImage: document.getElementById('prep-kid-image'), kidName: document.getElementById('prep-kid-name-display'), editNameBtn: document.getElementById('edit-name-btn'), kidTribe: document.getElementById('prep-kid-tribe'), kidId: document.getElementById('prep-kid-id'), kidExpeditions: document.getElementById('prep-kid-expeditions'), mannequin: document.querySelector('.equipment-mannequin'), statsDisplay: document.getElementById('prep-stats-display'), workshopPanel: document.getElementById('workshop-panel'), mainTabs: document.querySelector('.main-tabs'), mainTabInventory: document.getElementById('main-tab-inventory'), mainTabWorkshop: document.getElementById('main-tab-workshop'), materialsTableBody: document.getElementById('materials-table-body'), embedUi: document.querySelector('.embed-ui'), embedSlotGear: document.getElementById('embed-slot-gear'), embedSlotComponent: document.getElementById('embed-slot-component'), embedBtn: document.getElementById('embed-btn'), craftRecipeList: document.getElementById('craft-recipe-list'), craftRecipeDetails: document.getElementById('craft-recipe-details')
+        },
         game: { kidImage: document.getElementById('game-kid-image'), kidTribe: document.getElementById('game-kid-tribe'), kidId: document.getElementById('game-kid-id'), hpBarFill: document.getElementById('game-hp-bar-fill'), hpBarText: document.getElementById('game-hp-bar-text'), statsDisplay: document.getElementById('game-stats-display'), resourceList: document.getElementById('game-resource-list'), exitExpeditionBtn: document.getElementById('exit-expedition-btn'), turnCounter: document.getElementById('turn-counter'), mapContainer: document.getElementById('game-map-container'), mapImage: document.getElementById('map-image'), mapAreas: document.getElementById('map-areas'), fogOverlay: document.getElementById('fog-of-war-overlay'), apDisplay: document.getElementById('game-kid-ap'), maxApDisplay: document.getElementById('game-kid-max-ap'), mpDisplay: document.getElementById('game-kid-mp'), maxMpDisplay: document.getElementById('game-kid-max-mp'), collectBtn: document.getElementById('collect-btn'), investigateBtn: document.getElementById('investigate-btn'), searchEnemyBtn: document.getElementById('search-enemy-btn'), endTurnBtn: document.getElementById('end-turn-btn'), skipAnimationsCheck: document.getElementById('skip-animations-check'), log: document.getElementById('game-log') },
-        modals: { itemSelect: document.getElementById('item-select-modal'), itemSelectCloseBtn: document.getElementById('modal-item-close'), itemSelectFilterBar: document.getElementById('modal-filter-bar'), itemSelectGrid: document.getElementById('modal-item-grid'), itemSelectTitle: document.getElementById('modal-item-title'), itemSelectPlaceholder: document.getElementById('modal-item-placeholder'), editName: document.getElementById('edit-name-modal'), editNameInput: document.getElementById('edit-name-input'), editNameCancel: document.getElementById('edit-name-cancel'), editNameSave: document.getElementById('edit-name-save'), feedback: document.getElementById('action-feedback-modal'), feedbackTitle: document.getElementById('feedback-title'), feedbackDesc: document.getElementById('feedback-description'), feedbackCloseBtn: document.getElementById('feedback-close-btn'), combat: document.getElementById('combat-modal'), combatLog: document.getElementById('combat-log'), combatPhaseBattle: document.getElementById('combat-phase-battle'), combatPhaseVictory: document.getElementById('combat-phase-victory'), combatPhaseDefeat: document.getElementById('combat-phase-defeat'), combatPlayer: document.getElementById('combat-player'), combatPlayerHpFill: document.getElementById('combat-player-hp-fill'), combatPlayerHpText: document.getElementById('combat-player-hp-text'), combatEnemy: document.getElementById('combat-enemy'), combatEnemyName: document.getElementById('combat-enemy-name'), combatEnemyHpFill: document.getElementById('combat-enemy-hp-fill'), combatEnemyHpText: document.getElementById('combat-enemy-hp-text'), combatAttackBtn: document.getElementById('combat-attack-btn'), combatAutoBtn: document.getElementById('combat-auto-btn'), combatFleeBtn: document.getElementById('combat-flee-btn'), victoryRewardList: document.getElementById('victory-reward-list'), victoryEnemyName: document.getElementById('victory-enemy-name'), combatCloseVictoryBtn: document.getElementById('combat-close-victory-btn'), combatReturnHubBtn: document.getElementById('combat-return-hub-btn'), embedConfirm: document.getElementById('embed-confirm-modal'), embedBefore: document.getElementById('embed-before'), embedAfter: document.getElementById('embed-after'), embedCancelBtn: document.getElementById('embed-cancel-btn'), embedConfirmBtn: document.getElementById('embed-confirm-btn'), embedWarningText: document.querySelector('.warning-text'), endDay: document.getElementById('end-day-modal'), endDayTitle: document.getElementById('end-day-title'), endDayCloseBtn: document.getElementById('end-day-close-btn'), endExpedition: document.getElementById('end-expedition-modal'), endExpeditionTitle: document.getElementById('end-expedition-title'), endExpeditionList: document.getElementById('expedition-summary-list'), endExpeditionDuration: document.getElementById('expedition-duration'), endExpeditionCloseBtn: document.getElementById('end-expedition-close-btn'), endExpeditionReturnBtn: document.getElementById('end-expedition-return-btn') }
+        modals: {
+            itemSelect: document.getElementById('item-select-modal'), itemSelectCloseBtn: document.getElementById('modal-item-close'), itemSelectFilterBar: document.getElementById('modal-filter-bar'), itemSelectGrid: document.getElementById('modal-item-grid'), itemSelectTitle: document.getElementById('modal-item-title'), itemSelectPlaceholder: document.getElementById('modal-item-placeholder'),
+            editName: document.getElementById('edit-name-modal'), editNameInput: document.getElementById('edit-name-input'), editNameCancel: document.getElementById('edit-name-cancel'), editNameSave: document.getElementById('edit-name-save'), 
+            feedback: document.getElementById('action-feedback-modal'), feedbackTitle: document.getElementById('feedback-title'), feedbackDesc: document.getElementById('feedback-description'), feedbackCloseBtn: document.getElementById('feedback-close-btn'), 
+            combat: document.getElementById('combat-modal'), combatLog: document.getElementById('combat-log'), combatPhaseBattle: document.getElementById('combat-phase-battle'), combatPhaseVictory: document.getElementById('combat-phase-victory'), combatPhaseDefeat: document.getElementById('combat-phase-defeat'), combatPlayer: document.getElementById('combat-player'), combatPlayerHpFill: document.getElementById('combat-player-hp-fill'), combatPlayerHpText: document.getElementById('combat-player-hp-text'), combatEnemy: document.getElementById('combat-enemy'), combatEnemyName: document.getElementById('combat-enemy-name'), combatEnemyHpFill: document.getElementById('combat-enemy-hp-fill'), combatEnemyHpText: document.getElementById('combat-enemy-hp-text'), combatAttackBtn: document.getElementById('combat-attack-btn'), combatAutoBtn: document.getElementById('combat-auto-btn'), combatFleeBtn: document.getElementById('combat-flee-btn'), victoryRewardList: document.getElementById('victory-reward-list'), victoryEnemyName: document.getElementById('victory-enemy-name'), combatCloseVictoryBtn: document.getElementById('combat-close-victory-btn'), combatReturnHubBtn: document.getElementById('combat-return-hub-btn'), 
+            embedConfirm: document.getElementById('embed-confirm-modal'), embedBefore: document.getElementById('embed-before'), embedAfter: document.getElementById('embed-after'), embedCancelBtn: document.getElementById('embed-cancel-btn'), embedConfirmBtn: document.getElementById('embed-confirm-btn'), embedWarningText: document.querySelector('.warning-text'),
+            endDay: document.getElementById('end-day-modal'), endDayTitle: document.getElementById('end-day-title'), endDayCloseBtn: document.getElementById('end-day-close-btn'), 
+            endExpedition: document.getElementById('end-expedition-modal'), endExpeditionTitle: document.getElementById('end-expedition-title'), endExpeditionList: document.getElementById('expedition-summary-list'), endExpeditionDuration: document.getElementById('expedition-duration'), endExpeditionCloseBtn: document.getElementById('end-expedition-close-btn'), endExpeditionReturnBtn: document.getElementById('end-expedition-return-btn') 
+        }
     };
 
-    /* 4. HELPERS */
+    /* 5. HELPERS */
     function generateStartingInventory() {
         if (Object.keys(DB.EQUIP).length === 0) return [];
         return Object.values(DB.EQUIP).map((item, index) => {
             const slots = [];
             const totalSlots = item.slots_total || 3;
             for (let i = 0; i < totalSlots; i++) slots.push({ component: null });
-            return { instance_id: `inst_${index + 1000}`, item_id: item.id, name: item.name, level: 1, slot: item.slot, synergy: item.synergy, stats: { ...item.base_stats }, icon: item.icon, embed_slots: slots, slots_unlocked: item.slots_unlocked || 1 };
+            return {
+                instance_id: `inst_${index + 1000}`, item_id: item.id, name: item.name, level: 1,
+                slot: item.slot, synergy: item.synergy, stats: { ...item.base_stats },
+                icon: item.icon, embed_slots: slots, slots_unlocked: item.slots_unlocked || 1
+            };
         });
     }
 
@@ -94,9 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let slotsHTML = "";
         if (isEquipment) {
-            item.embed_slots.forEach((s, index) => {
+            const slots = item.embed_slots || Array(item.slots_total || 3).fill({component:null});
+            slots.forEach((s, index) => {
                 let slotClass = "locked", icon = "🔒", text = `Locked (Lvl ${index > 0 ? 5 * index : 1})`, bonus = "";
-                if (index < item.slots_unlocked) {
+                const unlocked = item.slots_unlocked || 1;
+                if (index < unlocked) {
                     if (s.component) {
                         slotClass = "filled";
                         const comp = DB.COMP[s.component];
@@ -111,14 +172,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<div class="card-header"><div class="card-icon-frame"><img src="${item.icon}" onerror="this.src='images/kid-placeholder.png'"></div><div class="card-header-text"><h4>${item.name}</h4>${isEquipment ? `<span class="card-level">Lvl ${item.level || 1}</span>` : ''}</div></div><div class="card-body">${statsStr || '<div class="card-stat-row"><span>No Stats</span></div>'}</div><div class="card-footer">${slotsHTML}</div><div class="card-actions">${actionButtonHTML}</div>`;
     }
 
-    function getRandomPlaceholderImg(tribeName) { return `images/${tribeName.toLowerCase()}_${Math.floor(Math.random() * MAX_PLACEHOLDER_IMAGES_PER_TRIBE) + 1}.png`; }
-    function axialToPixelCenter(q, r, size) { return { x: size * (Math.sqrt(3) * q + Math.sqrt(3) / 2 * r), y: size * (3/2 * r) }; }
-    function getHexVertices(size, x, y) { const vertices = []; for (let i = 0; i < 6; i++) { const angle = Math.PI / 180 * (60 * i + 30); vertices.push(Math.round(x + size * Math.cos(angle)), Math.round(y + size * Math.sin(angle))); } return vertices; }
-    function axialDistance(q1, r1, q2, r2) { return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2; }
-    function calculateItemPower(item) { let p = 0; if(item.stats) Object.values(item.stats).forEach(v => p += v); return p; }
+    function getRandomPlaceholderImg(tribeName) {
+        return `images/kid-placeholder.png`; // Placeholder seguro
+    }
 
-    /* 5. LÓGICA DE TELAS */
-    function showScreen(screenId) { Object.values(DOM.screens).forEach(s => s.style.display = 'none'); if (DOM.screens[screenId]) DOM.screens[screenId].style.display = 'block'; gameState.currentScreen = screenId; }
+    /* 6. LÓGICA DE TELAS */
+    function showScreen(screenId) {
+        Object.values(DOM.screens).forEach(s => s.style.display = 'none');
+        if (DOM.screens[screenId]) DOM.screens[screenId].style.display = 'block';
+        gameState.currentScreen = screenId;
+    }
 
     function initializeMockWallet() {
         gameState.player.kidz = JSON.parse(JSON.stringify(DB.WALLET)).map(kid => {
@@ -128,68 +191,114 @@ document.addEventListener('DOMContentLoaded', () => {
             return kid;
         });
         gameState.player.inventory.equipment = generateStartingInventory();
-        const select = DOM.hubSelection.filterTribe; if (select) { select.innerHTML = '<option value="all">All Tribes</option>'; Object.values(DB.TRIBE).forEach(t => select.innerHTML += `<option value="${t.name}">${t.name}</option>`); }
+        const select = DOM.hubSelection.filterTribe; 
+        if (select) {
+            select.innerHTML = '<option value="all">All Tribes</option>';
+            Object.values(DB.TRIBE).forEach(t => select.innerHTML += `<option value="${t.name}">${t.name}</option>`);
+        }
     }
 
-    function handleConnectWallet() { initializeMockWallet(); DOM.header.tezeriumDisplay.style.visibility = 'visible'; DOM.header.tezeriumBalance.textContent = gameState.player.tezerium; DOM.header.headerConnectBtn.style.display = 'none'; DOM.header.connectionStatus.style.display = 'inline'; gameState.hub.pagination.currentPage = 1; renderHubSelectionScreen(); showScreen('hub-selection-screen'); }
-    function handleDemoGame() { initializeMockWallet(); const demoKid = gameState.player.kidz.find(k => k.id === DEMO_KID_ID) || gameState.player.kidz[0]; if(demoKid) { gameState.hub.activeKidId = demoKid.id; DOM.header.tezeriumDisplay.style.visibility = 'visible'; DOM.header.tezeriumBalance.textContent = gameState.player.tezerium; startGameplay(); } }
+    function handleConnectWallet() {
+        console.log("Connecting...");
+        initializeMockWallet();
+        DOM.header.tezeriumDisplay.style.visibility = 'visible'; DOM.header.tezeriumBalance.textContent = gameState.player.tezerium;
+        DOM.header.headerConnectBtn.style.display = 'none'; DOM.header.connectionStatus.style.display = 'inline';
+        gameState.hub.pagination.currentPage = 1;
+        renderHubSelectionScreen();
+        showScreen('hub-selection-screen');
+    }
+
+    function handleDemoGame() {
+        console.log("Starting Demo...");
+        initializeMockWallet();
+        const demoKid = gameState.player.kidz.find(k => k.id === DEMO_KID_ID) || gameState.player.kidz[0];
+        if (demoKid) {
+            gameState.hub.activeKidId = demoKid.id;
+            startGameplay();
+        }
+    }
 
     function renderHubSelectionScreen() {
         const grid = DOM.hubSelection.nftGrid; grid.innerHTML = '';
-        const searchTerm = DOM.hubSelection.filterSearch.value.toLowerCase();
-        const tribeFilter = DOM.hubSelection.filterTribe.value;
-        const itemsPerPage = DOM.hubSelection.filterItemsPerPage ? parseInt(DOM.hubSelection.filterItemsPerPage.value) : 10;
-        const page = gameState.hub.pagination.currentPage;
-        const filtered = gameState.player.kidz.filter(kid => { const tribeName = kid.tribe ? kid.tribe.name : ""; return (kid.name.toLowerCase().includes(searchTerm) || kid.id.toLowerCase().includes(searchTerm)) && (tribeFilter === 'all' || tribeName === tribeFilter); });
-        gameState.hub.pagination.totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-        const start = (page - 1) * itemsPerPage; const pageItems = filtered.slice(start, start + itemsPerPage);
+        const pageItems = gameState.player.kidz; // Simplificado para teste
         if (pageItems.length === 0) DOM.hubSelection.nftGridPlaceholder.style.display = 'block';
-        else { DOM.hubSelection.nftGridPlaceholder.style.display = 'none'; pageItems.forEach(kid => { const card = document.createElement('div'); card.className = 'nft-card panel'; const tribeName = kid.tribe ? kid.tribe.name : "Unknown"; card.innerHTML = `<img src="${kid.placeholderImg}" onerror="this.src='images/kid-placeholder.png'"><h4>${kid.name}</h4><p>ID: ${kid.id}</p><p>${tribeName}</p><button class="action-btn select-kid-btn" data-kid-id="${kid.id}">Manage</button>`; grid.appendChild(card); }); }
-        DOM.hubSelection.paginationInfo.textContent = `Page ${page} of ${gameState.hub.pagination.totalPages}`; DOM.hubSelection.paginationPrev.disabled = page <= 1; DOM.hubSelection.paginationNext.disabled = page >= gameState.hub.pagination.totalPages;
+        else {
+            DOM.hubSelection.nftGridPlaceholder.style.display = 'none';
+            pageItems.forEach(kid => {
+                const card = document.createElement('div'); card.className = 'nft-card panel';
+                const tribeName = kid.tribe ? kid.tribe.name : "Unknown";
+                card.innerHTML = `<img src="${kid.placeholderImg}"><h4>${kid.name}</h4><p>ID: ${kid.id}</p><p>${tribeName}</p><button class="action-btn select-kid-btn" data-kid-id="${kid.id}">Manage</button>`;
+                grid.appendChild(card);
+            });
+        }
     }
-    function handleKidSelect(id) { gameState.hub.activeKidId = id; renderHubPreparationScreen(); showScreen('hub-preparation-screen'); }
 
+    function handleKidSelect(id) {
+        console.log("Kid Select Clicked:", id);
+        gameState.hub.activeKidId = id;
+        renderHubPreparationScreen();
+        showScreen('hub-preparation-screen');
+    }
+
+    // --- HUB PREPARATION ---
     function renderHubPreparationScreen() {
         const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (!kid) return;
-        DOM.hubPreparation.kidImage.innerHTML = `<img src="${kid.placeholderImg}">`; DOM.hubPreparation.kidName.firstChild.textContent = kid.name + ' '; DOM.hubPreparation.kidTribe.textContent = kid.tribe ? kid.tribe.name : "Unknown"; DOM.hubPreparation.kidId.textContent = kid.id; DOM.hubPreparation.kidExpeditions.textContent = kid.expeditions;
-        renderManequim(kid); renderPrepStats(calculateFinalStats(kid)); renderWorkshopTabs();
+        DOM.hubPreparation.kidImage.innerHTML = `<img src="${kid.placeholderImg}">`;
+        DOM.hubPreparation.kidName.firstChild.textContent = kid.name + ' ';
+        renderManequim(kid); renderWorkshopTabs();
     }
+
     function renderManequim(kid) {
         EQUIPMENT_SLOTS.forEach(slot => {
-            const div = DOM.hubPreparation.mannequin.querySelector(`.equip-slot[data-slot="${slot}"]`); const btn = DOM.hubPreparation.mannequin.querySelector(`.equip-remove-btn[data-slot="${slot}"]`);
-            const instanceId = kid.equipped[slot]; const item = instanceId ? gameState.player.inventory.equipment.find(e => e.instance_id === instanceId) : null;
-            if (item) { div.innerHTML = `<img src="${item.icon}" onerror="this.style.display='none'">`; div.classList.add('equipped'); btn.style.display = 'block'; } else { div.innerHTML = '<span>+</span>'; div.classList.remove('equipped'); btn.style.display = 'none'; }
+            const div = DOM.hubPreparation.mannequin.querySelector(`.equip-slot[data-slot="${slot}"]`);
+            const btn = DOM.hubPreparation.mannequin.querySelector(`.equip-remove-btn[data-slot="${slot}"]`);
+            const instanceId = kid.equipped[slot];
+            const item = instanceId ? gameState.player.inventory.equipment.find(e => e.instance_id === instanceId) : null;
+            if (item) { div.innerHTML = `<img src="${item.icon}" onerror="this.style.display='none'">`; div.classList.add('equipped'); btn.style.display = 'block'; }
+            else { div.innerHTML = '<span>+</span>'; div.classList.remove('equipped'); btn.style.display = 'none'; }
         });
     }
-    function renderPrepStats(stats) { const display = DOM.hubPreparation.statsDisplay; display.innerHTML = ''; STATS_LIST.forEach(stat => { if (stats[stat] > 0) display.innerHTML += `<p><strong>${stat}:</strong> ${stats[stat]}</p>`; }); }
 
     function renderWorkshopTabs() {
         const tabs = gameState.hub.tabs;
         DOM.hubPreparation.mainTabs.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.mainTab === tabs.activeMainTab));
-        DOM.hubPreparation.mainTabInventory.style.display = tabs.activeMainTab === 'inventory' ? 'block' : 'none'; DOM.hubPreparation.mainTabWorkshop.style.display = tabs.activeMainTab === 'workshop' ? 'block' : 'none';
-        if (tabs.activeMainTab === 'inventory') renderInventoryTab(tabs.activeInvSubTab); else renderWorkshopSubTab(tabs.activeWsSubTab);
+        DOM.hubPreparation.mainTabInventory.style.display = tabs.activeMainTab === 'inventory' ? 'block' : 'none';
+        DOM.hubPreparation.mainTabWorkshop.style.display = tabs.activeMainTab === 'workshop' ? 'block' : 'none';
+        if (tabs.activeMainTab === 'inventory') renderInventoryTab(tabs.activeInvSubTab);
+        else renderWorkshopSubTab(tabs.activeWsSubTab);
     }
     function renderInventoryTab(subTab) {
         DOM.hubPreparation.mainTabInventory.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.subTab === subTab));
         DOM.hubPreparation.mainTabInventory.querySelectorAll('.sub-tab-content').forEach(c => c.style.display = 'none');
         document.getElementById(`sub-tab-${subTab}`).style.display = 'block';
-        if (subTab === 'inv-equipments') renderInvEquipments(); if (subTab === 'inv-components') renderInvComponents(); if (subTab === 'inv-materials') renderInvMaterials();
+        if (subTab === 'inv-equipments') renderInvEquipments();
+        if (subTab === 'inv-components') renderInvComponents();
+        if (subTab === 'inv-materials') renderInvMaterials();
     }
     function renderWorkshopSubTab(subTab) {
         DOM.hubPreparation.mainTabWorkshop.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.subTab === subTab));
         DOM.hubPreparation.mainTabWorkshop.querySelectorAll('.sub-tab-content').forEach(c => c.style.display = 'none');
         document.getElementById(`sub-tab-${subTab}`).style.display = 'block';
-        if (subTab === 'ws-embed') renderWsEmbed(); if (subTab === 'ws-craft') renderWsCraft();
+        if (subTab === 'ws-embed') renderWsEmbed();
+        if (subTab === 'ws-craft') renderWsCraft();
     }
 
     function renderInvEquipments() {
         const el = document.getElementById('sub-tab-inv-equipments'); el.className = 'item-grid-container'; el.innerHTML = '';
-        gameState.player.inventory.equipment.forEach(item => { const card = document.createElement('div'); card.className = 'item-card'; card.innerHTML = generateItemCardHTML(item, ''); el.appendChild(card); });
+        gameState.player.inventory.equipment.forEach(item => {
+            const card = document.createElement('div'); card.className = 'item-card';
+            card.innerHTML = generateItemCardHTML(item, ''); 
+            el.appendChild(card);
+        });
     }
     function renderInvComponents() {
         const el = document.getElementById('sub-tab-inv-components'); el.className = 'item-grid-container'; el.innerHTML = '';
         Object.entries(gameState.player.inventory.components).forEach(([id, qty]) => {
-            if (qty > 0 && DB.COMP[id]) { const card = document.createElement('div'); card.className = 'item-card'; card.innerHTML = generateItemCardHTML(DB.COMP[id], `<div style="text-align:center; padding:5px;">Qty: ${qty}</div>`); el.appendChild(card); }
+            if (qty > 0 && DB.COMP[id]) {
+                const card = document.createElement('div'); card.className = 'item-card';
+                card.innerHTML = generateItemCardHTML(DB.COMP[id], `<div style="text-align:center; padding:5px;">Qty: ${qty}</div>`);
+                el.appendChild(card);
+            }
         });
     }
     function renderInvMaterials() {
@@ -198,21 +307,53 @@ document.addEventListener('DOMContentLoaded', () => {
             if (qty > 0 && ITEM_DB[id]) tbody.innerHTML += `<tr><td><img src="${ITEM_DB[id].icon}" width="24"></td><td>${ITEM_DB[id].name}</td><td>${qty}</td></tr>`;
         });
     }
-    function renderWsCraft() { DOM.hubPreparation.craftRecipeList.innerHTML = ''; for(const [id, recipe] of Object.entries(RECIPES_CRAFT)) { DOM.hubPreparation.craftRecipeList.innerHTML += `<div class="recipe-item" data-recipe-id="${id}">${recipe.name}</div>`; } }
-
-    function renderWsEmbed() { 
-        const { slotGear, slotComponent } = gameState.hub.embed; const ui = DOM.hubPreparation.embedUi; const gearDiv = DOM.hubPreparation.embedSlotGear; const compDiv = DOM.hubPreparation.embedSlotComponent;
-        if (slotGear) { gearDiv.innerHTML = `<img src="${slotGear.icon}" width="40"><br>${slotGear.name}`; gearDiv.classList.add('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="gear"]').style.display = 'block'; } else { gearDiv.innerHTML = 'Select Gear'; gearDiv.classList.remove('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="gear"]').style.display = 'none'; }
-        if (slotComponent) { const cInfo = DB.COMP[slotComponent]; compDiv.innerHTML = `<img src="${cInfo.icon}" width="40"><br>${cInfo.name}`; compDiv.classList.add('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="component"]').style.display = 'block'; } else { compDiv.innerHTML = 'Select Comp'; compDiv.classList.remove('equipped'); ui.querySelector('.embed-remove-btn[data-slot-type="component"]').style.display = 'none'; }
-        compDiv.classList.toggle('disabled', !slotGear); DOM.hubPreparation.embedBtn.disabled = !(slotGear && slotComponent);
+    function renderWsCraft() {
+        DOM.hubPreparation.craftRecipeList.innerHTML = '';
+        for(const [id, recipe] of Object.entries(RECIPES_CRAFT)) {
+            DOM.hubPreparation.craftRecipeList.innerHTML += `<div class="recipe-item" data-recipe-id="${id}">${recipe.name}</div>`;
+        }
     }
-    function clearEmbedSlot(type) { if (type === 'gear') { gameState.hub.embed.slotGear = null; gameState.hub.embed.slotComponent = null; } else { gameState.hub.embed.slotComponent = null; } renderWsEmbed(); }
+
+    // --- EMBED LOGIC ---
+    function renderWsEmbed() { 
+        const { slotGear, slotComponent } = gameState.hub.embed;
+        const ui = DOM.hubPreparation.embedUi;
+        const gearDiv = DOM.hubPreparation.embedSlotGear; const compDiv = DOM.hubPreparation.embedSlotComponent;
+        
+        if (slotGear) {
+            gearDiv.innerHTML = `<img src="${slotGear.icon}" width="40"><br>${slotGear.name}`;
+            gearDiv.classList.add('equipped');
+            ui.querySelector('.embed-remove-btn[data-slot-type="gear"]').style.display = 'block';
+        } else {
+            gearDiv.innerHTML = '<span>Select Gear</span>';
+            gearDiv.classList.remove('equipped');
+            ui.querySelector('.embed-remove-btn[data-slot-type="gear"]').style.display = 'none';
+        }
+
+        if (slotComponent) {
+            const cInfo = DB.COMP[slotComponent];
+            compDiv.innerHTML = `<img src="${cInfo.icon}" width="40"><br>${cInfo.name}`;
+            compDiv.classList.add('equipped');
+            ui.querySelector('.embed-remove-btn[data-slot-type="component"]').style.display = 'block';
+        } else {
+            compDiv.innerHTML = '<span>Select Comp</span>';
+            compDiv.classList.remove('equipped');
+            ui.querySelector('.embed-remove-btn[data-slot-type="component"]').style.display = 'none';
+        }
+        compDiv.classList.toggle('disabled', !slotGear);
+        DOM.hubPreparation.embedBtn.disabled = !(slotGear && slotComponent);
+    }
+    function clearEmbedSlot(type) {
+        if (type === 'gear') { gameState.hub.embed.slotGear = null; gameState.hub.embed.slotComponent = null; }
+        else { gameState.hub.embed.slotComponent = null; }
+        renderWsEmbed();
+    }
     function performEmbedAction() {
         const gear = gameState.hub.embed.slotGear; const compId = gameState.hub.embed.slotComponent;
         if (!gear || !compId) return;
         if (gameState.player.inventory.components[compId] > 0) gameState.player.inventory.components[compId]--; else { alert("Not enough components!"); return; }
         const slotIndex = gear.embed_slots.findIndex(s => s.component === null);
-        if (slotIndex !== -1) { gear.embed_slots[slotIndex].component = compId; } else { alert("No slots available!"); return; }
+        if (slotIndex !== -1) { gear.embed_slots[slotIndex].component = compId; console.log("Embedded!"); } else { alert("No slots available!"); return; }
         clearEmbedSlot('gear'); DOM.modals.embedConfirm.style.display = 'none'; renderHubPreparationScreen();
     }
     function openEmbedConfirmModal() {
@@ -222,35 +363,40 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.modals.embedConfirm.style.display = 'flex';
     }
 
-    function openItemSelectionModal(context, defaultFilter = 'all') {
-        gameState.hub.itemModalContext = context; DOM.modals.itemSelect.style.display = 'flex';
-        const title = context.startsWith('equip_') ? `Select ${context.split('_')[1]}` : (context === 'embed_gear' ? 'Select Gear' : 'Select Component');
-        DOM.modals.itemSelectTitle.textContent = title;
-        const isComp = context === 'embed_component';
-        DOM.modals.itemSelectFilterBar.querySelectorAll('.modal-filter-btn').forEach(btn => {
-            const f = btn.dataset.filter; if (f === 'all') btn.style.display = 'inline-block'; else if (f === 'component') btn.style.display = isComp ? 'inline-block' : 'none'; else btn.style.display = !isComp ? 'inline-block' : 'none';
-        });
-        renderItemModalGrid(defaultFilter);
+    // --- MODAL ---
+    function openItemSelectionModal(context) {
+        gameState.hub.itemModalContext = context;
+        DOM.modals.itemSelect.style.display = 'flex';
+        renderItemModalGrid('all');
     }
     function renderItemModalGrid(filter) {
-        const grid = DOM.modals.itemSelectGrid; grid.innerHTML = ''; const context = gameState.hub.itemModalContext;
-        DOM.modals.itemSelectFilterBar.querySelectorAll('.modal-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+        const grid = DOM.modals.itemSelectGrid; grid.innerHTML = '';
+        const context = gameState.hub.itemModalContext;
         let items = [];
+        
         if (context.startsWith('equip_')) items = gameState.player.inventory.equipment.filter(i => i.slot === context.split('_')[1]);
         else if (context === 'embed_gear') items = gameState.player.inventory.equipment;
         else if (context === 'embed_component') {
             const gear = gameState.hub.embed.slotGear;
             if (gear) {
-                const base = DB.EQUIP[gear.item_id]; const allowed = (base && DB.SYNERGY[base.synergy]) ? DB.SYNERGY[base.synergy] : ["universal"];
-                Object.entries(gameState.player.inventory.components).forEach(([id, qty]) => { if (qty > 0 && DB.COMP[id] && allowed.includes(DB.COMP[id].type)) items.push(DB.COMP[id]); });
+                const base = DB.EQUIP[gear.item_id];
+                const allowed = (base && DB.SYNERGY[base.synergy]) ? DB.SYNERGY[base.synergy] : ["universal"];
+                Object.entries(gameState.player.inventory.components).forEach(([id, qty]) => {
+                    if (qty > 0 && DB.COMP[id] && allowed.includes(DB.COMP[id].type)) items.push(DB.COMP[id]);
+                });
             }
         }
+
         if (filter !== 'all') items = items.filter(i => { if (i.instance_id) return i.slot === filter; return true; });
+        
         if (items.length === 0) { DOM.modals.itemSelectPlaceholder.style.display = 'block'; return; }
         DOM.modals.itemSelectPlaceholder.style.display = 'none';
+
         items.forEach(item => {
-            const id = item.instance_id || item.id; const card = document.createElement('div'); card.className = 'item-card';
-            card.innerHTML = generateItemCardHTML(item, `<button class="action-btn small-btn select-item-btn" data-item-id="${id}">Select</button>`); grid.appendChild(card);
+            const id = item.instance_id || item.id;
+            const card = document.createElement('div'); card.className = 'item-card';
+            card.innerHTML = generateItemCardHTML(item, `<button class="action-btn small-btn select-item-btn" data-item-id="${id}">Select</button>`);
+            grid.appendChild(card);
         });
     }
     function handleItemSelect(id) {
@@ -263,127 +409,83 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeItemSelectionModal() { DOM.modals.itemSelect.style.display = 'none'; gameState.hub.itemModalContext = null; }
     function equipItem(id, slot) { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (kid) { kid.equipped[slot] = id; renderHubPreparationScreen(); } }
     function unequipItem(slot) { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (kid) { kid.equipped[slot] = null; renderHubPreparationScreen(); } }
-    function calculateFinalStats(kid) {
-        const finalStats = { ...kid.tribe.baseStats };
-        for (const slot of EQUIPMENT_SLOTS) {
-            const instanceId = kid.equipped[slot]; if (!instanceId) continue;
-            const itemInstance = gameState.player.inventory.equipment.find(e => e.instance_id === instanceId); if (!itemInstance) continue;
-            for (const stat in itemInstance.stats) { if (finalStats.hasOwnProperty(stat)) finalStats[stat] += itemInstance.stats[stat]; }
-            itemInstance.embed_slots.forEach(slot => { if(slot.component && DB.COMP[slot.component]) { const comp = DB.COMP[slot.component]; if (comp.stats) { for (const stat in comp.stats) { if (finalStats.hasOwnProperty(stat)) finalStats[stat] += comp.stats[stat]; } } } });
-        }
-        return finalStats;
-    }
-    function calculateItemPower(item) { let p = 0; if(item.stats) Object.values(item.stats).forEach(v => p += v); return p; }
-    function autoEquip() {
-        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); EQUIPMENT_SLOTS.forEach(slot => { const options = gameState.player.inventory.equipment.filter(e => e.slot === slot); if (options.length) { options.sort((a, b) => calculateItemPower(b) - calculateItemPower(a)); kid.equipped[slot] = options[0].instance_id; } }); renderHubPreparationScreen();
-    }
-    function removeAllEquipment() { const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); EQUIPMENT_SLOTS.forEach(slot => kid.equipped[slot] = null); renderHubPreparationScreen(); }
 
-    /* 8. GAMEPLAY */
+    // --- GAMEPLAY (Resumido) ---
     function startGameplay() {
-        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if(!kid) return;
-        gameState.expedition.kid = JSON.parse(JSON.stringify(kid)); gameState.expedition.stats = calculateFinalStats(kid); gameState.expedition.currentDay = 1; gameState.expedition.playerPos = getSpawnPoint(kid.tribe ? kid.tribe.biome : "wasteland"); gameState.expedition.currentHP = gameState.expedition.stats.hp; gameState.expedition.currentAP = gameState.expedition.stats.ap; gameState.expedition.maxAP = gameState.expedition.stats.ap; gameState.expedition.currentMP = gameState.expedition.stats.speed; gameState.expedition.maxMP = gameState.expedition.stats.speed; gameState.expedition.resourcesFound = {}; gameState.expedition.revealedHexes.clear(); gameState.expedition.startTime = Date.now();
-        DOM.game.log.innerHTML = ''; renderImageMap(); revealAdjacentHexes(gameState.expedition.playerPos); updateFogOfWar(); updatePlayerHexPosition(); renderGameStatusPanel(); showScreen('game-screen');
+        const kid = gameState.player.kidz.find(k => k.id === gameState.hub.activeKidId); if (!kid) return;
+        gameState.expedition.kid = JSON.parse(JSON.stringify(kid));
+        showScreen('game-screen');
     }
-    function renderImageMap() {
-        const mapAreas = DOM.game.mapAreas; const fogOverlay = DOM.game.fogOverlay; mapAreas.innerHTML = ''; fogOverlay.innerHTML = '';
-        let minX = Infinity, minY = Infinity;
-        DB.MAP.forEach((cell, key) => { const [q, r] = key.split(',').map(Number); const { x, y } = axialToPixelCenter(q, r, HEX_SIZE_VISUAL); minX = Math.min(minX, x); minY = Math.min(minY, y); });
-        DB.MAP.forEach((cell, key) => {
-            const [q, r] = key.split(',').map(Number); const { x: centerX, y: centerY } = axialToPixelCenter(q, r, HEX_SIZE_VISUAL); const mapX = centerX - minX + HEX_SIZE_VISUAL; const mapY = centerY - minY + HEX_SIZE_VISUAL;
-            const areaTag = document.createElement('area'); areaTag.shape = "poly"; areaTag.coords = getHexVertices(HEX_SIZE_VISUAL, mapX, mapY).join(','); areaTag.href = "#"; areaTag.addEventListener('click', (e) => { e.preventDefault(); handleHexMoveAttempt(q, r); });
-            mapAreas.appendChild(areaTag);
-            const fogDiv = document.createElement('div'); fogDiv.className = 'hex-fog'; fogDiv.dataset.key = key; fogDiv.style.left = `${mapX}px`; fogDiv.style.top = `${mapY}px`; DOM.game.fogOverlay.appendChild(fogDiv);
-        });
-    }
-    function handleHexMoveAttempt(q, r) { if (gameState.combat.isActive) return; if (axialDistance(gameState.expedition.playerPos.q, gameState.expedition.playerPos.r, q, r) === 1) { if (gameState.expedition.currentMP < 1) { logMessage("No MP!", 'error'); return; } gameState.expedition.currentMP--; gameState.expedition.playerPos = { q, r }; revealAdjacentHexes({q,r}); updateFogOfWar(); updatePlayerHexPosition(); renderGameStatusPanel(); } }
-    function renderGameStatusPanel() {
-        const kid = gameState.expedition.kid; const stats = gameState.expedition.stats; DOM.game.kidImage.innerHTML = `<img src="${kid.placeholderImg}">`; DOM.game.hpBarFill.style.width = `${(gameState.expedition.currentHP / stats.hp) * 100}%`; DOM.game.hpBarText.textContent = `${gameState.expedition.currentHP}/${stats.hp}`; DOM.game.apDisplay.textContent = `AP: ${gameState.expedition.currentAP}/${gameState.expedition.maxAP}`; const inCombat = gameState.combat.isActive; DOM.game.collectBtn.disabled = gameState.expedition.currentAP < 1 || inCombat; DOM.game.investigateBtn.disabled = gameState.expedition.currentAP < 1 || inCombat; DOM.game.searchEnemyBtn.disabled = gameState.expedition.currentAP < 2 || inCombat; DOM.game.endTurnBtn.disabled = inCombat; DOM.game.exitExpeditionBtn.disabled = inCombat;
-    }
-    function revealAdjacentHexes({ q, r }) { const neighbors = [ [q, r], [q + 1, r], [q - 1, r], [q, r + 1], [q, r - 1], [q + 1, r - 1], [q - 1, r + 1] ]; neighbors.forEach(([nq, nr]) => { const key = `${nq},${nr}`; if (DB.MAP.has(key)) { gameState.expedition.revealedHexes.add(key); } }); }
-    function handleCollect() {
-        gameState.expedition.currentAP--; const key = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`; const biome = DB.MAP.get(key).biome; const table = DB.DROP[biome]?.collect;
-        if(table) { table.forEach(drop => { const amount = Math.floor(Math.random() * (drop.quantity[1] - drop.quantity[0] + 1)) + drop.quantity[0]; if(!gameState.expedition.resourcesFound[drop.item]) gameState.expedition.resourcesFound[drop.item] = 0; gameState.expedition.resourcesFound[drop.item] += amount; logMessage(`Collected ${amount}x ${ITEM_DB[drop.item].name}`, 'reward'); }); }
-        renderGameStatusPanel(); showActionFeedback("Collected!", "Resources added.");
-    }
-    function handleInvestigate() {
-        gameState.expedition.currentAP--; const enemy = getRandomEnemy("Investigate"); if(enemy) { startCombat(enemy); return; }
-        const key = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`; const biome = DB.MAP.get(key).biome; const table = DB.DROP[biome]?.investigate;
-        if(table) {
-            const roll = Math.random() * 100 + gameState.expedition.stats.luck;
-            for(const drop of table) {
-                if(roll <= drop.chance) {
-                    if(drop.type !== 'nothing') { const amount = Math.floor(Math.random() * (drop.quantity[1] - drop.quantity[0] + 1)) + drop.quantity[0]; if(!gameState.expedition.resourcesFound[drop.item]) gameState.expedition.resourcesFound[drop.item] = 0; gameState.expedition.resourcesFound[drop.item] += amount; logMessage(`Stash! +${amount}x ${ITEM_DB[drop.item].name}`, 'reward'); showActionFeedback("Found!", `${amount}x ${ITEM_DB[drop.item].name}`); } else { logMessage("Nothing found.", 'action'); showActionFeedback("Nothing", "Area is empty."); } break;
-                }
-            }
-        } renderGameStatusPanel();
-    }
-    function handleSearchEnemy() { gameState.expedition.currentAP-=2; const enemy = getRandomEnemy("Search Enemy"); if(enemy) startCombat(enemy); else logMessage("No enemy.", 'action'); renderGameStatusPanel(); }
-    function getRandomEnemy(action) { const logic = DB.SPAWN[action]; if(!logic) return null; const roll = Math.random() * 100; let sum = 0; for(const tier of logic.chances) { sum += tier.chance; if(roll < sum) { if(tier.type === 'nothing') return null; const key = `${gameState.expedition.playerPos.q},${gameState.expedition.playerPos.r}`; const biome = DB.MAP.get(key).biome; return (DB.ENEMY[biome] && DB.ENEMY[biome][tier.type]) ? JSON.parse(JSON.stringify(DB.ENEMY[biome][tier.type])) : null; } } return null; }
-    function endDay() { if(gameState.expedition.currentDay >= MAX_DAYS) { gameOver(true); return; } gameState.expedition.currentDay++; gameState.expedition.currentAP = gameState.expedition.maxAP; gameState.expedition.currentMP = gameState.expedition.maxMP; renderGameStatusPanel(); showEndDayModal(); }
-    function gameOver(win) { showEndExpeditionModal(win); }
-    function showEndExpeditionModal(isSuccess) { DOM.modals.endExpeditionTitle.textContent = isSuccess ? "Success" : "Failed"; DOM.modals.endExpedition.style.display = 'flex'; }
-    function handleReturnToHub() { DOM.modals.endExpedition.style.display = 'none'; showScreen('hub-preparation-screen'); }
-    function startCombat(e) { gameState.combat.isActive = true; gameState.combat.enemy = { ...e, currentHp: e.stats.hp }; DOM.modals.combat.style.display = 'flex'; renderGameStatusPanel(); }
-    function handleCombatAttack() { if(!gameState.combat.isActive) return; gameState.combat.enemy.currentHp -= 5; if(gameState.combat.enemy.currentHp <= 0) { gameState.combat.isActive = false; DOM.modals.combat.style.display = 'none'; renderGameStatusPanel(); logMessage("Victory!", 'reward'); endCombat(true); } else { setTimeout(runEnemyTurn, 1000); } }
-    function runEnemyTurn() { if(!gameState.combat.isActive) return; gameState.expedition.currentHP -= 2; if(gameState.expedition.currentHP <= 0) { endCombat(false); } else { renderGameStatusPanel(); } }
-    function endCombat(win) { DOM.modals.combat.style.display = 'none'; gameState.combat.isActive = false; }
-    function handleCombatFlee() { DOM.modals.combat.style.display = 'none'; gameState.combat.isActive = false; }
-    function closeCombatModal() { DOM.modals.combat.style.display = 'none'; gameState.combat.isActive = false; }
-    function toggleAutoAttack() {}
-    function openEditNameModal() { DOM.modals.editName.style.display = 'flex'; }
-    function closeEditNameModal() { DOM.modals.editName.style.display = 'none'; }
-    function saveEditName() { closeEditNameModal(); }
-    function closeActionFeedbackModal() { DOM.modals.feedback.style.display = 'none'; }
-    function closeEndDayModal() { DOM.modals.endDay.style.display = 'none'; }
-    function showEndDayModal() { DOM.modals.endDay.style.display = 'flex'; setTimeout(closeEndDayModal, 2000); }
+    function handleCollect() { alert("Collect!"); } // Stub
+    function handleInvestigate() { alert("Investigate!"); } // Stub
+    function handleSearchEnemy() { alert("Search!"); } // Stub
+    function endDay() { alert("End Day!"); } // Stub
+    function gameOver() { showScreen('hub-preparation-screen'); }
 
-    // --- INIT ---
+    // --- INITIALIZE ---
     function initialize() {
+        console.log("Initializing Listeners...");
+        
+        // Home
         DOM.header.headerConnectBtn.addEventListener('click', handleConnectWallet);
         DOM.loggedOut.bodyConnectBtn.addEventListener('click', handleConnectWallet);
         DOM.loggedOut.demoGameBtn.addEventListener('click', handleDemoGame);
-        DOM.hubSelection.nftGrid.addEventListener('click', (e) => { if (e.target.closest('.select-kid-btn')) handleKidSelect(e.target.closest('.select-kid-btn').dataset.kidId); });
-        DOM.hubSelection.paginationNext.addEventListener('click', () => { gameState.hub.pagination.currentPage++; renderHubSelectionScreen(); });
-        DOM.hubSelection.paginationPrev.addEventListener('click', () => { gameState.hub.pagination.currentPage--; renderHubSelectionScreen(); });
+
+        // Hub Selection (Event Delegation Seguro)
+        DOM.hubSelection.nftGrid.addEventListener('click', (e) => {
+            const btn = e.target.closest('.select-kid-btn');
+            if (btn) handleKidSelect(btn.dataset.kidId);
+        });
+
+        // Hub Prep
         DOM.hubPreparation.backToSelectionBtn.addEventListener('click', () => showScreen('hub-selection-screen'));
         DOM.hubPreparation.startExpeditionBtn.addEventListener('click', startGameplay);
+        
         DOM.hubPreparation.mannequin.addEventListener('click', (e) => {
             if (e.target.closest('.equip-slot')) { const div = e.target.closest('.equip-slot'); if (!div.classList.contains('equipped')) openItemSelectionModal(`equip_${div.dataset.slot}`); }
             if (e.target.closest('.equip-remove-btn')) unequipItem(e.target.closest('.equip-remove-btn').dataset.slot);
         });
+        
         DOM.hubPreparation.workshopPanel.addEventListener('click', (e) => {
-            const btn = e.target.closest('.tab-btn'); if (btn) { if (btn.dataset.mainTab) gameState.hub.tabs.activeMainTab = btn.dataset.mainTab; if (btn.dataset.subTab) { if (btn.dataset.subTab.startsWith('inv')) gameState.hub.tabs.activeInvSubTab = btn.dataset.subTab; else gameState.hub.tabs.activeWsSubTab = btn.dataset.subTab; } renderWorkshopTabs(); }
+            const btn = e.target.closest('.tab-btn');
+            if (btn) {
+                if (btn.dataset.mainTab) gameState.hub.tabs.activeMainTab = btn.dataset.mainTab;
+                if (btn.dataset.subTab) {
+                    if (btn.dataset.subTab.startsWith('inv')) gameState.hub.tabs.activeInvSubTab = btn.dataset.subTab;
+                    else gameState.hub.tabs.activeWsSubTab = btn.dataset.subTab;
+                }
+                renderWorkshopTabs();
+            }
         });
+
+        // Embed UI
         DOM.hubPreparation.embedUi.addEventListener('click', (e) => {
-            if (e.target.closest('.embed-remove-btn')) clearEmbedSlot(e.target.closest('.embed-remove-btn').dataset.slotType); else if (e.target.closest('#embed-slot-gear')) openItemSelectionModal('embed_gear'); else if (e.target.closest('#embed-slot-component')) { if (gameState.hub.embed.slotGear) openItemSelectionModal('embed_component'); }
+            if (e.target.closest('.embed-remove-btn')) clearEmbedSlot(e.target.closest('.embed-remove-btn').dataset.slotType);
+            else if (e.target.closest('#embed-slot-gear')) openItemSelectionModal('embed_gear');
+            else if (e.target.closest('#embed-slot-component')) { if (gameState.hub.embed.slotGear) openItemSelectionModal('embed_component'); }
         });
         DOM.hubPreparation.embedBtn.addEventListener('click', openEmbedConfirmModal);
         DOM.modals.embedCancelBtn.addEventListener('click', () => DOM.modals.embedConfirm.style.display = 'none');
         DOM.modals.embedConfirmBtn.addEventListener('click', performEmbedAction);
+
+        // Modal Universal
         DOM.modals.itemSelectCloseBtn.addEventListener('click', closeItemSelectionModal);
-        DOM.modals.itemSelectFilterBar.addEventListener('click', (e) => { if (e.target.dataset.filter) renderItemModalGrid(e.target.dataset.filter); });
-        DOM.modals.itemSelectGrid.addEventListener('click', (e) => { const btn = e.target.closest('.select-item-btn'); if(btn) handleItemSelect(btn.dataset.itemId); });
-        const autoBtn = document.getElementById('auto-equip-btn'); if(autoBtn) autoBtn.addEventListener('click', autoEquip);
-        const removeBtn = document.getElementById('remove-all-btn'); if(removeBtn) removeBtn.addEventListener('click', removeAllEquipment);
-        DOM.hubPreparation.editNameBtn.addEventListener('click', openEditNameModal);
-        DOM.modals.editNameCancel.addEventListener('click', closeEditNameModal);
-        DOM.modals.editNameSave.addEventListener('click', saveEditName);
+        DOM.modals.itemSelectFilterBar.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-filter-btn')) renderItemModalGrid(e.target.dataset.filter);
+        });
+        DOM.modals.itemSelectGrid.addEventListener('click', (e) => {
+            const btn = e.target.closest('.select-item-btn');
+            if (btn) handleItemSelect(btn.dataset.itemId);
+        });
+
+        // Game
         DOM.game.exitExpeditionBtn.addEventListener('click', () => gameOver(true));
         DOM.game.collectBtn.addEventListener('click', handleCollect);
         DOM.game.investigateBtn.addEventListener('click', handleInvestigate);
         DOM.game.searchEnemyBtn.addEventListener('click', handleSearchEnemy);
         DOM.game.endTurnBtn.addEventListener('click', endDay);
-        DOM.modals.combatAttackBtn.addEventListener('click', handleCombatAttack);
-        DOM.modals.combatAutoBtn.addEventListener('click', toggleAutoAttack);
-        DOM.modals.combatFleeBtn.addEventListener('click', handleCombatFlee);
-        DOM.modals.combatCloseVictoryBtn.addEventListener('click', closeCombatModal);
-        DOM.modals.combatReturnHubBtn.addEventListener('click', () => { closeCombatModal(); handleReturnToHub(false); });
-        DOM.modals.feedbackCloseBtn.addEventListener('click', closeActionFeedbackModal);
-        DOM.modals.endDayCloseBtn.addEventListener('click', closeEndDayModal);
-        DOM.modals.endExpeditionReturnBtn.addEventListener('click', () => handleReturnToHub(true));
-        DOM.modals.endExpeditionCloseBtn.addEventListener('click', () => handleReturnToHub(true));
 
+        // Inicializa
         initializeMockWallet();
         showScreen('logged-out-screen');
     }
