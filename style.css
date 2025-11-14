@@ -266,29 +266,47 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 }
 
 /* ==================================================================== */
-/* SEÇÃO 10: RESPONSIVIDADE (Ajustada)
+/* SEÇÃO 10: RESPONSIVIDADE (Ajustada para evitar quebra em Desktop)
 /* ==================================================================== */
 
-/* Só muda para 1 coluna se a tela for MENOR que 900px (Tablets/Celulares) */
-@media (max-width: 900px) { 
-    .preparation-container, #game-container { 
-        grid-template-columns: 1fr; /* Pilha vertical */
-        height: auto; /* Altura automática para rolagem da página */
-    } 
+/* Apenas muda para layout vertical se a tela for realmente pequena (Tablets/Celulares) */
+/* Reduzido de 1200px para 992px */
+@media (max-width: 992px) {
+    .preparation-container, 
+    #game-container { 
+        grid-template-columns: 1fr; /* Pilha vertical (1 coluna) */
+        height: auto; /* Permite rolagem da página inteira */
+    }
     
     #game-map-container {
-        height: 500px; /* Altura fixa para o mapa no mobile */
+        height: 500px; /* Altura fixa para o mapa no modo mobile */
+        min-height: 400px;
     }
     
     #map-panel { 
         min-height: auto; 
+        height: auto;
+    }
+    
+    /* Ajuste para os painéis laterais no mobile */
+    #status-panel, #action-panel {
+        min-width: 100%; /* Ocupa toda a largura no mobile */
+        height: auto; /* Altura ajustável ao conteúdo */
+        max-height: 400px; /* Limita altura se necessário */
     }
 }
 
-@media (max-width: 768px) { 
-    .modal-content.modal-large { max-width: 95%; } 
-    .modal-item-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } 
-    .embed-ui { flex-direction: column; } /* Embed empilhado no mobile */
+@media (max-width: 768px) {
+    .modal-content.modal-large {
+        max-width: 95%;
+        width: 95%;
+    }
+    .modal-item-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    .embed-ui { 
+        flex-direction: column; 
+    }
 }
 
 /* Correção para Grid de Itens */
