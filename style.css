@@ -116,54 +116,68 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 .modal-filter-btn:hover, .modal-filter-btn.active { border-color: var(--color-accent-blue); color: var(--color-accent-blue); box-shadow: 0 0 5px var(--color-accent-blue); }
 .modal-item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; max-height: 50vh; overflow-y: auto; padding-top: 5px; }
 
-/* Game Screen */
-/* --- TELA 4 (GAME) --- */
+/* ==================================================================== */
+/* SEÇÃO 7: TELA 4 (GAME SCREEN) - CORRIGIDO
+/* ==================================================================== */
 #game-container { 
     display: grid; 
-    /* MUDANÇA 1: Colunas laterais fixas (300px) para não quebrar o layout */
+    /* Colunas laterais fixas em 300px, centro flexível */
     grid-template-columns: 300px 1fr 300px; 
     gap: 20px; 
     height: 80vh; 
-    max-width: 100%; /* Remove o limite de 1800px para usar a tela toda */
+    max-width: 100%; 
     margin: 0 auto; 
+    align-items: start; /* Evita que colunas estiquem altura sem necessidade */
 }
 
-/* Painéis Laterais com Rolagem se necessário */
-#status-panel, #action-panel {
-    overflow-y: auto;
-    min-width: 300px; /* Garante que não esmague */
+/* Painéis Laterais */
+#status-panel, #action-panel { 
+    display: flex; 
+    flex-direction: column; 
+    height: 100%; /* Ocupa altura total do container */
+    overflow-y: auto; /* Permite rolagem se conteúdo for grande */
 }
 
+/* Painel do Mapa (Centro) */
+#map-panel { 
+    display: flex; 
+    flex-direction: column; 
+    padding: 10px; 
+    height: 100%;
+    overflow: hidden; /* Segura o overflow do mapa */
+}
+
+#map-panel h3 { margin: 5px 10px; flex-shrink: 0; }
+
+/* Container do Mapa (Janela de Visualização) */
 #game-map-container { 
     position: relative; 
     width: 100%; 
     height: 100%; 
-    /* MUDANÇA 2: Remove o padding-top hack e adiciona overflow */
-    padding-top: 0; 
-    overflow: auto; /* Permite rolagem se o mapa for grande */
     background: #000; 
-    border-radius: 5px; 
+    border-radius: 5px;
+    overflow: auto; /* Habilita barras de rolagem (Scroll) */
     
-    /* Centraliza o conteúdo se for menor que a tela */
+    /* Centraliza o mapa se for menor que a janela */
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* Container interno para garantir que Imagem e Fog tenham o mesmo tamanho base */
+/* Wrapper Interno (Garante que Imagem e Neblina tenham mesmo tamanho) */
 #map-wrapper {
     position: relative;
-    /* Tamanho fixo ou min-content para respeitar a imagem */
     width: fit-content;
     height: fit-content;
+    min-width: 500px; /* Largura mínima do seu mapa */
+    min-height: 400px;
 }
 
 #map-image { 
-    /* MUDANÇA 3: Imagem tamanho real (não estica/encolhe) para bater com o JS */
-    width: auto; 
-    height: auto; 
-    max-width: none; /* Permite ser maior que o container */
     display: block;
+    width: auto; /* Tamanho real da imagem */
+    height: auto;
+    max-width: none; /* Impede que o CSS esmague a imagem */
 }
 
 #fog-of-war-overlay { 
@@ -172,9 +186,9 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
     left: 0; 
     width: 100%; 
     height: 100%; 
-    /* O JS vai posicionar os hexágonos relativos a este container */
 }
 
+/* Elementos do Mapa */
 .hex-fog { 
     position: absolute; 
     width: var(--hex-visual-width); 
@@ -183,9 +197,8 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
     transform: translate(-50%, -50%); 
     background: rgba(0,0,0,0.9); 
     pointer-events: none; 
-    transition: opacity 0.5s ease; 
+    transition: opacity 0.5s; 
 }
-
 .hex-fog.revealed { opacity: 0; }
 
 .kid-marker { 
@@ -196,6 +209,17 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
     pointer-events: none; 
     text-shadow: 0 0 5px white; 
 }
+
+/* Ajustes dos Painéis Laterais */
+.info-section { border: 1px solid #444; border-radius: 5px; padding: 10px; margin-bottom: 15px; }
+.kid-identity { display: flex; align-items: center; gap: 15px; }
+#game-kid-image { width: 80px; height: 80px; border: 2px solid var(--color-accent-red); border-radius: 5px; overflow: hidden; flex-shrink: 0; }
+#game-kid-image img { width: 100%; height: 100%; object-fit: cover; }
+.ap-mp-display { display: flex; justify-content: space-around; background-color: #111; border: 1px solid #444; border-radius: 5px; padding: 10px; margin-bottom: 15px; font-weight: bold; }
+#ap-display { color: var(--color-accent-blue); }
+#mp-display { color: var(--color-mp-bar); } 
+.action-buttons { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+#game-log { height: 200px; overflow-y: scroll; background-color: #111; border: 1px solid #444; padding: 10px; border-radius: 5px; flex-grow: 1; font-size: 0.85em; }
 
 /* --- TELA 1: LOGGED OUT (Correção Visual V7) --- */
 #logged-out-screen {
@@ -241,9 +265,31 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
     font-size: 1.1em;
 }
 
-/* Responsividade */
-@media (max-width: 1200px) { .preparation-container, #game-container { grid-template-columns: 1fr; } #map-panel { min-height: 500px; } }
-@media (max-width: 768px) { .modal-content.modal-large { max-width: 95%; } .modal-item-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
+/* ==================================================================== */
+/* SEÇÃO 10: RESPONSIVIDADE (Ajustada)
+/* ==================================================================== */
+
+/* Só muda para 1 coluna se a tela for MENOR que 900px (Tablets/Celulares) */
+@media (max-width: 900px) { 
+    .preparation-container, #game-container { 
+        grid-template-columns: 1fr; /* Pilha vertical */
+        height: auto; /* Altura automática para rolagem da página */
+    } 
+    
+    #game-map-container {
+        height: 500px; /* Altura fixa para o mapa no mobile */
+    }
+    
+    #map-panel { 
+        min-height: auto; 
+    }
+}
+
+@media (max-width: 768px) { 
+    .modal-content.modal-large { max-width: 95%; } 
+    .modal-item-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } 
+    .embed-ui { flex-direction: column; } /* Embed empilhado no mobile */
+}
 
 /* Correção para Grid de Itens */
 .item-grid-container, .modal-item-grid {
