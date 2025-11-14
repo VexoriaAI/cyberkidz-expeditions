@@ -1,5 +1,5 @@
 /* ====================================================================
-// CYBERKIDZ CLUB - CSS V6.0 (Fix Layout & Modal)
+// CYBERKIDZ CLUB - CSS V10.0 (Layout Fix & Rich Cards)
 // ==================================================================== */
 :root {
     --color-bg-dark: #1a1a2e;
@@ -74,7 +74,7 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 .equip-remove-btn { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; background: var(--color-accent-red); color: white; border: 2px solid var(--color-bg-dark); cursor: pointer; font-weight: bold; display: none; z-index: 2; }
 .equip-slot.equipped + .equip-remove-btn { display: block; }
 
-/* Workshop & Inventory */
+/* Workshop Tabs */
 .tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--color-accent-blue); margin-bottom: 15px; }
 .tab-btn { background: none; border: none; color: var(--color-text-dim); padding: 10px 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
 .tab-btn.active { color: var(--color-accent-blue); border-bottom: 2px solid var(--color-accent-blue); }
@@ -82,8 +82,16 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 .main-tab-content, .sub-tab-content { display: none; }
 .main-tab-content.active, .sub-tab-content.active { display: block; }
 
-/* Item Grid & Cards */
-.item-grid-container, .modal-item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 5px; max-height: 60vh; overflow-y: auto; }
+/* RICH ITEM CARD (GRID) */
+.item-grid-container, .modal-item-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+    gap: 15px; 
+    padding: 5px; 
+    max-height: 60vh; 
+    overflow-y: auto; 
+}
+
 .item-card { background-color: var(--color-bg-dark); border: 1px solid #444; border-radius: 5px; display: flex; flex-direction: column; transition: 0.2s; overflow: hidden; }
 .item-card:hover { border-color: var(--color-accent-blue); box-shadow: 0 0 10px rgba(0, 224, 255, 0.1); }
 .card-header { padding: 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #444; background: linear-gradient(90deg, rgba(0,0,0,0.3), transparent); }
@@ -97,6 +105,9 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 .card-footer { padding: 8px; background: rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 4px; }
 .slot-bar { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 3px; background: var(--color-bg-dark); border: 1px solid #333; font-size: 0.75em; }
 .slot-bar.filled { border-color: var(--color-accent-blue); }
+.slot-bar-icon { width: 16px; height: 16px; object-fit: contain; }
+.slot-bar-text { flex-grow: 1; color: white; }
+.slot-bar-bonus { color: var(--color-hp-bar); }
 .slot-bar.empty { border: 1px dashed #666; color: #666; }
 .slot-bar.locked { background: #111; border-color: #222; color: #444; }
 .card-actions { padding: 10px; }
@@ -111,6 +122,7 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 .embed-slot:hover { border-color: var(--color-accent-blue); }
 .embed-slot.equipped { border-style: solid; border-color: var(--color-accent-blue); }
 .embed-slot-wrapper { position: relative; }
+.embed-plus { font-size: 2em; font-weight: bold; color: var(--color-accent-red); }
 .embed-remove-btn { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; background: var(--color-accent-red); color: white; border: 2px solid var(--color-bg-dark); cursor: pointer; font-weight: bold; display: none; z-index: 2; }
 .embed-slot.equipped + .embed-remove-btn { display: block; }
 
@@ -127,7 +139,6 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 /* --- TELA 4: GAME SCREEN (CORREÇÃO DE LAYOUT) --- */
 #game-container { 
     display: grid; 
-    /* Força 3 colunas fixas mesmo se houver zoom ou tela um pouco menor */
     grid-template-columns: 300px 1fr 300px; 
     gap: 20px; 
     height: 80vh; 
@@ -136,20 +147,18 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
     align-items: start;
 }
 
-/* Colunas laterais */
 #status-panel, #action-panel { 
     display: flex; flex-direction: column; 
     height: 100%; 
     overflow-y: auto; 
-    min-width: 300px; /* Garante largura mínima */
+    min-width: 300px;
 }
 
-/* Centro (Mapa) */
 #map-panel { 
     display: flex; flex-direction: column; 
     height: 100%; 
     overflow: hidden; 
-    min-width: 0; /* Permite encolher se necessário, mas o grid segura */
+    min-width: 0;
 }
 #map-panel h3 { margin: 5px 10px; flex-shrink: 0; }
 
@@ -166,7 +175,7 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
     position: relative;
     width: fit-content;
     height: fit-content;
-    min-width: 500px; /* Tamanho mínimo da imagem */
+    min-width: 500px; /* Tamanho mínimo */
     min-height: 400px;
 }
 #map-image { display: block; width: auto; height: auto; max-width: none; }
@@ -183,29 +192,21 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 .action-buttons { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
 #game-log { height: 200px; overflow-y: scroll; background-color: #111; border: 1px solid #444; padding: 10px; border-radius: 5px; flex-grow: 1; font-size: 0.85em; }
 
-/* COMBAT MODAL FIX */
+.hex-fog { position: absolute; width: var(--hex-visual-width); height: var(--hex-visual-height); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); pointer-events: none; transition: opacity 0.5s; }
+.hex-fog.revealed { opacity: 0; }
+.kid-marker { position: absolute; font-size: 2em; transform: translate(-50%, -100%); z-index: 10; pointer-events: none; text-shadow: 0 0 5px white; }
+
+/* COMBAT MODAL */
 .combat-modal { max-width: 800px; }
-.combat-arena { 
-    display: flex; 
-    justify-content: space-around; 
-    align-items: center; 
-    margin: 20px 0; 
-    flex-direction: row !important; /* Força horizontal */
-}
-.combatant { 
-    display: flex; flex-direction: column; align-items: center; 
-    width: 35%; 
-}
+.combat-arena { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; flex-direction: row !important; }
+.combatant { display: flex; flex-direction: column; align-items: center; width: 35%; }
 .combat-vs { font-size: 2.5em; color: var(--color-accent-red); font-weight: bold; }
 
-/* RESPONSIVIDADE (Breakpoint reduzido para 768px) */
+/* RESPONSIVIDADE - Breakpoint reduzido */
 @media (max-width: 768px) {
-    .preparation-container, #game-container { 
-        grid-template-columns: 1fr; /* 1 Coluna apenas em mobile real */
-        height: auto; 
-    }
+    .preparation-container, #game-container { grid-template-columns: 1fr; height: auto; }
     #game-map-container { height: 500px; }
-    .combat-arena { flex-direction: column !important; gap: 20px; } /* Combate vertical no mobile */
+    .combat-arena { flex-direction: column !important; gap: 20px; }
     .modal-content.modal-large { max-width: 95%; } 
     .modal-item-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } 
     .embed-ui { flex-direction: column; }
