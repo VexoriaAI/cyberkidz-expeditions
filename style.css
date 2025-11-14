@@ -117,13 +117,85 @@ p { color: var(--color-text-dim); line-height: 1.6; margin-bottom: 15px; }
 .modal-item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; max-height: 50vh; overflow-y: auto; padding-top: 5px; }
 
 /* Game Screen */
-#game-container { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 20px; height: 80vh; max-width: 1800px; margin: 0 auto; }
-#game-map-container { position: relative; width: 100%; padding-top: 80%; overflow: hidden; background: #000; border-radius: 5px; }
-#map-image { width: 100%; height: 100%; object-fit: fill; position: absolute; top: 0; left: 0; }
-#fog-of-war-overlay { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-.hex-fog { position: absolute; width: var(--hex-visual-width); height: var(--hex-visual-height); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); pointer-events: none; transition: opacity 0.5s; }
+/* --- TELA 4 (GAME) --- */
+#game-container { 
+    display: grid; 
+    /* MUDANÇA 1: Colunas laterais fixas (300px) para não quebrar o layout */
+    grid-template-columns: 300px 1fr 300px; 
+    gap: 20px; 
+    height: 80vh; 
+    max-width: 100%; /* Remove o limite de 1800px para usar a tela toda */
+    margin: 0 auto; 
+}
+
+/* Painéis Laterais com Rolagem se necessário */
+#status-panel, #action-panel {
+    overflow-y: auto;
+    min-width: 300px; /* Garante que não esmague */
+}
+
+#game-map-container { 
+    position: relative; 
+    width: 100%; 
+    height: 100%; 
+    /* MUDANÇA 2: Remove o padding-top hack e adiciona overflow */
+    padding-top: 0; 
+    overflow: auto; /* Permite rolagem se o mapa for grande */
+    background: #000; 
+    border-radius: 5px; 
+    
+    /* Centraliza o conteúdo se for menor que a tela */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Container interno para garantir que Imagem e Fog tenham o mesmo tamanho base */
+#map-wrapper {
+    position: relative;
+    /* Tamanho fixo ou min-content para respeitar a imagem */
+    width: fit-content;
+    height: fit-content;
+}
+
+#map-image { 
+    /* MUDANÇA 3: Imagem tamanho real (não estica/encolhe) para bater com o JS */
+    width: auto; 
+    height: auto; 
+    max-width: none; /* Permite ser maior que o container */
+    display: block;
+}
+
+#fog-of-war-overlay { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    /* O JS vai posicionar os hexágonos relativos a este container */
+}
+
+.hex-fog { 
+    position: absolute; 
+    width: var(--hex-visual-width); 
+    height: var(--hex-visual-height); 
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); 
+    transform: translate(-50%, -50%); 
+    background: rgba(0,0,0,0.9); 
+    pointer-events: none; 
+    transition: opacity 0.5s ease; 
+}
+
 .hex-fog.revealed { opacity: 0; }
-.kid-marker { position: absolute; font-size: 2em; transform: translate(-50%, -100%); z-index: 10; pointer-events: none; text-shadow: 0 0 5px white; }
+
+.kid-marker { 
+    position: absolute; 
+    font-size: 2em; 
+    transform: translate(-50%, -100%); 
+    z-index: 10; 
+    pointer-events: none; 
+    text-shadow: 0 0 5px white; 
+}
 
 /* --- TELA 1: LOGGED OUT (Correção Visual V7) --- */
 #logged-out-screen {
